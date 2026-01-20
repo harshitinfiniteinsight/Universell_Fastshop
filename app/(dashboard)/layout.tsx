@@ -327,7 +327,7 @@ export default function DashboardLayout({
 
     const LinkComponent = item.external ? "a" : Link;
     const linkProps = item.external
-      ? { href: item.href, target: "_blank", rel: "noopener noreferrer" }
+      ? { href: item.href || "#", target: "_blank", rel: "noopener noreferrer" }
       : { href: item.href || "#" };
 
     return (

@@ -1100,7 +1100,7 @@ function GuidedOnboardingVariant({
       socialLinks: [""],
       brandGuidelinesUrl: "",
       notesForAi: "",
-      dosAndDonts: { dos: [""], donts: [""] },
+      dosAndDonts: "",
     },
   });
   const brandLogoInputRef = useRef<HTMLInputElement>(null);
@@ -1119,10 +1119,6 @@ function GuidedOnboardingVariant({
       extras: {
         ...data.extras,
         socialLinks: data.extras.socialLinks.filter(l => l.trim()),
-        dosAndDonts: {
-          dos: data.extras.dosAndDonts.dos.filter(d => d.trim()),
-          donts: data.extras.dosAndDonts.donts.filter(d => d.trim()),
-        },
       },
     };
     
