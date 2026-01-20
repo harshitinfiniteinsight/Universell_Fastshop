@@ -4,12 +4,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Loader2, Undo2, Save, ShoppingBag } from "lucide-react";
+import { Eye, Loader2, Undo2, Save, ShoppingBag, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { MenuItemV2, MenuItemFlat, SourceItem } from "./types";
 import { SortableMenuTree, DropIntent } from "./sortable-menu-tree";
-import { SourcesPanel } from "./sources-panel";
+import { AddMenuItemModal } from "./add-menu-item-modal";
 import {
   flatToTree,
   treeToFlat,
@@ -20,9 +20,10 @@ import {
   findItemById,
   saveMenuToStorage,
   loadMenuFromStorage,
-  defaultMenuItems,
-  generateId,
+  defaultHeaderMenuItems,
+  defaultFooterMenuItems,
   reorderWithIntent,
+  MenuLocation,
 } from "./utils";
 
 // Available pages to add to menu
@@ -46,17 +47,35 @@ const availableCategories: SourceItem[] = [
 ];
 
 export function MenuBuilder() {
-  const [menuItems, setMenuItems] = useState<MenuItemV2[]>([]);
+  // Header menu state
+  const [headerMenuItems, setHeaderMenuItems] = useState<MenuItemV2[]>([]);
+  const [headerLastSaved, setHeaderLastSaved] = useState<MenuItemFlat[] | null>(null);
+  
+  // Footer menu state
+  const [footerMenuItems, setFooterMenuItems] = useState<MenuItemV2[]>([]);
+  const [footerLastSaved, setFooterLastSaved] = useState<MenuItemFlat[] | null>(null);
+  
+  // UI state
   const [isLoading, setIsLoading] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
-  const [lastSaved, setLastSaved] = useState<MenuItemFlat[] | null>(null);
+  const [footerExpanded, setFooterExpanded] = useState(true);
+  
+  // Modal state
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addModalTarget, setAddModalTarget] = useState<MenuLocation>("header");
 
-  // Load menu from storage on mount
+  // Load menus from storage on mount
   useEffect(() => {
-    const saved = loadMenuFromStorage();
-    const items = saved || defaultMenuItems;
-    setMenuItems(flatToTree(items));
-    setLastSaved(items);
+    const savedHeader = loadMenuFromStorage("header");
+    const savedFooter = loadMenuFromStorage("footer");
+    
+    const headerItems = savedHeader || defaultHeaderMenuItems;
+    const footerItems = savedFooter || defaultFooterMenuItems;
+    
+    setHeaderMenuItems(flatToTree(headerItems));
+    setHeaderLastSaved(headerItems);
+    setFooterMenuItems(flatToTree(footerItems));
+    setFooterLastSaved(footerItems);
     setIsLoading(false);
   }, []);
 
@@ -64,61 +83,105 @@ export function MenuBuilder() {
   useEffect(() => {
     if (!isLoading && hasChanges) {
       const timeout = setTimeout(() => {
-        const flatItems = treeToFlat(menuItems);
-        saveMenuToStorage(flatItems);
-        setLastSaved(flatItems);
+        const headerFlat = treeToFlat(headerMenuItems);
+        const footerFlat = treeToFlat(footerMenuItems);
+        saveMenuToStorage(headerFlat, "header");
+        saveMenuToStorage(footerFlat, "footer");
+        setHeaderLastSaved(headerFlat);
+        setFooterLastSaved(footerFlat);
         setHasChanges(false);
       }, 1000);
       return () => clearTimeout(timeout);
     }
-  }, [menuItems, hasChanges, isLoading]);
+  }, [headerMenuItems, footerMenuItems, hasChanges, isLoading]);
 
-  // Mark as changed when menu updates
-  const updateMenu = useCallback((newItems: MenuItemV2[]) => {
-    setMenuItems(newItems);
+  // Header menu handlers
+  const updateHeaderMenu = useCallback((newItems: MenuItemV2[]) => {
+    setHeaderMenuItems(newItems);
     setHasChanges(true);
   }, []);
 
-  // Handle reorder from drag and drop with nesting support
-  const handleReorder = useCallback((activeId: string, overId: string, intent: DropIntent) => {
-    const newItems = reorderWithIntent(menuItems, activeId, overId, intent);
-    updateMenu(newItems);
-  }, [menuItems, updateMenu]);
+  const handleHeaderReorder = useCallback((activeId: string, overId: string, intent: DropIntent) => {
+    const newItems = reorderWithIntent(headerMenuItems, activeId, overId, intent);
+    updateHeaderMenu(newItems);
+  }, [headerMenuItems, updateHeaderMenu]);
 
-  // Handle item updates
-  const handleUpdateItem = (id: string, updates: Partial<MenuItemV2>) => {
-    updateMenu(updateItem(menuItems, id, updates));
+  const handleHeaderUpdateItem = (id: string, updates: Partial<MenuItemV2>) => {
+    updateHeaderMenu(updateItem(headerMenuItems, id, updates));
   };
 
-  // Handle item removal
-  const handleRemoveItem = (id: string) => {
-    updateMenu(removeItem(menuItems, id));
+  const handleHeaderRemoveItem = (id: string) => {
+    updateHeaderMenu(removeItem(headerMenuItems, id));
   };
 
-  // Handle expand/collapse
-  const handleToggleExpand = (id: string) => {
-    const item = findItemById(menuItems, id);
+  const handleHeaderToggleExpand = (id: string) => {
+    const item = findItemById(headerMenuItems, id);
     if (item) {
-      handleUpdateItem(id, { isExpanded: !item.isExpanded });
+      handleHeaderUpdateItem(id, { isExpanded: !item.isExpanded });
     }
   };
 
-  // Add items from sources panel
+  // Footer menu handlers
+  const updateFooterMenu = useCallback((newItems: MenuItemV2[]) => {
+    setFooterMenuItems(newItems);
+    setHasChanges(true);
+  }, []);
+
+  const handleFooterReorder = useCallback((activeId: string, overId: string, intent: DropIntent) => {
+    const newItems = reorderWithIntent(footerMenuItems, activeId, overId, intent);
+    updateFooterMenu(newItems);
+  }, [footerMenuItems, updateFooterMenu]);
+
+  const handleFooterUpdateItem = (id: string, updates: Partial<MenuItemV2>) => {
+    updateFooterMenu(updateItem(footerMenuItems, id, updates));
+  };
+
+  const handleFooterRemoveItem = (id: string) => {
+    updateFooterMenu(removeItem(footerMenuItems, id));
+  };
+
+  const handleFooterToggleExpand = (id: string) => {
+    const item = findItemById(footerMenuItems, id);
+    if (item) {
+      handleFooterUpdateItem(id, { isExpanded: !item.isExpanded });
+    }
+  };
+
+  // Add items from modal
   const handleAddItems = (sources: SourceItem[]) => {
     const newItems = sources.map((source) => createMenuItem(source));
-    updateMenu([...menuItems, ...newItems]);
+    if (addModalTarget === "header") {
+      updateHeaderMenu([...headerMenuItems, ...newItems]);
+    } else {
+      updateFooterMenu([...footerMenuItems, ...newItems]);
+    }
+  };
+
+  // Open add modal for specific menu
+  const openAddModal = (target: MenuLocation) => {
+    setAddModalTarget(target);
+    setAddModalOpen(true);
   };
 
   // Revert to last saved
   const handleRevert = () => {
-    if (lastSaved) {
-      setMenuItems(flatToTree(lastSaved));
-      setHasChanges(false);
+    if (headerLastSaved) {
+      setHeaderMenuItems(flatToTree(headerLastSaved));
     }
+    if (footerLastSaved) {
+      setFooterMenuItems(flatToTree(footerLastSaved));
+    }
+    setHasChanges(false);
   };
 
   // Get visible items for preview
-  const visibleItems = getVisibleItems(menuItems);
+  const visibleHeaderItems = getVisibleItems(headerMenuItems);
+  const visibleFooterItems = getVisibleItems(footerMenuItems);
+
+  // Count total items
+  const countItems = (items: MenuItemV2[]): number => {
+    return items.reduce((acc, item) => acc + 1 + countItems(item.children), 0);
+  };
 
   if (isLoading) {
     return (
@@ -135,7 +198,7 @@ export function MenuBuilder() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Menu Builder</h1>
           <p className="text-muted-foreground">
-            Drag and drop to reorder. Nest items to create dropdowns.
+            Configure navigation menus for your website header and footer.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -155,54 +218,109 @@ export function MenuBuilder() {
         </div>
       </div>
 
-      {/* Three Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Panel: Sources (3 cols) */}
-        <div className="lg:col-span-3">
-          <SourcesPanel
-            pages={availablePages}
-            categories={availableCategories}
-            onAddItems={handleAddItems}
-          />
-        </div>
-
-        {/* Center Panel: Menu Structure (5 cols) */}
-        <div className="lg:col-span-5">
-          <Card className="h-full">
+      {/* Two Column Layout - 40/60 split */}
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+        {/* Left Panel: Menu Structures (40%) */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Header Menu Structure Card */}
+          <Card>
             <div className="flex items-center justify-between p-4 border-b border-border">
               <div>
-                <h3 className="font-semibold text-foreground">Menu Structure</h3>
+                <h3 className="font-semibold text-foreground">Header Menu Structure</h3>
                 <p className="text-xs text-muted-foreground">
-                  {menuItems.length} item{menuItems.length !== 1 ? "s" : ""}
+                  Drag and drop to reorder. Nest items to create dropdown menus.
                 </p>
               </div>
-              <Badge variant="outline">Header Menu</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {countItems(headerMenuItems)} item{countItems(headerMenuItems) !== 1 ? "s" : ""}
+                </Badge>
+                <Button size="sm" onClick={() => openAddModal("header")}>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Item
+                </Button>
+              </div>
             </div>
 
-            <div className="p-4 min-h-[400px]">
-              {menuItems.length > 0 ? (
+            <div className="p-4 min-h-[300px]">
+              {headerMenuItems.length > 0 ? (
                 <SortableMenuTree
-                  items={menuItems}
-                  onReorder={handleReorder}
-                  onUpdateItem={handleUpdateItem}
-                  onRemoveItem={handleRemoveItem}
-                  onToggleExpand={handleToggleExpand}
+                  items={headerMenuItems}
+                  onReorder={handleHeaderReorder}
+                  onUpdateItem={handleHeaderUpdateItem}
+                  onRemoveItem={handleHeaderRemoveItem}
+                  onToggleExpand={handleHeaderToggleExpand}
                 />
               ) : (
-                <div className="h-64 flex flex-col items-center justify-center text-center border-2 border-dashed border-border rounded-lg">
+                <div className="h-48 flex flex-col items-center justify-center text-center border-2 border-dashed border-border rounded-lg">
                   <p className="text-muted-foreground mb-2">No menu items yet</p>
-                  <p className="text-sm text-muted-foreground">
-                    Select items from the left panel to add to your menu
-                  </p>
+                  <Button variant="outline" size="sm" onClick={() => openAddModal("header")}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Menu Item
+                  </Button>
                 </div>
               )}
             </div>
           </Card>
+
+          {/* Footer Menu Structure Card */}
+          <Card className="border-muted">
+            <button
+              onClick={() => setFooterExpanded(!footerExpanded)}
+              className="w-full flex items-center justify-between p-4 border-b border-border hover:bg-muted/30 transition-colors"
+            >
+              <div className="text-left">
+                <h3 className="font-semibold text-foreground">Footer Menu Structure</h3>
+                <p className="text-xs text-muted-foreground">
+                  Optional footer navigation links
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {countItems(footerMenuItems)} item{countItems(footerMenuItems) !== 1 ? "s" : ""}
+                </Badge>
+                {footerExpanded ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </div>
+            </button>
+
+            {footerExpanded && (
+              <>
+                <div className="flex items-center justify-end p-3 border-b border-border bg-muted/20">
+                  <Button size="sm" variant="outline" onClick={() => openAddModal("footer")}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Item
+                  </Button>
+                </div>
+                <div className="p-4 min-h-[200px]">
+                  {footerMenuItems.length > 0 ? (
+                    <SortableMenuTree
+                      items={footerMenuItems}
+                      onReorder={handleFooterReorder}
+                      onUpdateItem={handleFooterUpdateItem}
+                      onRemoveItem={handleFooterRemoveItem}
+                      onToggleExpand={handleFooterToggleExpand}
+                    />
+                  ) : (
+                    <div className="h-32 flex flex-col items-center justify-center text-center border-2 border-dashed border-border rounded-lg bg-muted/10">
+                      <p className="text-sm text-muted-foreground mb-2">No footer menu items</p>
+                      <p className="text-xs text-muted-foreground">
+                        Footer menu is optional. Add items if needed.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </Card>
         </div>
 
-        {/* Right Panel: Live Preview (4 cols) */}
-        <div className="lg:col-span-4">
-          <Card className="h-full min-h-[500px] flex flex-col">
+        {/* Right Panel: Live Preview (60%) */}
+        <div className="lg:col-span-6">
+          <Card className="h-full min-h-[600px] flex flex-col sticky top-6">
             {/* Preview Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
@@ -243,10 +361,10 @@ export function MenuBuilder() {
                       <span className="font-semibold text-sm text-foreground">FastShop</span>
                     </div>
 
-                    {/* Navigation */}
+                    {/* Header Navigation */}
                     <nav className="flex items-center gap-3">
-                      {visibleItems.length > 0 ? (
-                        visibleItems.map((item, idx) => (
+                      {visibleHeaderItems.length > 0 ? (
+                        visibleHeaderItems.map((item, idx) => (
                           <div key={item.id} className="relative group">
                             <span
                               className={cn(
@@ -275,7 +393,7 @@ export function MenuBuilder() {
                           </div>
                         ))
                       ) : (
-                        <span className="text-xs text-muted-foreground italic">No visible items</span>
+                        <span className="text-xs text-muted-foreground italic">No header items</span>
                       )}
                     </nav>
 
@@ -288,7 +406,7 @@ export function MenuBuilder() {
 
                 {/* Mock Page Content */}
                 <div className="flex-1 p-4 space-y-4">
-                  <div className="h-24 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg flex items-center justify-center">
+                  <div className="h-20 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg flex items-center justify-center">
                     <div className="text-center">
                       <h2 className="text-sm font-bold text-foreground">Welcome to FastShop</h2>
                       <p className="text-xs text-muted-foreground">Your one-stop destination</p>
@@ -296,8 +414,39 @@ export function MenuBuilder() {
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-12 bg-muted rounded animate-pulse" />
+                      <div key={i} className="h-10 bg-muted rounded animate-pulse" />
                     ))}
+                  </div>
+                  <div className="h-16 bg-muted/50 rounded" />
+                </div>
+
+                {/* Mock Website Footer with Live Menu */}
+                <div className="border-t border-border bg-muted/30 px-4 py-3 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-primary/80 rounded flex items-center justify-center">
+                        <span className="text-white font-bold text-[8px]">FS</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">© 2026 FastShop</span>
+                    </div>
+                    
+                    {/* Footer Navigation */}
+                    <nav className="flex items-center gap-3">
+                      {visibleFooterItems.length > 0 ? (
+                        visibleFooterItems.map((item) => (
+                          <span
+                            key={item.id}
+                            className="text-[10px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                          >
+                            {item.label}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground/50 italic">
+                          No footer links
+                        </span>
+                      )}
+                    </nav>
                   </div>
                 </div>
               </div>
@@ -305,6 +454,16 @@ export function MenuBuilder() {
           </Card>
         </div>
       </div>
+
+      {/* Add Menu Item Modal */}
+      <AddMenuItemModal
+        open={addModalOpen}
+        onOpenChange={setAddModalOpen}
+        pages={availablePages}
+        categories={availableCategories}
+        onAddItems={handleAddItems}
+        menuLocation={addModalTarget}
+      />
     </div>
   );
 }

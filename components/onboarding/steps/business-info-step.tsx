@@ -125,56 +125,79 @@ export function BusinessInfoStep({
             </div>
           </div>
 
-          {/* Floating UI Preview Cards - Visual Excitement */}
-          <div className="relative hidden lg:block h-[280px]">
-            {/* Background glow */}
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent rounded-3xl" />
-            
-            {/* Floating Card 1 - Website Preview */}
-            <div className="absolute top-4 left-4 right-8 glass rounded-xl p-4 shadow-xl animate-float">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                  <Globe className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Your Website</p>
-                  <p className="text-sm font-semibold text-foreground truncate">{data.name || "Your Business"}</p>
-                </div>
+          {/* Bold Visual Tiles - AI-First Design */}
+          <div className="relative hidden lg:block h-[280px]" aria-hidden="true">
+            {/* Tile 1 - Website Blocks (Top Left) */}
+            <div className="absolute top-0 left-0 w-32 h-40 rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-orange-500 shadow-2xl shadow-primary/30 animate-float overflow-hidden">
+              <div className="absolute inset-0 opacity-30">
+                <div className="absolute top-4 left-4 right-4 h-8 bg-white/20 rounded-lg" />
+                <div className="absolute top-16 left-4 right-4 h-4 bg-white/15 rounded" />
+                <div className="absolute top-22 left-4 w-12 h-4 bg-white/15 rounded" />
+                <div className="absolute bottom-4 left-4 right-4 h-12 bg-white/10 rounded-lg" />
               </div>
-              <div className="space-y-2">
-                <div className="h-2 bg-foreground/10 rounded-full w-full" />
-                <div className="h-2 bg-foreground/5 rounded-full w-3/4" />
+              <div className="absolute bottom-3 right-3">
+                <Globe className="w-6 h-6 text-white/60" />
               </div>
             </div>
 
-            {/* Floating Card 2 - Design Preview */}
-            <div className="absolute top-24 right-2 left-12 glass rounded-xl p-4 shadow-xl animate-float-delayed">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Palette className="w-4 h-4 text-primary" />
+            {/* Tile 2 - Color Swatches (Top Right) */}
+            <div className="absolute top-6 right-0 w-28 h-28 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-xl shadow-violet-500/25 animate-float-delayed overflow-hidden">
+              <div className="absolute inset-3 flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-white/90 shadow-sm" />
+                  <div className="w-8 h-8 rounded-lg bg-primary/80" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">Theme Color</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="w-4 h-4 rounded-full bg-primary shadow-sm" />
-                    <span className="text-xs font-medium text-foreground">Universell Orange</span>
-                  </div>
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-violet-300/60" />
+                  <div className="w-8 h-8 rounded-lg bg-white/40" />
+                </div>
+              </div>
+              <div className="absolute bottom-2 right-2">
+                <Palette className="w-5 h-5 text-white/50" />
+              </div>
+            </div>
+
+            {/* Tile 3 - Sparkles/AI Magic (Middle) */}
+            <div className="absolute top-[110px] left-[90px] w-36 h-24 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-rose-400 shadow-xl shadow-orange-400/25 animate-float-slow overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative">
+                  <Sparkles className="w-10 h-10 text-white drop-shadow-lg" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse" />
+                  <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-white/80 rounded-full animate-pulse delay-150" />
+                </div>
+              </div>
+              <div className="absolute top-2 left-3 w-8 h-1.5 bg-white/30 rounded-full" />
+              <div className="absolute bottom-2 right-3 w-6 h-1.5 bg-white/30 rounded-full" />
+            </div>
+
+            {/* Tile 4 - Abstract Storefront (Bottom Left) */}
+            <div className="absolute bottom-0 left-8 w-24 h-28 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-emerald-500/25 animate-float-delayed overflow-hidden">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3">
+                <div className="w-10 h-10 rounded-xl bg-white/25 flex items-center justify-center">
+                  <ShoppingBag className="w-5 h-5 text-white" />
+                </div>
+                <div className="w-full space-y-1.5">
+                  <div className="h-1.5 bg-white/30 rounded-full w-full" />
+                  <div className="h-1.5 bg-white/20 rounded-full w-3/4 mx-auto" />
                 </div>
               </div>
             </div>
 
-            {/* Floating Card 3 - Pages */}
-            <div className="absolute bottom-4 left-2 right-12 glass rounded-xl p-4 shadow-xl animate-float-slow">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
-                  <Layout className="w-4 h-4 text-green-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">AI will generate</p>
-                  <p className="text-sm font-semibold text-foreground">5+ pages for you</p>
-                </div>
+            {/* Tile 5 - Layout Blocks (Bottom Right) */}
+            <div className="absolute bottom-4 right-4 w-20 h-20 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 animate-float overflow-hidden">
+              <div className="absolute inset-2 grid grid-cols-2 gap-1">
+                <div className="bg-white/25 rounded" />
+                <div className="bg-white/15 rounded" />
+                <div className="bg-white/15 rounded" />
+                <div className="bg-white/25 rounded" />
+              </div>
+              <div className="absolute bottom-1 right-1">
+                <Layout className="w-4 h-4 text-white/40" />
               </div>
             </div>
+
+            {/* Subtle glow effects */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
           </div>
 
           {/* What happens next - Desktop only */}

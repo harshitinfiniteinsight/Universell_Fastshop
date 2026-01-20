@@ -364,21 +364,40 @@ export function wouldCreateCircularReference(
 }
 
 // LocalStorage helpers
-const STORAGE_KEY = 'universell-menu-structure';
+const HEADER_MENU_STORAGE_KEY = 'universell-header-menu';
+const FOOTER_MENU_STORAGE_KEY = 'universell-footer-menu';
 
-export function saveMenuToStorage(items: MenuItemFlat[]): void {
+// Legacy key for migration
+const LEGACY_STORAGE_KEY = 'universell-menu-structure';
+
+export type MenuLocation = 'header' | 'footer';
+
+export function saveMenuToStorage(items: MenuItemFlat[], location: MenuLocation = 'header'): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    const key = location === 'header' ? HEADER_MENU_STORAGE_KEY : FOOTER_MENU_STORAGE_KEY;
+    localStorage.setItem(key, JSON.stringify(items));
   } catch (e) {
     console.error('Failed to save menu to storage:', e);
   }
 }
 
-export function loadMenuFromStorage(): MenuItemFlat[] | null {
+export function loadMenuFromStorage(location: MenuLocation = 'header'): MenuItemFlat[] | null {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const key = location === 'header' ? HEADER_MENU_STORAGE_KEY : FOOTER_MENU_STORAGE_KEY;
+    const saved = localStorage.getItem(key);
     if (saved) {
       return JSON.parse(saved);
+    }
+    // Migration: check legacy key for header menu
+    if (location === 'header') {
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacy) {
+        const items = JSON.parse(legacy);
+        // Migrate to new key
+        localStorage.setItem(HEADER_MENU_STORAGE_KEY, legacy);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+        return items;
+      }
     }
   } catch (e) {
     console.error('Failed to load menu from storage:', e);
@@ -386,11 +405,17 @@ export function loadMenuFromStorage(): MenuItemFlat[] | null {
   return null;
 }
 
-// Default menu items
-export const defaultMenuItems: MenuItemFlat[] = [
+// Default menu items for header
+export const defaultHeaderMenuItems: MenuItemFlat[] = [
   { id: '1', label: 'Home', type: 'system', url: '/', parentId: null, order: 0, visible: true, target: '_self' },
   { id: '2', label: 'Products', type: 'page', url: '/products', pageId: 'products', parentId: null, order: 1, visible: true, target: '_self' },
   { id: '3', label: 'Services', type: 'page', url: '/services', pageId: 'services', parentId: null, order: 2, visible: true, target: '_self' },
   { id: '4', label: 'About Us', type: 'page', url: '/about', pageId: 'about', parentId: null, order: 3, visible: true, target: '_self' },
   { id: '5', label: 'Contact', type: 'page', url: '/contact', pageId: 'contact', parentId: null, order: 4, visible: true, target: '_self' },
 ];
+
+// Default menu items for footer (empty by default)
+export const defaultFooterMenuItems: MenuItemFlat[] = [];
+
+// Keep backward compatibility
+export const defaultMenuItems = defaultHeaderMenuItems;

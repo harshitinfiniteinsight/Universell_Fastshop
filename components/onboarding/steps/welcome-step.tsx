@@ -75,6 +75,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BusinessInfo } from "../wizard-container";
+import { BrandVaultModal, BrandVaultData } from "../brand-vault-modal";
 
 interface WelcomeStepProps {
   onNext: () => void;
@@ -1078,74 +1079,70 @@ function GuidedOnboardingVariant({
 
   // Brand Vault state
   const [isBrandVaultOpen, setIsBrandVaultOpen] = useState(false);
-  const [brandVaultExpandedSections, setBrandVaultExpandedSections] = useState({
-    core: true,
-    recommended: false,
-    optional: false,
-  });
-  const [brandVaultData, setBrandVaultData] = useState({
-    inspirationLinks: [""],
-    logoFile: null as File | null,
-    logoPreview: null as string | null,
-    primaryColor: "",
-    secondaryColor: "",
-    accentColor: "",
-    fontPreference: "",
-    brandTone: "",
-    industry: "",
-    targetAudience: "",
-    socialLinks: [""],
-    brandGuidelines: null as File | null,
-    additionalNotes: "",
+  const [brandVaultData, setBrandVaultData] = useState<BrandVaultData>({
+    coreAssets: {
+      inspirationLinks: [""],
+      logoFile: null,
+      logoPreview: null,
+      primaryColor: "",
+      secondaryColor: "",
+      accentColor: "",
+    },
+    brandStyle: {
+      designStyles: [],
+      typographyPreference: null,
+    },
+    personality: {
+      brandTones: [],
+      targetAudience: "",
+    },
+    extras: {
+      socialLinks: [""],
+      brandGuidelinesUrl: "",
+      notesForAi: "",
+      dosAndDonts: { dos: [""], donts: [""] },
+    },
   });
   const brandLogoInputRef = useRef<HTMLInputElement>(null);
-  const brandGuidelinesInputRef = useRef<HTMLInputElement>(null);
 
-  const brandTones = [
-    { id: "professional", label: "Professional", emoji: "💼" },
-    { id: "friendly", label: "Friendly", emoji: "😊" },
-    { id: "premium", label: "Premium", emoji: "✨" },
-    { id: "playful", label: "Playful", emoji: "🎉" },
-    { id: "minimal", label: "Minimal", emoji: "◻️" },
-    { id: "bold", label: "Bold", emoji: "🔥" },
-  ];
+  const handleBrandVaultSave = (data: BrandVaultData) => {
+    // Update local state
+    setBrandVaultData(data);
 
-  const industries = [
-    "Fashion & Apparel",
-    "Food & Beverage",
-    "Health & Wellness",
-    "Technology",
-    "Home & Living",
-    "Beauty & Skincare",
-    "Sports & Fitness",
-    "Arts & Crafts",
-    "Professional Services",
-    "Other",
-  ];
-
-  const handleBrandVaultSave = () => {
     // Clean up and save vault data
     const cleanedData = {
-      ...brandVaultData,
-      inspirationLinks: brandVaultData.inspirationLinks.filter(l => l.trim()),
-      socialLinks: brandVaultData.socialLinks.filter(l => l.trim()),
+      ...data,
+      coreAssets: {
+        ...data.coreAssets,
+        inspirationLinks: data.coreAssets.inspirationLinks.filter(l => l.trim()),
+      },
+      extras: {
+        ...data.extras,
+        socialLinks: data.extras.socialLinks.filter(l => l.trim()),
+        dosAndDonts: {
+          dos: data.extras.dosAndDonts.dos.filter(d => d.trim()),
+          donts: data.extras.dosAndDonts.donts.filter(d => d.trim()),
+        },
+      },
     };
     
     // Store in localStorage
     localStorage.setItem("universell-brand-vault", JSON.stringify(cleanedData));
     
-    // Store onboarding data
+    // Store onboarding data for compatibility
     const onboardingData = {
-      inspiration: cleanedData.inspirationLinks.join(", "),
-      color: cleanedData.primaryColor || "",
-      secondaryColor: cleanedData.secondaryColor || "",
-      accentColor: cleanedData.accentColor || "",
-      brandTone: cleanedData.brandTone || "",
-      industry: cleanedData.industry || "",
-      targetAudience: cleanedData.targetAudience || "",
-      fontPreference: cleanedData.fontPreference || "",
-      hasLogo: !!cleanedData.logoPreview,
-      logoPreview: cleanedData.logoPreview || "",
+      inspiration: cleanedData.coreAssets.inspirationLinks.join(", "),
+      color: cleanedData.coreAssets.primaryColor || "",
+      secondaryColor: cleanedData.coreAssets.secondaryColor || "",
+      accentColor: cleanedData.coreAssets.accentColor || "",
+      brandTones: cleanedData.personality.brandTones || [],
+      targetAudience: cleanedData.personality.targetAudience || "",
+      designStyles: cleanedData.brandStyle.designStyles || [],
+      typographyPreference: cleanedData.brandStyle.typographyPreference || "",
+      hasLogo: !!cleanedData.coreAssets.logoPreview,
+      logoPreview: cleanedData.coreAssets.logoPreview || "",
+      socialLinks: cleanedData.extras.socialLinks || [],
+      notesForAi: cleanedData.extras.notesForAi || "",
       fromBrandVault: true,
     };
     localStorage.setItem("universell-onboarding-data", JSON.stringify(onboardingData));
@@ -1821,446 +1818,21 @@ function GuidedOnboardingVariant({
         </div>
 
         {/* Brand Vault Modal */}
-        <Dialog open={isBrandVaultOpen} onOpenChange={setIsBrandVaultOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader className="pb-4 border-b border-border">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
-                  <FolderOpen className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <DialogTitle className="text-xl font-bold">Create Your Brand Vault</DialogTitle>
-                  <DialogDescription className="text-sm text-muted-foreground mt-0.5">
-                    Add everything you already have — you can always change or refine it later.
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
+        <BrandVaultModal
+          open={isBrandVaultOpen}
+          onOpenChange={setIsBrandVaultOpen}
+          onSave={handleBrandVaultSave}
+          initialData={brandVaultData}
+        />
 
-            <div className="space-y-4 py-4">
-              {/* Helper notice */}
-              <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800">
-                <Sparkles className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  These help us design a more accurate and polished website — but you can edit everything later.
-                </p>
-              </div>
-
-              {/* Core Section */}
-              <div className="bg-card rounded-xl border border-border overflow-hidden">
-                <button
-                  onClick={() => setBrandVaultExpandedSections(prev => ({ ...prev, core: !prev.core }))}
-                  className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Star className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="text-left">
-                      <span className="font-semibold text-foreground">Core Brand Assets</span>
-                      <span className="text-xs text-muted-foreground block">Inspiration, logo, colors</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">Recommended</span>
-                    {brandVaultExpandedSections.core ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
-                  </div>
-                </button>
-
-                {brandVaultExpandedSections.core && (
-                  <div className="p-4 pt-0 space-y-5 border-t border-border">
-                    {/* Inspiration Links */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Link className="w-4 h-4 text-muted-foreground" />
-                        <Label className="font-medium">Website Inspiration</Label>
-                      </div>
-                      <p className="text-xs text-muted-foreground -mt-1">
-                        Share websites you like — we&apos;ll use them as design references.
-                      </p>
-                      <div className="space-y-2">
-                        {brandVaultData.inspirationLinks.map((link, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <Input
-                              placeholder="https://example.com"
-                              value={link}
-                              onChange={(e) => {
-                                const links = [...brandVaultData.inspirationLinks];
-                                links[index] = e.target.value;
-                                setBrandVaultData(prev => ({ ...prev, inspirationLinks: links }));
-                              }}
-                              className="flex-1"
-                            />
-                            {brandVaultData.inspirationLinks.length > 1 && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setBrandVaultData(prev => ({
-                                    ...prev,
-                                    inspirationLinks: prev.inspirationLinks.filter((_, i) => i !== index),
-                                  }));
-                                }}
-                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setBrandVaultData(prev => ({ ...prev, inspirationLinks: [...prev.inspirationLinks, ""] }))}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add another link
-                      </Button>
-                    </div>
-
-                    {/* Logo Upload */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                        <Label className="font-medium">Brand Logo</Label>
-                      </div>
-                      <input
-                        ref={brandLogoInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              setBrandVaultData(prev => ({
-                                ...prev,
-                                logoFile: file,
-                                logoPreview: ev.target?.result as string,
-                              }));
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="hidden"
-                      />
-                      {brandVaultData.logoPreview ? (
-                        <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl border border-border">
-                          <div className="w-16 h-16 rounded-xl bg-white border border-border flex items-center justify-center overflow-hidden">
-                            <img src={brandVaultData.logoPreview} alt="Logo preview" className="max-w-full max-h-full object-contain" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-foreground">{brandVaultData.logoFile?.name}</p>
-                            <p className="text-xs text-muted-foreground">Click to replace</p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => brandLogoInputRef.current?.click()}
-                          >
-                            Replace
-                          </Button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => brandLogoInputRef.current?.click()}
-                          className="w-full p-6 border-2 border-dashed border-border rounded-xl hover:border-primary/50 hover:bg-muted/30 transition-all flex flex-col items-center gap-2"
-                        >
-                          <Upload className="w-8 h-8 text-muted-foreground" />
-                          <span className="text-sm font-medium text-foreground">Upload your logo</span>
-                          <span className="text-xs text-muted-foreground">PNG, JPG, or SVG</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Brand Colors */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Palette className="w-4 h-4 text-muted-foreground" />
-                        <Label className="font-medium">Brand Colors</Label>
-                      </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        {/* Primary */}
-                        <div className="space-y-2">
-                          <span className="text-xs text-muted-foreground">Primary</span>
-                          <div className="relative">
-                            <input
-                              type="color"
-                              value={brandVaultData.primaryColor || "#6366f1"}
-                              onChange={(e) => setBrandVaultData(prev => ({ ...prev, primaryColor: e.target.value }))}
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            />
-                            <div
-                              className="w-full h-12 rounded-lg border-2 border-border cursor-pointer flex items-center justify-center"
-                              style={{ backgroundColor: brandVaultData.primaryColor || "#f3f4f6" }}
-                            >
-                              {!brandVaultData.primaryColor && <Plus className="w-4 h-4 text-muted-foreground" />}
-                            </div>
-                          </div>
-                        </div>
-                        {/* Secondary */}
-                        <div className="space-y-2">
-                          <span className="text-xs text-muted-foreground">Secondary</span>
-                          <div className="relative">
-                            <input
-                              type="color"
-                              value={brandVaultData.secondaryColor || "#8b5cf6"}
-                              onChange={(e) => setBrandVaultData(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            />
-                            <div
-                              className="w-full h-12 rounded-lg border-2 border-border cursor-pointer flex items-center justify-center"
-                              style={{ backgroundColor: brandVaultData.secondaryColor || "#f3f4f6" }}
-                            >
-                              {!brandVaultData.secondaryColor && <Plus className="w-4 h-4 text-muted-foreground" />}
-                            </div>
-                          </div>
-                        </div>
-                        {/* Accent */}
-                        <div className="space-y-2">
-                          <span className="text-xs text-muted-foreground">Accent</span>
-                          <div className="relative">
-                            <input
-                              type="color"
-                              value={brandVaultData.accentColor || "#f59e0b"}
-                              onChange={(e) => setBrandVaultData(prev => ({ ...prev, accentColor: e.target.value }))}
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            />
-                            <div
-                              className="w-full h-12 rounded-lg border-2 border-border cursor-pointer flex items-center justify-center"
-                              style={{ backgroundColor: brandVaultData.accentColor || "#f3f4f6" }}
-                            >
-                              {!brandVaultData.accentColor && <Plus className="w-4 h-4 text-muted-foreground" />}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Recommended Section */}
-              <div className="bg-card rounded-xl border border-border overflow-hidden">
-                <button
-                  onClick={() => setBrandVaultExpandedSections(prev => ({ ...prev, recommended: !prev.recommended }))}
-                  className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                      <Heart className="w-4 h-4 text-amber-500" />
-                    </div>
-                    <div className="text-left">
-                      <span className="font-semibold text-foreground">Brand Personality</span>
-                      <span className="text-xs text-muted-foreground block">Fonts, tone, audience</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-amber-600 bg-amber-500/10 px-2 py-1 rounded-full">Suggested</span>
-                    {brandVaultExpandedSections.recommended ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
-                  </div>
-                </button>
-
-                {brandVaultExpandedSections.recommended && (
-                  <div className="p-4 pt-0 space-y-5 border-t border-border">
-                    {/* Font Preference */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Type className="w-4 h-4 text-muted-foreground" />
-                        <Label className="font-medium">Font Preference</Label>
-                      </div>
-                      <Input
-                        placeholder="e.g., Modern sans-serif, Classic serif, Handwritten..."
-                        value={brandVaultData.fontPreference}
-                        onChange={(e) => setBrandVaultData(prev => ({ ...prev, fontPreference: e.target.value }))}
-                      />
-                    </div>
-
-                    {/* Brand Tone */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4 text-muted-foreground" />
-                        <Label className="font-medium">Brand Tone</Label>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {brandTones.map((tone) => (
-                          <button
-                            key={tone.id}
-                            onClick={() => setBrandVaultData(prev => ({ ...prev, brandTone: tone.id }))}
-                            className={cn(
-                              "p-3 rounded-lg border-2 transition-all text-left",
-                              brandVaultData.brandTone === tone.id
-                                ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/40"
-                            )}
-                          >
-                            <span className="text-lg">{tone.emoji}</span>
-                            <span className="text-sm font-medium block mt-1">{tone.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Industry */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Store className="w-4 h-4 text-muted-foreground" />
-                        <Label className="font-medium">Industry</Label>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {industries.map((industry) => (
-                          <button
-                            key={industry}
-                            onClick={() => setBrandVaultData(prev => ({ ...prev, industry }))}
-                            className={cn(
-                              "px-3 py-1.5 rounded-full border text-sm transition-all",
-                              brandVaultData.industry === industry
-                                ? "border-primary bg-primary/10 text-primary font-medium"
-                                : "border-border hover:border-primary/40 text-muted-foreground"
-                            )}
-                          >
-                            {industry}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Target Audience */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-muted-foreground" />
-                        <Label className="font-medium">Target Audience</Label>
-                      </div>
-                      <Textarea
-                        placeholder="Who is your website for? e.g., Young professionals aged 25-40, health-conscious consumers..."
-                        value={brandVaultData.targetAudience}
-                        onChange={(e) => setBrandVaultData(prev => ({ ...prev, targetAudience: e.target.value }))}
-                        className="min-h-[80px] resize-none"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Optional Section */}
-              <div className="bg-card rounded-xl border border-border overflow-hidden">
-                <button
-                  onClick={() => setBrandVaultExpandedSections(prev => ({ ...prev, optional: !prev.optional }))}
-                  className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                      <Plus className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div className="text-left">
-                      <span className="font-semibold text-foreground">Extra Assets</span>
-                      <span className="text-xs text-muted-foreground block">Social links, guidelines, notes</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">Optional</span>
-                    {brandVaultExpandedSections.optional ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
-                  </div>
-                </button>
-
-                {brandVaultExpandedSections.optional && (
-                  <div className="p-4 pt-0 space-y-5 border-t border-border">
-                    {/* Social Links */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Instagram className="w-4 h-4 text-muted-foreground" />
-                        <Label className="font-medium">Social Media Links</Label>
-                      </div>
-                      <div className="space-y-2">
-                        {brandVaultData.socialLinks.map((link, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <Input
-                              placeholder="https://instagram.com/yourbrand"
-                              value={link}
-                              onChange={(e) => {
-                                const links = [...brandVaultData.socialLinks];
-                                links[index] = e.target.value;
-                                setBrandVaultData(prev => ({ ...prev, socialLinks: links }));
-                              }}
-                              className="flex-1"
-                            />
-                            {brandVaultData.socialLinks.length > 1 && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setBrandVaultData(prev => ({
-                                    ...prev,
-                                    socialLinks: prev.socialLinks.filter((_, i) => i !== index),
-                                  }));
-                                }}
-                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setBrandVaultData(prev => ({ ...prev, socialLinks: [...prev.socialLinks, ""] }))}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add another link
-                      </Button>
-                    </div>
-
-                    {/* Additional Notes */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Tag className="w-4 h-4 text-muted-foreground" />
-                        <Label className="font-medium">Additional Notes</Label>
-                      </div>
-                      <Textarea
-                        placeholder="Anything else you'd like us to know about your brand..."
-                        value={brandVaultData.additionalNotes}
-                        onChange={(e) => setBrandVaultData(prev => ({ ...prev, additionalNotes: e.target.value }))}
-                        className="min-h-[80px] resize-none"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Reassurance note */}
-              <div className="flex items-center gap-2 justify-center pt-2">
-                <Check className="w-4 h-4 text-green-500" />
-                <p className="text-sm text-muted-foreground">
-                  Nothing here is final. You can tweak, replace, or remove any item later.
-                </p>
-              </div>
-            </div>
-
-            <DialogFooter className="pt-4 border-t border-border gap-2">
-              <Button variant="outline" onClick={() => setIsBrandVaultOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleBrandVaultSave} className="px-6">
-                <FolderOpen className="w-4 h-4 mr-2" />
-                Save Brand Vault & Continue
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-              {/* Business Model Selection Modal */}
-              <Dialog open={isBusinessModelModalOpen} onOpenChange={setIsBusinessModelModalOpen}>
-                <DialogContent className="sm:max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl">
-                      Choose your business model
-                    </DialogTitle>
-                    <DialogDescription className="text-base pt-1">
+        {/* Business Model Selection Modal */}
+        <Dialog open={isBusinessModelModalOpen} onOpenChange={setIsBusinessModelModalOpen}>
+          <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl">
+                Choose your business model
+              </DialogTitle>
+              <DialogDescription className="text-base pt-1">
                       This information is required so we can create the right website structure for your business.
                     </DialogDescription>
                   </DialogHeader>
@@ -2636,95 +2208,176 @@ function GuidedOnboardingVariant({
                     </p>
                   </div>
 
-                  {/* Form Fields */}
-                  <div className="space-y-5 max-w-lg">
-                    <div className="grid grid-cols-2 gap-4">
+                  {/* Two Column Layout */}
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 lg:gap-12">
+                    {/* Left Column - Form Fields */}
+                    <div className="space-y-5">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="country" className="text-sm font-medium">
+                            Country <span className="text-primary">*</span>
+                          </Label>
+                          <Input
+                            id="country"
+                            value={formData.country}
+                            onChange={(e) => updateField("country", e.target.value)}
+                            placeholder="United States"
+                            className="h-11 rounded-xl"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="state" className="text-sm font-medium">
+                            State <span className="text-primary">*</span>
+                          </Label>
+                          <Input
+                            id="state"
+                            value={formData.state}
+                            onChange={(e) => updateField("state", e.target.value)}
+                            placeholder="California"
+                            className="h-11 rounded-xl"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="city" className="text-sm font-medium">
+                            City <span className="text-primary">*</span>
+                          </Label>
+                          <Input
+                            id="city"
+                            value={formData.city}
+                            onChange={(e) => updateField("city", e.target.value)}
+                            placeholder="San Francisco"
+                            className="h-11 rounded-xl"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="zipcode" className="text-sm font-medium">
+                            Zipcode <span className="text-primary">*</span>
+                          </Label>
+                          <Input
+                            id="zipcode"
+                            value={formData.zipcode}
+                            onChange={(e) => updateField("zipcode", e.target.value)}
+                            placeholder="94102"
+                            className="h-11 rounded-xl"
+                          />
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
-                        <Label htmlFor="country" className="text-sm font-medium">
-                          Country <span className="text-primary">*</span>
+                        <Label htmlFor="streetAddress" className="text-sm font-medium">
+                          Street Address <span className="text-primary">*</span>
                         </Label>
                         <Input
-                          id="country"
-                          value={formData.country}
-                          onChange={(e) => updateField("country", e.target.value)}
-                          placeholder="United States"
+                          id="streetAddress"
+                          value={formData.streetAddress}
+                          onChange={(e) => updateField("streetAddress", e.target.value)}
+                          placeholder="123 Main Street, Suite 100"
                           className="h-11 rounded-xl"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="state" className="text-sm font-medium">
-                          State <span className="text-primary">*</span>
-                        </Label>
-                        <Input
-                          id="state"
-                          value={formData.state}
-                          onChange={(e) => updateField("state", e.target.value)}
-                          placeholder="California"
-                          className="h-11 rounded-xl"
-                        />
+
+                      {/* Actions */}
+                      <div className="flex items-center justify-between pt-6 border-t border-border/50">
+                        <Button
+                          variant="ghost"
+                          onClick={handleBack}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <ChevronLeft className="w-4 h-4 mr-1" />
+                          Back
+                        </Button>
+                        <Button
+                          onClick={handleConfirmStep}
+                          size="lg"
+                          className="px-8 rounded-xl shadow-lg shadow-primary/20"
+                          disabled={!formData.country || !formData.state || !formData.city || !formData.zipcode || !formData.streetAddress}
+                        >
+                          Continue
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="city" className="text-sm font-medium">
-                          City <span className="text-primary">*</span>
-                        </Label>
-                        <Input
-                          id="city"
-                          value={formData.city}
-                          onChange={(e) => updateField("city", e.target.value)}
-                          placeholder="San Francisco"
-                          className="h-11 rounded-xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="zipcode" className="text-sm font-medium">
-                          Zipcode <span className="text-primary">*</span>
-                        </Label>
-                        <Input
-                          id="zipcode"
-                          value={formData.zipcode}
-                          onChange={(e) => updateField("zipcode", e.target.value)}
-                          placeholder="94102"
-                          className="h-11 rounded-xl"
-                        />
+                    {/* Right Column - Map Infographic */}
+                    <div className="hidden lg:block" aria-hidden="true">
+                      <div className="relative h-full min-h-[320px] rounded-3xl bg-gradient-to-br from-primary/5 via-muted/30 to-primary/10 border border-border/50 overflow-hidden">
+                        {/* Abstract Map Grid */}
+                        <svg className="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 340 320" fill="none">
+                          {/* Horizontal Roads */}
+                          <path d="M0 80 L340 80" stroke="currentColor" strokeWidth="2" className="text-border" />
+                          <path d="M0 160 L340 160" stroke="currentColor" strokeWidth="3" className="text-muted-foreground/30" />
+                          <path d="M0 240 L340 240" stroke="currentColor" strokeWidth="2" className="text-border" />
+                          {/* Vertical Roads */}
+                          <path d="M85 0 L85 320" stroke="currentColor" strokeWidth="2" className="text-border" />
+                          <path d="M170 0 L170 320" stroke="currentColor" strokeWidth="3" className="text-muted-foreground/30" />
+                          <path d="M255 0 L255 320" stroke="currentColor" strokeWidth="2" className="text-border" />
+                        </svg>
+
+                        {/* Abstract City Blocks */}
+                        <div className="absolute top-6 left-6 w-16 h-14 rounded-xl bg-muted/60 shadow-sm" />
+                        <div className="absolute top-6 right-8 w-20 h-12 rounded-xl bg-muted/40 shadow-sm" />
+                        <div className="absolute top-24 left-24 w-14 h-10 rounded-lg bg-muted/50 shadow-sm" />
+                        <div className="absolute bottom-24 left-8 w-18 h-14 rounded-xl bg-muted/50 shadow-sm" />
+                        <div className="absolute bottom-8 right-6 w-16 h-12 rounded-xl bg-muted/60 shadow-sm" />
+                        <div className="absolute bottom-16 left-28 w-12 h-10 rounded-lg bg-muted/40 shadow-sm" />
+
+                        {/* Delivery Route - Dashed Line */}
+                        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 340 320" fill="none">
+                          <path 
+                            d="M40 280 Q80 240 120 220 T200 180 T280 120" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeDasharray="8 4"
+                            className="text-primary/40"
+                            fill="none"
+                          />
+                          {/* Route start dot */}
+                          <circle cx="40" cy="280" r="4" className="fill-primary/50" />
+                        </svg>
+
+                        {/* Location Pin - Central Focus */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                          {/* Pin Shadow */}
+                          <div className="absolute top-12 left-1/2 -translate-x-1/2 w-8 h-3 bg-black/10 rounded-full blur-sm" />
+                          {/* Pulse Ring */}
+                          <div className="absolute inset-0 w-16 h-16 -translate-x-2 -translate-y-2 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '2s' }} />
+                          <div className="absolute inset-0 w-12 h-12 rounded-full bg-primary/10" />
+                          {/* Pin */}
+                          <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/80 shadow-xl shadow-primary/30 flex items-center justify-center">
+                            <MapPin className="w-6 h-6 text-white" />
+                          </div>
+                        </div>
+
+                        {/* Store Icon - Near Pin */}
+                        <div className="absolute top-[35%] right-[25%] w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400/80 to-teal-500/80 shadow-lg flex items-center justify-center animate-float-slow">
+                          <Store className="w-5 h-5 text-white" />
+                        </div>
+
+                        {/* Abstract Landmarks */}
+                        <div className="absolute top-16 left-[45%] w-8 h-8 rounded-lg bg-violet-400/30 shadow-sm flex items-center justify-center">
+                          <div className="w-3 h-3 rounded bg-violet-400/60" />
+                        </div>
+                        <div className="absolute bottom-20 right-[35%] w-6 h-6 rounded-full bg-amber-400/30 shadow-sm" />
+
+                        {/* Subtle Glow Behind Pin */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-primary/15 rounded-full blur-2xl pointer-events-none" />
+
+                        {/* Decorative Corner Elements */}
+                        <div className="absolute top-4 right-4 flex items-center gap-1 opacity-40">
+                          <div className="w-2 h-2 rounded-full bg-primary/60" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                          <div className="w-1 h-1 rounded-full bg-primary/30" />
+                        </div>
+                        <div className="absolute bottom-4 left-4 flex items-center gap-1 opacity-40">
+                          <div className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
+                          <div className="w-2 h-2 rounded-full bg-muted-foreground/60" />
+                        </div>
                       </div>
                     </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="streetAddress" className="text-sm font-medium">
-                        Street Address <span className="text-primary">*</span>
-                      </Label>
-                      <Input
-                        id="streetAddress"
-                        value={formData.streetAddress}
-                        onChange={(e) => updateField("streetAddress", e.target.value)}
-                        placeholder="123 Main Street, Suite 100"
-                        className="h-11 rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-between mt-10 pt-6 border-t border-border/50">
-                    <Button
-                      variant="ghost"
-                      onClick={handleBack}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <ChevronLeft className="w-4 h-4 mr-1" />
-                      Back
-                    </Button>
-                    <Button
-                      onClick={handleConfirmStep}
-                      size="lg"
-                      className="px-8 rounded-xl shadow-lg shadow-primary/20"
-                      disabled={!formData.country || !formData.state || !formData.city || !formData.zipcode || !formData.streetAddress}
-                    >
-                      Continue
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
                   </div>
                 </div>
               )}
