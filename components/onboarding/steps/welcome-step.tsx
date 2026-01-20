@@ -84,7 +84,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BusinessInfo } from "../wizard-container";
-import { BrandVaultModal, BrandVaultData } from "../brand-vault-modal";
+import { BrandVaultScreen, BrandVaultData } from "../brand-vault-modal";
 
 interface WelcomeStepProps {
   onNext: () => void;
@@ -1111,8 +1111,8 @@ function GuidedOnboardingVariant({
   const [isCreatingWebsite, setIsCreatingWebsite] = useState(false);
   const router = useRouter();
 
-  // Brand Vault state
-  const [isBrandVaultOpen, setIsBrandVaultOpen] = useState(false);
+  // Brand Vault state - now using full-screen rendering instead of modal
+  const [showBrandVaultScreen, setShowBrandVaultScreen] = useState(false);
   const [brandVaultData, setBrandVaultData] = useState<BrandVaultData>({
     coreAssets: {
       inspirationLinks: [""],
@@ -1177,8 +1177,8 @@ function GuidedOnboardingVariant({
     };
     localStorage.setItem("universell-onboarding-data", JSON.stringify(onboardingData));
     
-    // Close modal and proceed
-    setIsBrandVaultOpen(false);
+    // Close Brand Vault screen and proceed to business model selection
+    setShowBrandVaultScreen(false);
     setIsBusinessModelModalOpen(true);
   };
 
@@ -1514,6 +1514,19 @@ function GuidedOnboardingVariant({
   };
 
   // ==========================================
+  // BRAND VAULT SCREEN (Full-page replacement)
+  // ==========================================
+  if (showBrandVaultScreen) {
+    return (
+      <BrandVaultScreen
+        onSave={handleBrandVaultSave}
+        onBack={() => setShowBrandVaultScreen(false)}
+        initialData={brandVaultData}
+      />
+    );
+  }
+
+  // ==========================================
   // PHASE 1: Intro Screen (Before "Get Started")
   // ==========================================
   if (!hasStartedGuidedOnboarding) {
@@ -1768,7 +1781,7 @@ function GuidedOnboardingVariant({
               <div className="space-y-4 mb-6">
                 {/* Option A: Brand Vault */}
                 <button
-                  onClick={() => setIsBrandVaultOpen(true)}
+                  onClick={() => setShowBrandVaultScreen(true)}
                   className="w-full group relative p-5 rounded-2xl border-2 border-border bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 hover:border-violet-400 hover:shadow-lg hover:shadow-violet-500/10 transition-all duration-300 text-left"
                 >
                   <div className="flex items-start gap-4">
@@ -1846,14 +1859,6 @@ function GuidedOnboardingVariant({
             </div>
           </div>
         </div>
-
-        {/* Brand Vault Modal */}
-        <BrandVaultModal
-          open={isBrandVaultOpen}
-          onOpenChange={setIsBrandVaultOpen}
-          onSave={handleBrandVaultSave}
-          initialData={brandVaultData}
-        />
 
         {/* Business Model Selection Modal */}
         <Dialog open={isBusinessModelModalOpen} onOpenChange={setIsBusinessModelModalOpen}>

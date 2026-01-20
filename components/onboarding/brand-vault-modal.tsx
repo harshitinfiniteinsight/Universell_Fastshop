@@ -60,6 +60,13 @@ interface BrandVaultModalProps {
   initialData?: Partial<BrandVaultData>;
 }
 
+// Full-screen Brand Vault component (for onboarding flow)
+interface BrandVaultScreenProps {
+  onSave: (data: BrandVaultData) => void;
+  onBack: () => void;
+  initialData?: Partial<BrandVaultData>;
+}
+
 const STEPS = [
   { id: 1, label: "Core Assets", shortLabel: "Core", required: true, icon: Palette },
   { id: 2, label: "Brand Style", shortLabel: "Style", required: false, icon: Sparkles },
@@ -756,5 +763,599 @@ export function BrandVaultModal({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ============================================
+// BRAND VAULT SCREEN (Full-page version for onboarding)
+// ============================================
+export function BrandVaultScreen({
+  onSave,
+  onBack,
+  initialData,
+}: BrandVaultScreenProps) {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [data, setData] = useState<BrandVaultData>(() => ({
+    ...DEFAULT_DATA,
+    ...initialData,
+    coreAssets: { ...DEFAULT_DATA.coreAssets, ...initialData?.coreAssets },
+    brandStyle: { ...DEFAULT_DATA.brandStyle, ...initialData?.brandStyle },
+    personality: { ...DEFAULT_DATA.personality, ...initialData?.personality },
+    extras: { ...DEFAULT_DATA.extras, ...initialData?.extras },
+  }));
+
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // Update helpers
+  const updateCoreAssets = (updates: Partial<BrandVaultData["coreAssets"]>) => {
+    setData((prev) => ({
+      ...prev,
+      coreAssets: { ...prev.coreAssets, ...updates },
+    }));
+  };
+
+  const updateBrandStyle = (updates: Partial<BrandVaultData["brandStyle"]>) => {
+    setData((prev) => ({
+      ...prev,
+      brandStyle: { ...prev.brandStyle, ...updates },
+    }));
+  };
+
+  const updatePersonality = (updates: Partial<BrandVaultData["personality"]>) => {
+    setData((prev) => ({
+      ...prev,
+      personality: { ...prev.personality, ...updates },
+    }));
+  };
+
+  const updateExtras = (updates: Partial<BrandVaultData["extras"]>) => {
+    setData((prev) => ({
+      ...prev,
+      extras: { ...prev.extras, ...updates },
+    }));
+  };
+
+  // Navigation
+  const goToStep = (step: number) => {
+    if (step >= 1 && step <= STEPS.length) {
+      if (step > currentStep) {
+        setCompletedSteps((prev) => new Set([...prev, currentStep]));
+      }
+      setCurrentStep(step);
+    }
+  };
+
+  const handleNext = () => {
+    setCompletedSteps((prev) => new Set([...prev, currentStep]));
+    goToStep(currentStep + 1);
+  };
+
+  const handleBackStep = () => {
+    goToStep(currentStep - 1);
+  };
+
+  const handleSkip = () => {
+    goToStep(currentStep + 1);
+  };
+
+  const handleSave = () => {
+    setCompletedSteps((prev) => new Set([...prev, currentStep]));
+    onSave(data);
+  };
+
+  // Logo handling
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateCoreAssets({
+          logoFile: file,
+          logoPreview: reader.result as string,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLogo = () => {
+    updateCoreAssets({
+      logoFile: null,
+      logoPreview: null,
+    });
+  };
+
+  // Toggle functions
+  const toggleDesignStyle = (styleId: string) => {
+    const current = data.brandStyle.designStyles;
+    if (current.includes(styleId)) {
+      updateBrandStyle({ designStyles: current.filter((s) => s !== styleId) });
+    } else {
+      updateBrandStyle({ designStyles: [...current, styleId] });
+    }
+  };
+
+  const toggleBrandTone = (toneId: string) => {
+    const current = data.personality.brandTones;
+    if (current.includes(toneId)) {
+      updatePersonality({ brandTones: current.filter((t) => t !== toneId) });
+    } else {
+      updatePersonality({ brandTones: [...current, toneId] });
+    }
+  };
+
+  // Step content renderers (same as modal)
+  const renderStep1 = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      {/* Left: Main inputs */}
+      <div className="lg:col-span-3 space-y-8">
+        {/* Website Inspiration */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-foreground">Website Inspiration</Label>
+          <p className="text-sm text-muted-foreground">
+            Share websites you like — we&apos;ll use them as design references.
+          </p>
+          <div className="space-y-2">
+            {data.coreAssets.inspirationLinks.map((link, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="https://example.com"
+                    value={link}
+                    onChange={(e) => {
+                      const links = [...data.coreAssets.inspirationLinks];
+                      links[index] = e.target.value;
+                      updateCoreAssets({ inspirationLinks: links });
+                    }}
+                    className="pl-10 h-11"
+                  />
+                </div>
+                {data.coreAssets.inspirationLinks.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 h-11 w-11 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      updateCoreAssets({
+                        inspirationLinks: data.coreAssets.inspirationLinks.filter((_, i) => i !== index),
+                      });
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                updateCoreAssets({
+                  inspirationLinks: [...data.coreAssets.inspirationLinks, ""],
+                });
+              }}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add another
+            </Button>
+          </div>
+        </div>
+
+        {/* Brand Colors */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-foreground">Brand Colors</Label>
+          <p className="text-sm text-muted-foreground">
+            Pick your primary, secondary, and accent colors.
+          </p>
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { key: "primaryColor" as const, label: "Primary" },
+              { key: "secondaryColor" as const, label: "Secondary" },
+              { key: "accentColor" as const, label: "Accent" },
+            ].map((color) => (
+              <div key={color.key} className="space-y-2">
+                <span className="text-xs text-muted-foreground">{color.label}</span>
+                <div className="relative">
+                  <input
+                    type="color"
+                    value={data.coreAssets[color.key]}
+                    onChange={(e) => updateCoreAssets({ [color.key]: e.target.value })}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div
+                    className="h-11 rounded-lg border border-border flex items-center gap-2 px-3 cursor-pointer hover:border-primary/50 transition-colors"
+                  >
+                    <div
+                      className="w-6 h-6 rounded-md border border-border/50"
+                      style={{ backgroundColor: data.coreAssets[color.key] }}
+                    />
+                    <span className="text-sm font-mono text-muted-foreground">
+                      {data.coreAssets[color.key].toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Logo Upload */}
+      <div className="lg:col-span-2">
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-foreground">Logo</Label>
+          <p className="text-sm text-muted-foreground">
+            Upload your logo (optional)
+          </p>
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleLogoUpload}
+            className="hidden"
+          />
+          {data.coreAssets.logoPreview ? (
+            <div className="relative group">
+              <div className="aspect-square rounded-xl border border-border bg-muted/30 flex items-center justify-center overflow-hidden">
+                <img
+                  src={data.coreAssets.logoPreview}
+                  alt="Logo preview"
+                  className="max-w-full max-h-full object-contain p-4"
+                />
+              </div>
+              <button
+                onClick={removeLogo}
+                className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => logoInputRef.current?.click()}
+              className="w-full aspect-square rounded-xl border-2 border-dashed border-border hover:border-primary/50 bg-muted/20 flex flex-col items-center justify-center gap-3 transition-colors"
+            >
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <Upload className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-foreground">Upload logo</p>
+                <p className="text-xs text-muted-foreground">PNG, JPG, or SVG</p>
+              </div>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStep2 = () => (
+    <div className="space-y-8">
+      {/* Design Style */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Design Style</Label>
+        <p className="text-sm text-muted-foreground">
+          Pick styles that match your brand vibe.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {DESIGN_STYLES.map((style) => (
+            <button
+              key={style.id}
+              onClick={() => toggleDesignStyle(style.id)}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium border transition-all",
+                data.brandStyle.designStyles.includes(style.id)
+                  ? "bg-primary text-white border-primary"
+                  : "bg-muted/30 text-foreground border-border hover:border-primary/50"
+              )}
+            >
+              <span className="mr-1.5">{style.emoji}</span>
+              {style.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Typography */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Typography Preference</Label>
+        <p className="text-sm text-muted-foreground">
+          Choose the overall font feel for your site.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {TYPOGRAPHY_OPTIONS.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => updateBrandStyle({ typographyPreference: option.id })}
+              className={cn(
+                "p-4 rounded-xl border text-left transition-all",
+                data.brandStyle.typographyPreference === option.id
+                  ? "bg-primary/5 border-primary"
+                  : "border-border hover:border-primary/50"
+              )}
+            >
+              <p className="font-medium text-foreground text-sm">{option.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{option.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStep3 = () => (
+    <div className="space-y-8">
+      {/* Brand Tones */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Brand Personality</Label>
+        <p className="text-sm text-muted-foreground">
+          Select tones that describe your brand voice.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {BRAND_TONES.map((tone) => (
+            <button
+              key={tone.id}
+              onClick={() => toggleBrandTone(tone.id)}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium border transition-all",
+                data.personality.brandTones.includes(tone.id)
+                  ? "bg-primary text-white border-primary"
+                  : "bg-muted/30 text-foreground border-border hover:border-primary/50"
+              )}
+            >
+              <span className="mr-1.5">{tone.emoji}</span>
+              {tone.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Target Audience */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Target Audience</Label>
+        <p className="text-sm text-muted-foreground">
+          Who are your ideal customers?
+        </p>
+        <Textarea
+          placeholder="e.g., Young professionals aged 25-40 who value sustainability and quality..."
+          value={data.personality.targetAudience}
+          onChange={(e) => updatePersonality({ targetAudience: e.target.value })}
+          className="min-h-[100px] resize-y"
+        />
+      </div>
+    </div>
+  );
+
+  const renderStep4 = () => (
+    <div className="space-y-6">
+      {/* Social Links */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Social Media Links</Label>
+        <div className="space-y-2">
+          {data.extras.socialLinks.map((link, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="https://instagram.com/yourbrand"
+                  value={link}
+                  onChange={(e) => {
+                    const links = [...data.extras.socialLinks];
+                    links[index] = e.target.value;
+                    updateExtras({ socialLinks: links });
+                  }}
+                  className="pl-10 h-11"
+                />
+              </div>
+              {data.extras.socialLinks.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 h-11 w-11 text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    updateExtras({
+                      socialLinks: data.extras.socialLinks.filter((_, i) => i !== index),
+                    });
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              updateExtras({
+                socialLinks: [...data.extras.socialLinks, ""],
+              });
+            }}
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Add another
+          </Button>
+        </div>
+      </div>
+
+      {/* Brand Guidelines URL */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Brand Guidelines</Label>
+        <div className="relative">
+          <FileUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Link to your brand guidelines (PDF, Notion, etc.)"
+            value={data.extras.brandGuidelinesUrl}
+            onChange={(e) => updateExtras({ brandGuidelinesUrl: e.target.value })}
+            className="pl-10 h-11"
+          />
+        </div>
+      </div>
+
+      {/* Notes for AI */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Notes for AI</Label>
+        <Textarea
+          placeholder="Any specific instructions or preferences for the AI..."
+          value={data.extras.notesForAi}
+          onChange={(e) => updateExtras({ notesForAi: e.target.value })}
+          className="min-h-[100px] resize-y"
+        />
+      </div>
+
+      {/* Do's & Don'ts */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Do&apos;s & Don&apos;ts</Label>
+        <Textarea
+          placeholder="e.g., Don't use pink colors, Always include our tagline..."
+          value={data.extras.dosAndDonts}
+          onChange={(e) => updateExtras({ dosAndDonts: e.target.value })}
+          className="min-h-[120px] resize-y"
+        />
+      </div>
+    </div>
+  );
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return renderStep1();
+      case 2:
+        return renderStep2();
+      case 3:
+        return renderStep3();
+      case 4:
+        return renderStep4();
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-full flex flex-col animate-fade-in-up">
+      {/* Header */}
+      <div className="shrink-0 px-6 py-5 border-b border-border flex items-center justify-between bg-background">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Create Your Brand Vault</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              You can edit everything later — nothing is final.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stepper */}
+      <div className="shrink-0 px-6 py-4 border-b border-border bg-muted/20">
+        <div className="flex items-center max-w-3xl mx-auto">
+          {STEPS.map((step, index) => {
+            const StepIcon = step.icon;
+            const isCompleted = completedSteps.has(step.id);
+            const isCurrent = currentStep === step.id;
+            const isAccessible = isCurrent || isCompleted || currentStep > step.id;
+
+            return (
+              <React.Fragment key={step.id}>
+                <button
+                  onClick={() => isAccessible && goToStep(step.id)}
+                  disabled={!isAccessible}
+                  className={cn(
+                    "flex items-center gap-2 transition-all",
+                    isAccessible ? "cursor-pointer" : "cursor-default",
+                    isCurrent ? "opacity-100" : isAccessible ? "opacity-70 hover:opacity-100" : "opacity-40"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all",
+                      isCurrent
+                        ? "bg-primary text-white shadow-sm"
+                        : isCompleted
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {isCompleted && !isCurrent ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <StepIcon className="w-4 h-4" />
+                    )}
+                  </div>
+                  <span
+                    className={cn(
+                      "text-sm font-medium hidden sm:block",
+                      isCurrent ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    {step.label}
+                  </span>
+                </button>
+
+                {index < STEPS.length - 1 && (
+                  <div
+                    className={cn(
+                      "flex-1 h-px mx-3 transition-colors",
+                      isCompleted || currentStep > step.id ? "bg-primary/40" : "bg-border"
+                    )}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Content - Scrollable */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-6 py-8">
+          {renderStepContent()}
+        </div>
+      </div>
+
+      {/* Footer - Sticky */}
+      <div className="shrink-0 px-6 py-4 border-t border-border bg-background">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <div>
+            {currentStep > 1 ? (
+              <Button variant="ghost" onClick={handleBackStep} className="text-muted-foreground">
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Back
+              </Button>
+            ) : (
+              <div />
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {currentStep < STEPS.length && !STEPS[currentStep - 1].required && (
+              <Button variant="ghost" onClick={handleSkip} className="text-muted-foreground">
+                Skip
+              </Button>
+            )}
+
+            {currentStep < STEPS.length ? (
+              <Button onClick={handleNext}>
+                Continue
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            ) : (
+              <Button onClick={handleSave}>
+                Save Brand Vault & Continue
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
