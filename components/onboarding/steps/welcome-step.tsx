@@ -606,8 +606,8 @@ function FloatingStockCard({ className, isVisible }: { className?: string; isVis
 }
 
 // Additional themed cards for richer visuals
-// Theme 1 Extra: Express Shipping Badge
-function FloatingExpressCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+// Theme 1 Extra: Store Pickup Badge
+function FloatingStorePickupCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
   return (
     <div className={cn(
       "absolute glass rounded-xl shadow-lg px-3 py-2 transition-all duration-500",
@@ -615,8 +615,8 @@ function FloatingExpressCard({ className, isVisible }: { className?: string; isV
       className
     )}>
       <div className="flex items-center gap-2">
-        <Zap className="w-4 h-4 text-amber-500" />
-        <span className="text-xs font-semibold text-foreground">Express Available</span>
+        <Store className="w-4 h-4 text-blue-500" />
+        <span className="text-xs font-semibold text-foreground">Store Pickup</span>
       </div>
     </div>
   );
@@ -713,12 +713,12 @@ function LandingStyleVariant({ onStartGuided }: { onStartGuided: () => void }) {
 
   // Feature slides - each slide contains 3 feature cards
   const featureSlides = [
-    // Slide 1: Original features
+    // Tier 1 – Immediate Value (What I get instantly)
     [
       {
-        icon: Store,
-        title: "Professional Store",
-        description: "Beautiful, conversion-optimized storefronts that sell.",
+        icon: Zap,
+        title: "Launch in Minutes",
+        description: "From zero to live store faster than ever before.",
       },
       {
         icon: Sparkles,
@@ -726,30 +726,12 @@ function LandingStyleVariant({ onStartGuided }: { onStartGuided: () => void }) {
         description: "Generate stunning pages with intelligent automation.",
       },
       {
-        icon: Zap,
-        title: "Launch in Minutes",
-        description: "From zero to live store faster than ever before.",
+        icon: Store,
+        title: "Professional Store",
+        description: "Beautiful, conversion-optimized storefronts that sell.",
       },
     ],
-    // Slide 2: New features
-    [
-      {
-        icon: Layers,
-        title: "Unified Platform",
-        description: "A single platform connected with all modules like CRM, orders, inventory, and payments.",
-      },
-      {
-        icon: Truck,
-        title: "Shipping Options",
-        description: "Give your customers local delivery, shipping, or store pickup options.",
-      },
-      {
-        icon: CreditCard,
-        title: "Easy Checkout",
-        description: "Fast and easy checkout for hassle-free orders.",
-      },
-    ],
-    // Slide 3: Analytics, Responsive Design, Gift Cards
+    // Tier 2 – Growth & Insights (How I run and scale)
     [
       {
         icon: BarChart3,
@@ -757,14 +739,32 @@ function LandingStyleVariant({ onStartGuided }: { onStartGuided: () => void }) {
         description: "Track orders, inventory, and revenue with powerful real-time insights.",
       },
       {
-        icon: Monitor,
-        title: "Compatible Website Design",
-        description: "Flexible design that works seamlessly on mobile, tablet, and desktop.",
+        icon: Layers,
+        title: "Order Management",
+        description: "Manage orders, inventory, and fulfillment from a single dashboard.",
       },
       {
         icon: Gift,
         title: "Integrated with Gift Card",
         description: "Built-in gift card support to boost sales and customer retention.",
+      },
+    ],
+    // Tier 3 – Experience & Reach (How customers interact)
+    [
+      {
+        icon: Monitor,
+        title: "Compatible Website Design",
+        description: "Flexible design that works seamlessly on mobile, tablet, and desktop.",
+      },
+      {
+        icon: Truck,
+        title: "Shipping & Store Pickup",
+        description: "Offer local delivery, shipping, or convenient store pickup options.",
+      },
+      {
+        icon: CreditCard,
+        title: "Easy Checkout",
+        description: "Fast and easy checkout for hassle-free orders.",
       },
     ],
   ];
@@ -900,7 +900,7 @@ function LandingStyleVariant({ onStartGuided }: { onStartGuided: () => void }) {
               className="bottom-16 right-4 animate-float-delayed" 
               isVisible={visualThemes[activeTheme] === "shipping"} 
             />
-            <FloatingExpressCard 
+            <FloatingStorePickupCard 
               className="top-1/3 right-12 animate-float-slow" 
               isVisible={visualThemes[activeTheme] === "shipping"} 
             />
