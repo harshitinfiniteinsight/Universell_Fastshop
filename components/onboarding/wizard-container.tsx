@@ -14,6 +14,7 @@ export type ShopType = "products" | "services" | "booking" | "both" | null;
 
 export interface BusinessInfo {
   name: string;
+  tagline: string;
   description: string;
   email: string;
   phone: string;
@@ -73,7 +74,8 @@ const STEPS = [
 // Pre-filled demo data (from user signup)
 const initialBusinessInfo: BusinessInfo = {
   name: "Sunrise Cafe & Bakery",
-  description: "Fresh baked goods and artisan coffee in the heart of downtown",
+  tagline: "Where every morning starts with warmth",
+  description: "Fresh baked goods and artisan coffee in the heart of downtown. We source local ingredients and craft each item with love.",
   email: "hello@sunrisecafe.com",
   phone: "+1 (555) 123-4567",
   country: "United States",

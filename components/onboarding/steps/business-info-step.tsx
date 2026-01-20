@@ -340,17 +340,77 @@ export function BusinessInfoStep({
                 )}
               </div>
 
-              {/* Description - Full Width */}
+              {/* Tagline */}
               <div className="space-y-1.5">
-                <Label htmlFor="description" className="text-sm">Business Description / Tagline</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="tagline" className="text-sm">Tagline</Label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // AI generates a short, catchy phrase
+                      const generatedTagline = "Where quality meets convenience";
+                      handleChange("tagline", generatedTagline.slice(0, 60));
+                    }}
+                    className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Generate with AI
+                  </button>
+                </div>
+                <Input
+                  id="tagline"
+                  placeholder="A short phrase that represents your brand"
+                  value={data.tagline}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 60);
+                    handleChange("tagline", value);
+                  }}
+                  maxLength={60}
+                  className="h-10 rounded-lg border-border/60 bg-background/50 focus:bg-background transition-colors"
+                />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>A short phrase that represents your brand.</span>
+                  <span className={cn(data.tagline.length >= 55 && "text-amber-500", data.tagline.length >= 60 && "text-destructive")}>
+                    {data.tagline.length}/60
+                  </span>
+                </div>
+              </div>
+
+              {/* Business Description */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="description" className="text-sm">Business Description</Label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // AI generates a concise business overview
+                      const generatedDescription = "We are dedicated to providing exceptional products and services that exceed expectations. Our commitment to quality and customer satisfaction drives everything we do.";
+                      handleChange("description", generatedDescription.slice(0, 300));
+                    }}
+                    className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Generate with AI
+                  </button>
+                </div>
                 <Textarea
                   id="description"
-                  placeholder="Tell customers what you do..."
+                  placeholder="Describe what your business does..."
                   value={data.description}
-                  onChange={(e) => handleChange("description", e.target.value)}
-                  rows={2}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 300);
+                    handleChange("description", value);
+                  }}
+                  maxLength={300}
+                  rows={3}
                   className="rounded-lg border-border/60 bg-background/50 focus:bg-background transition-colors resize-none text-sm"
                 />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Describe what your business does — this will be used across your website.</span>
+                  <span className={cn(data.description.length >= 280 && "text-amber-500", data.description.length >= 300 && "text-destructive")}>
+                    {data.description.length}/300
+                  </span>
+                </div>
               </div>
 
               {/* Email & Phone - 2 Columns */}

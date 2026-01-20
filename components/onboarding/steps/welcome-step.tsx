@@ -946,7 +946,7 @@ function LandingStyleVariant({ onStartGuided }: { onStartGuided: () => void }) {
               isVisible={visualThemes[activeTheme] === "analytics"} 
             />
             <FloatingInsightsCard 
-              className="top-1/3 right-12 animate-float-delayed" 
+              className="top-4 right-2 animate-float-delayed" 
               isVisible={visualThemes[activeTheme] === "analytics"} 
             />
             <AnalyticsGraphic isVisible={visualThemes[activeTheme] === "analytics"} />
@@ -1305,6 +1305,7 @@ function GuidedOnboardingVariant({
   // Local form state
   const [formData, setFormData] = useState({
     name: businessInfo?.name || "",
+    tagline: businessInfo?.tagline || "",
     description: businessInfo?.description || "",
     email: businessInfo?.email || "",
     phone: businessInfo?.phone || "",
@@ -1522,6 +1523,7 @@ function GuidedOnboardingVariant({
         onSave={handleBrandVaultSave}
         onBack={() => setShowBrandVaultScreen(false)}
         initialData={brandVaultData}
+        logoPreview={logoPreview || businessInfo?.logoPreview}
       />
     );
   }
@@ -2005,8 +2007,42 @@ function GuidedOnboardingVariant({
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
+                          <Label htmlFor="tagline" className="text-sm font-medium">
+                            Tagline
+                          </Label>
+                          <button
+                            type="button"
+                            className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors"
+                            onClick={() => {
+                              // AI generates a short, catchy phrase
+                              const generatedTagline = "Where quality meets convenience";
+                              updateField("tagline", generatedTagline.slice(0, 60));
+                            }}
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            Generate with AI
+                          </button>
+                        </div>
+                        <Input
+                          id="tagline"
+                          value={formData.tagline}
+                          onChange={(e) => updateField("tagline", e.target.value.slice(0, 60))}
+                          placeholder="A short phrase that represents your brand"
+                          maxLength={60}
+                          className="h-11 rounded-xl"
+                        />
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>A short phrase that represents your brand.</span>
+                          <span className={formData.tagline.length >= 55 ? (formData.tagline.length >= 60 ? "text-destructive" : "text-amber-500") : ""}>
+                            {formData.tagline.length}/60
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
                           <Label htmlFor="description" className="text-sm font-medium">
-                            Business Description / Tagline
+                            Business Description
                           </Label>
                           <button
                             type="button"
@@ -2020,11 +2056,18 @@ function GuidedOnboardingVariant({
                         <Textarea
                           id="description"
                           value={formData.description}
-                          onChange={(e) => updateField("description", e.target.value)}
-                          placeholder="Brief description of your business"
+                          onChange={(e) => updateField("description", e.target.value.slice(0, 300))}
+                          placeholder="Describe what your business does..."
+                          maxLength={300}
                           className="rounded-xl resize-none"
                           rows={3}
                         />
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Describe what your business does — this will be used across your website.</span>
+                          <span className={formData.description.length >= 280 ? (formData.description.length >= 300 ? "text-destructive" : "text-amber-500") : ""}>
+                            {formData.description.length}/300
+                          </span>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
@@ -2220,9 +2263,9 @@ function GuidedOnboardingVariant({
                             // Simulate AI generation (replace with actual AI call)
                             setTimeout(() => {
                               const generatedDescription = aiDescriptionInput
-                                ? `${formData.name || "Our business"} - ${aiDescriptionInput.slice(0, 100)}${aiDescriptionInput.length > 100 ? "..." : ""}`
+                                ? `${formData.name || "Our business"} - ${aiDescriptionInput.slice(0, 200)}${aiDescriptionInput.length > 200 ? "..." : ""}`
                                 : `${formData.name || "Your Business"} offers exceptional products and services tailored to meet your needs.`;
-                              updateField("description", generatedDescription);
+                              updateField("description", generatedDescription.slice(0, 300));
                               setIsGeneratingDescription(false);
                               setIsAIDescriptionModalOpen(false);
                               setAIDescriptionInput("");

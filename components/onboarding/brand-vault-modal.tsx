@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Link,
-  Upload,
   Palette,
   ImageIcon,
   Plus,
@@ -65,6 +64,7 @@ interface BrandVaultScreenProps {
   onSave: (data: BrandVaultData) => void;
   onBack: () => void;
   initialData?: Partial<BrandVaultData>;
+  logoPreview?: string | null; // Logo from previous step for color extraction
 }
 
 const STEPS = [
@@ -138,8 +138,6 @@ export function BrandVaultModal({
     extras: { ...DEFAULT_DATA.extras, ...initialData?.extras },
   }));
 
-  const logoInputRef = useRef<HTMLInputElement>(null);
-
   // Update helpers
   const updateCoreAssets = (updates: Partial<BrandVaultData["coreAssets"]>) => {
     setData((prev) => ({
@@ -198,28 +196,6 @@ export function BrandVaultModal({
     onOpenChange(false);
   };
 
-  // Logo handling
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateCoreAssets({
-          logoFile: file,
-          logoPreview: reader.result as string,
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeLogo = () => {
-    updateCoreAssets({
-      logoFile: null,
-      logoPreview: null,
-    });
-  };
-
   // Toggle functions
   const toggleDesignStyle = (styleId: string) => {
     const current = data.brandStyle.designStyles;
@@ -255,169 +231,115 @@ export function BrandVaultModal({
     }
   };
 
-  // Step 1: Core Brand Assets - Two column layout
+  // Step 1: Core Brand Assets
   const renderStep1 = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-      {/* Left: Main inputs */}
-      <div className="lg:col-span-3 space-y-8">
-        {/* Website Inspiration */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground">Website Inspiration</Label>
-          <p className="text-sm text-muted-foreground">
-            Share websites you like — we&apos;ll use them as design references.
-          </p>
-          <div className="space-y-2">
-            {data.coreAssets.inspirationLinks.map((link, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="https://example.com"
-                    value={link}
-                    onChange={(e) => {
-                      const links = [...data.coreAssets.inspirationLinks];
-                      links[index] = e.target.value;
-                      updateCoreAssets({ inspirationLinks: links });
-                    }}
-                    className="pl-10 h-11"
-                  />
-                </div>
-                {data.coreAssets.inspirationLinks.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 h-11 w-11 text-muted-foreground hover:text-destructive"
-                    onClick={() => {
-                      updateCoreAssets({
-                        inspirationLinks: data.coreAssets.inspirationLinks.filter((_, i) => i !== index),
-                      });
-                    }}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                updateCoreAssets({
-                  inspirationLinks: [...data.coreAssets.inspirationLinks, ""],
-                });
-              }}
-            >
-              <Plus className="w-4 h-4 mr-1.5" />
-              Add another
-            </Button>
-          </div>
-        </div>
-
-        {/* Brand Colors */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground">Brand Colors</Label>
-          <div className="flex items-center gap-4">
-            {/* Primary */}
-            <div className="flex-1 space-y-1.5">
-              <span className="text-xs text-muted-foreground">Primary</span>
-              <div className="relative">
-                <input
-                  type="color"
-                  value={data.coreAssets.primaryColor}
-                  onChange={(e) => updateCoreAssets({ primaryColor: e.target.value })}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <div
-                  className="h-11 rounded-lg border border-border cursor-pointer transition-all hover:ring-2 hover:ring-primary/20"
-                  style={{ backgroundColor: data.coreAssets.primaryColor }}
+    <div className="space-y-8">
+      {/* Website Inspiration */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Website Inspiration</Label>
+        <p className="text-sm text-muted-foreground">
+          Share websites you like — we&apos;ll use them as design references.
+        </p>
+        <div className="space-y-2">
+          {data.coreAssets.inspirationLinks.map((link, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="https://example.com"
+                  value={link}
+                  onChange={(e) => {
+                    const links = [...data.coreAssets.inspirationLinks];
+                    links[index] = e.target.value;
+                    updateCoreAssets({ inspirationLinks: links });
+                  }}
+                  className="pl-10 h-11"
                 />
               </div>
+              {data.coreAssets.inspirationLinks.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 h-11 w-11 text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    updateCoreAssets({
+                      inspirationLinks: data.coreAssets.inspirationLinks.filter((_, i) => i !== index),
+                    });
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
             </div>
-            {/* Secondary */}
-            <div className="flex-1 space-y-1.5">
-              <span className="text-xs text-muted-foreground">Secondary</span>
-              <div className="relative">
-                <input
-                  type="color"
-                  value={data.coreAssets.secondaryColor}
-                  onChange={(e) => updateCoreAssets({ secondaryColor: e.target.value })}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <div
-                  className="h-11 rounded-lg border border-border cursor-pointer transition-all hover:ring-2 hover:ring-primary/20"
-                  style={{ backgroundColor: data.coreAssets.secondaryColor }}
-                />
-              </div>
-            </div>
-            {/* Accent */}
-            <div className="flex-1 space-y-1.5">
-              <span className="text-xs text-muted-foreground">Accent</span>
-              <div className="relative">
-                <input
-                  type="color"
-                  value={data.coreAssets.accentColor}
-                  onChange={(e) => updateCoreAssets({ accentColor: e.target.value })}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <div
-                  className="h-11 rounded-lg border border-border cursor-pointer transition-all hover:ring-2 hover:ring-primary/20"
-                  style={{ backgroundColor: data.coreAssets.accentColor }}
-                />
-              </div>
-            </div>
-          </div>
+          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              updateCoreAssets({
+                inspirationLinks: [...data.coreAssets.inspirationLinks, ""],
+              });
+            }}
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            Add another
+          </Button>
         </div>
       </div>
 
-      {/* Right: Logo upload */}
-      <div className="lg:col-span-2">
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground">Brand Logo</Label>
-          <input
-            ref={logoInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/svg+xml"
-            className="hidden"
-            onChange={handleLogoUpload}
-          />
-
-          {data.coreAssets.logoPreview ? (
-            <div className="relative aspect-square bg-muted/30 rounded-xl border border-border flex items-center justify-center group overflow-hidden">
-              <img
-                src={data.coreAssets.logoPreview}
-                alt="Logo preview"
-                className="max-h-[80%] max-w-[80%] object-contain"
+      {/* Brand Colors */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Brand Colors</Label>
+        <div className="flex items-center gap-4">
+          {/* Primary */}
+          <div className="flex-1 space-y-1.5">
+            <span className="text-xs text-muted-foreground">Primary</span>
+            <div className="relative">
+              <input
+                type="color"
+                value={data.coreAssets.primaryColor}
+                onChange={(e) => updateCoreAssets({ primaryColor: e.target.value })}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                <Button size="sm" variant="secondary" onClick={() => logoInputRef.current?.click()}>
-                  Replace
-                </Button>
-                <Button size="sm" variant="destructive" onClick={removeLogo}>
-                  Remove
-                </Button>
-              </div>
+              <div
+                className="h-11 rounded-lg border border-border cursor-pointer transition-all hover:ring-2 hover:ring-primary/20"
+                style={{ backgroundColor: data.coreAssets.primaryColor }}
+              />
             </div>
-          ) : (
-            <button
-              onClick={() => logoInputRef.current?.click()}
-              className="w-full aspect-square bg-muted/20 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/40 transition-all flex flex-col items-center justify-center gap-3 group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Upload className="w-5 h-5 text-primary" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-foreground">Upload logo</p>
-                <p className="text-xs text-muted-foreground">PNG, JPG, or SVG</p>
-              </div>
-            </button>
-          )}
-          <button
-            onClick={() => updateCoreAssets({ logoFile: null, logoPreview: null })}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            I&apos;ll add this later
-          </button>
+          </div>
+          {/* Secondary */}
+          <div className="flex-1 space-y-1.5">
+            <span className="text-xs text-muted-foreground">Secondary</span>
+            <div className="relative">
+              <input
+                type="color"
+                value={data.coreAssets.secondaryColor}
+                onChange={(e) => updateCoreAssets({ secondaryColor: e.target.value })}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <div
+                className="h-11 rounded-lg border border-border cursor-pointer transition-all hover:ring-2 hover:ring-primary/20"
+                style={{ backgroundColor: data.coreAssets.secondaryColor }}
+              />
+            </div>
+          </div>
+          {/* Accent */}
+          <div className="flex-1 space-y-1.5">
+            <span className="text-xs text-muted-foreground">Accent</span>
+            <div className="relative">
+              <input
+                type="color"
+                value={data.coreAssets.accentColor}
+                onChange={(e) => updateCoreAssets({ accentColor: e.target.value })}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <div
+                className="h-11 rounded-lg border border-border cursor-pointer transition-all hover:ring-2 hover:ring-primary/20"
+                style={{ backgroundColor: data.coreAssets.accentColor }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -773,9 +695,13 @@ export function BrandVaultScreen({
   onSave,
   onBack,
   initialData,
+  logoPreview,
 }: BrandVaultScreenProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [colorsExtractedFromLogo, setColorsExtractedFromLogo] = useState(false);
+  const [hasManuallyEditedColors, setHasManuallyEditedColors] = useState(false);
+  const colorExtractionRef = useRef(false);
   const [data, setData] = useState<BrandVaultData>(() => ({
     ...DEFAULT_DATA,
     ...initialData,
@@ -785,10 +711,117 @@ export function BrandVaultScreen({
     extras: { ...DEFAULT_DATA.extras, ...initialData?.extras },
   }));
 
-  const logoInputRef = useRef<HTMLInputElement>(null);
+  // Color extraction from logo
+  useEffect(() => {
+    // Only extract colors once, if we have a logo and colors haven't been manually edited
+    if (logoPreview && !colorExtractionRef.current && !hasManuallyEditedColors) {
+      // Skip if it's a recommended logo reference (starts with "recommended:")
+      if (logoPreview.startsWith("recommended:")) {
+        // Extract colors from the recommended logo string format
+        const parts = logoPreview.split(":");
+        if (parts.length >= 5) {
+          const primaryColor = parts[3];
+          const secondaryColor = parts[4];
+          if (primaryColor && secondaryColor) {
+            setData((prev) => ({
+              ...prev,
+              coreAssets: {
+                ...prev.coreAssets,
+                primaryColor: primaryColor,
+                secondaryColor: secondaryColor,
+                accentColor: primaryColor, // Use primary as accent fallback
+              },
+            }));
+            setColorsExtractedFromLogo(true);
+            colorExtractionRef.current = true;
+          }
+        }
+        return;
+      }
+      
+      // Extract colors from actual image using canvas
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
 
-  // Update helpers
+          // Scale down for performance
+          const maxSize = 100;
+          const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const pixels = imageData.data;
+
+          // Build color frequency map (excluding transparent and near-white/black pixels)
+          const colorMap: Record<string, number> = {};
+          for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i];
+            const g = pixels[i + 1];
+            const b = pixels[i + 2];
+            const a = pixels[i + 3];
+
+            // Skip transparent pixels
+            if (a < 128) continue;
+
+            // Skip near-white and near-black (not distinctive brand colors)
+            const brightness = (r + g + b) / 3;
+            if (brightness > 240 || brightness < 15) continue;
+
+            // Quantize colors to reduce noise (group similar colors)
+            const qr = Math.round(r / 32) * 32;
+            const qg = Math.round(g / 32) * 32;
+            const qb = Math.round(b / 32) * 32;
+            const key = `${qr},${qg},${qb}`;
+            colorMap[key] = (colorMap[key] || 0) + 1;
+          }
+
+          // Sort by frequency
+          const sortedColors = Object.entries(colorMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5); // Top 5 colors
+
+          if (sortedColors.length >= 1) {
+            const toHex = (rgb: string) => {
+              const [r, g, b] = rgb.split(",").map(Number);
+              return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+            };
+
+            const primaryColor = toHex(sortedColors[0][0]);
+            const secondaryColor = sortedColors.length >= 2 ? toHex(sortedColors[1][0]) : "#666666";
+            const accentColor = sortedColors.length >= 3 ? toHex(sortedColors[2][0]) : primaryColor;
+
+            setData((prev) => ({
+              ...prev,
+              coreAssets: {
+                ...prev.coreAssets,
+                primaryColor,
+                secondaryColor,
+                accentColor,
+              },
+            }));
+            setColorsExtractedFromLogo(true);
+            colorExtractionRef.current = true;
+          }
+        } catch (error) {
+          console.error("Error extracting colors from logo:", error);
+        }
+      };
+      img.src = logoPreview;
+    }
+  }, [logoPreview, hasManuallyEditedColors]);
+
+  // Update helpers - track manual edits for colors
   const updateCoreAssets = (updates: Partial<BrandVaultData["coreAssets"]>) => {
+    // Check if any color is being updated
+    if (updates.primaryColor || updates.secondaryColor || updates.accentColor) {
+      setHasManuallyEditedColors(true);
+    }
     setData((prev) => ({
       ...prev,
       coreAssets: { ...prev.coreAssets, ...updates },
@@ -844,28 +877,6 @@ export function BrandVaultScreen({
     onSave(data);
   };
 
-  // Logo handling
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateCoreAssets({
-          logoFile: file,
-          logoPreview: reader.result as string,
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeLogo = () => {
-    updateCoreAssets({
-      logoFile: null,
-      logoPreview: null,
-    });
-  };
-
   // Toggle functions
   const toggleDesignStyle = (styleId: string) => {
     const current = data.brandStyle.designStyles;
@@ -887,147 +898,103 @@ export function BrandVaultScreen({
 
   // Step content renderers (same as modal)
   const renderStep1 = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-      {/* Left: Main inputs */}
-      <div className="lg:col-span-3 space-y-8">
-        {/* Website Inspiration */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground">Website Inspiration</Label>
-          <p className="text-sm text-muted-foreground">
-            Share websites you like — we&apos;ll use them as design references.
-          </p>
-          <div className="space-y-2">
-            {data.coreAssets.inspirationLinks.map((link, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="https://example.com"
-                    value={link}
-                    onChange={(e) => {
-                      const links = [...data.coreAssets.inspirationLinks];
-                      links[index] = e.target.value;
-                      updateCoreAssets({ inspirationLinks: links });
-                    }}
-                    className="pl-10 h-11"
-                  />
-                </div>
-                {data.coreAssets.inspirationLinks.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 h-11 w-11 text-muted-foreground hover:text-destructive"
-                    onClick={() => {
-                      updateCoreAssets({
-                        inspirationLinks: data.coreAssets.inspirationLinks.filter((_, i) => i !== index),
-                      });
-                    }}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
+    <div className="space-y-8">
+      {/* Website Inspiration */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Website Inspiration</Label>
+        <p className="text-sm text-muted-foreground">
+          Share websites you like — we&apos;ll use them as design references.
+        </p>
+        <div className="space-y-2">
+          {data.coreAssets.inspirationLinks.map((link, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="https://example.com"
+                  value={link}
+                  onChange={(e) => {
+                    const links = [...data.coreAssets.inspirationLinks];
+                    links[index] = e.target.value;
+                    updateCoreAssets({ inspirationLinks: links });
+                  }}
+                  className="pl-10 h-11"
+                />
               </div>
-            ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                updateCoreAssets({
-                  inspirationLinks: [...data.coreAssets.inspirationLinks, ""],
-                });
-              }}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Add another
-            </Button>
-          </div>
-        </div>
-
-        {/* Brand Colors */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground">Brand Colors</Label>
-          <p className="text-sm text-muted-foreground">
-            Pick your primary, secondary, and accent colors.
-          </p>
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { key: "primaryColor" as const, label: "Primary" },
-              { key: "secondaryColor" as const, label: "Secondary" },
-              { key: "accentColor" as const, label: "Accent" },
-            ].map((color) => (
-              <div key={color.key} className="space-y-2">
-                <span className="text-xs text-muted-foreground">{color.label}</span>
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={data.coreAssets[color.key]}
-                    onChange={(e) => updateCoreAssets({ [color.key]: e.target.value })}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <div
-                    className="h-11 rounded-lg border border-border flex items-center gap-2 px-3 cursor-pointer hover:border-primary/50 transition-colors"
-                  >
-                    <div
-                      className="w-6 h-6 rounded-md border border-border/50"
-                      style={{ backgroundColor: data.coreAssets[color.key] }}
-                    />
-                    <span className="text-sm font-mono text-muted-foreground">
-                      {data.coreAssets[color.key].toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              {data.coreAssets.inspirationLinks.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 h-11 w-11 text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    updateCoreAssets({
+                      inspirationLinks: data.coreAssets.inspirationLinks.filter((_, i) => i !== index),
+                    });
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              updateCoreAssets({
+                inspirationLinks: [...data.coreAssets.inspirationLinks, ""],
+              });
+            }}
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Add another
+          </Button>
         </div>
       </div>
 
-      {/* Right: Logo Upload */}
-      <div className="lg:col-span-2">
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground">Logo</Label>
-          <p className="text-sm text-muted-foreground">
-            Upload your logo (optional)
-          </p>
-          <input
-            ref={logoInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleLogoUpload}
-            className="hidden"
-          />
-          {data.coreAssets.logoPreview ? (
-            <div className="relative group">
-              <div className="aspect-square rounded-xl border border-border bg-muted/30 flex items-center justify-center overflow-hidden">
-                <img
-                  src={data.coreAssets.logoPreview}
-                  alt="Logo preview"
-                  className="max-w-full max-h-full object-contain p-4"
+      {/* Brand Colors */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Brand Colors</Label>
+        <p className="text-sm text-muted-foreground">
+          Pick your primary, secondary, and accent colors.
+        </p>
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { key: "primaryColor" as const, label: "Primary" },
+            { key: "secondaryColor" as const, label: "Secondary" },
+            { key: "accentColor" as const, label: "Accent" },
+          ].map((color) => (
+            <div key={color.key} className="space-y-2">
+              <span className="text-xs text-muted-foreground">{color.label}</span>
+              <div className="relative">
+                <input
+                  type="color"
+                  value={data.coreAssets[color.key] || "#000000"}
+                  onChange={(e) => updateCoreAssets({ [color.key]: e.target.value })}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
+                <div
+                  className="h-11 rounded-lg border border-border flex items-center gap-2 px-3 cursor-pointer hover:border-primary/50 transition-colors"
+                >
+                  <div
+                    className="w-6 h-6 rounded-md border border-border/50"
+                    style={{ backgroundColor: data.coreAssets[color.key] || "#000000" }}
+                  />
+                  <span className="text-sm font-mono text-muted-foreground">
+                    {(data.coreAssets[color.key] || "#000000").toUpperCase()}
+                  </span>
+                </div>
               </div>
-              <button
-                onClick={removeLogo}
-                className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-colors opacity-0 group-hover:opacity-100"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
-          ) : (
-            <button
-              onClick={() => logoInputRef.current?.click()}
-              className="w-full aspect-square rounded-xl border-2 border-dashed border-border hover:border-primary/50 bg-muted/20 flex flex-col items-center justify-center gap-3 transition-colors"
-            >
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                <Upload className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-foreground">Upload logo</p>
-                <p className="text-xs text-muted-foreground">PNG, JPG, or SVG</p>
-              </div>
-            </button>
-          )}
+          ))}
         </div>
+        {colorsExtractedFromLogo && !hasManuallyEditedColors && (
+          <p className="text-xs text-muted-foreground/80 flex items-center gap-1.5 mt-2">
+            <Sparkles className="w-3 h-3" />
+            These colors are suggested based on your logo — feel free to change them.
+          </p>
+        )}
       </div>
     </div>
   );
