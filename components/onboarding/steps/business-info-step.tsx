@@ -125,79 +125,104 @@ export function BusinessInfoStep({
             </div>
           </div>
 
-          {/* Bold Visual Tiles - AI-First Design */}
-          <div className="relative hidden lg:block h-[280px]" aria-hidden="true">
-            {/* Tile 1 - Website Blocks (Top Left) */}
-            <div className="absolute top-0 left-0 w-32 h-40 rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-orange-500 shadow-2xl shadow-primary/30 animate-float overflow-hidden">
-              <div className="absolute inset-0 opacity-30">
-                <div className="absolute top-4 left-4 right-4 h-8 bg-white/20 rounded-lg" />
-                <div className="absolute top-16 left-4 right-4 h-4 bg-white/15 rounded" />
-                <div className="absolute top-22 left-4 w-12 h-4 bg-white/15 rounded" />
-                <div className="absolute bottom-4 left-4 right-4 h-12 bg-white/10 rounded-lg" />
-              </div>
-              <div className="absolute bottom-3 right-3">
-                <Globe className="w-6 h-6 text-white/60" />
-              </div>
-            </div>
-
-            {/* Tile 2 - Color Swatches (Top Right) */}
-            <div className="absolute top-6 right-0 w-28 h-28 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-xl shadow-violet-500/25 animate-float-delayed overflow-hidden">
-              <div className="absolute inset-3 flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-white/90 shadow-sm" />
-                  <div className="w-8 h-8 rounded-lg bg-primary/80" />
+          {/* Brand-in-Website Styles - Preview Cards */}
+          <div className="relative hidden lg:block" aria-hidden="true">
+            <div className="space-y-3">
+              {/* Style 1: Modern & Minimal */}
+              <div className="relative rounded-xl bg-white border border-gray-200 shadow-lg shadow-gray-200/50 overflow-hidden animate-float">
+                {/* Browser Header */}
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border-b border-gray-100">
+                  <div className="w-2 h-2 rounded-full bg-gray-300" />
+                  <div className="w-2 h-2 rounded-full bg-gray-300" />
+                  <div className="w-2 h-2 rounded-full bg-gray-300" />
+                  <div className="flex-1 mx-3 h-4 bg-gray-100 rounded text-[8px] flex items-center justify-center text-gray-400">
+                    {data.name ? `${data.name.toLowerCase().replace(/\s+/g, '')}.com` : 'yourbusiness.com'}
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-violet-300/60" />
-                  <div className="w-8 h-8 rounded-lg bg-white/40" />
-                </div>
-              </div>
-              <div className="absolute bottom-2 right-2">
-                <Palette className="w-5 h-5 text-white/50" />
-              </div>
-            </div>
-
-            {/* Tile 3 - Sparkles/AI Magic (Middle) */}
-            <div className="absolute top-[110px] left-[90px] w-36 h-24 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-rose-400 shadow-xl shadow-orange-400/25 animate-float-slow overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative">
-                  <Sparkles className="w-10 h-10 text-white drop-shadow-lg" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse" />
-                  <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-white/80 rounded-full animate-pulse delay-150" />
+                {/* Website Content */}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-semibold text-gray-900 truncate max-w-[140px]">
+                      {data.name || "Your Business"}
+                    </p>
+                    <div className="flex gap-2">
+                      <div className="w-8 h-1.5 bg-gray-200 rounded-full" />
+                      <div className="w-8 h-1.5 bg-gray-200 rounded-full" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="h-2 bg-gray-100 rounded w-full" />
+                    <div className="h-2 bg-gray-100 rounded w-3/4" />
+                  </div>
+                  <div className="mt-3 w-16 h-5 bg-gray-900 rounded text-[7px] text-white flex items-center justify-center">
+                    Explore
+                  </div>
                 </div>
               </div>
-              <div className="absolute top-2 left-3 w-8 h-1.5 bg-white/30 rounded-full" />
-              <div className="absolute bottom-2 right-3 w-6 h-1.5 bg-white/30 rounded-full" />
-            </div>
 
-            {/* Tile 4 - Abstract Storefront (Bottom Left) */}
-            <div className="absolute bottom-0 left-8 w-24 h-28 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-emerald-500/25 animate-float-delayed overflow-hidden">
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3">
-                <div className="w-10 h-10 rounded-xl bg-white/25 flex items-center justify-center">
-                  <ShoppingBag className="w-5 h-5 text-white" />
+              {/* Style 2: Bold & Playful */}
+              <div className="relative rounded-xl bg-gradient-to-br from-primary to-orange-500 shadow-xl shadow-primary/30 overflow-hidden ml-4 animate-float-delayed">
+                {/* Browser Header */}
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-white/10">
+                  <div className="w-2 h-2 rounded-full bg-white/40" />
+                  <div className="w-2 h-2 rounded-full bg-white/40" />
+                  <div className="w-2 h-2 rounded-full bg-white/40" />
                 </div>
-                <div className="w-full space-y-1.5">
-                  <div className="h-1.5 bg-white/30 rounded-full w-full" />
-                  <div className="h-1.5 bg-white/20 rounded-full w-3/4 mx-auto" />
+                {/* Website Content */}
+                <div className="p-4">
+                  <p className="text-sm font-bold text-white mb-2 truncate max-w-[160px]">
+                    {data.name || "Your Business"}
+                  </p>
+                  <div className="space-y-1.5 mb-3">
+                    <div className="h-1.5 bg-white/30 rounded w-full" />
+                    <div className="h-1.5 bg-white/20 rounded w-2/3" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="w-14 h-5 bg-white rounded-full text-[7px] text-primary font-medium flex items-center justify-center">
+                      Shop Now
+                    </div>
+                    <div className="w-14 h-5 bg-white/20 rounded-full text-[7px] text-white flex items-center justify-center">
+                      Learn More
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Tile 5 - Layout Blocks (Bottom Right) */}
-            <div className="absolute bottom-4 right-4 w-20 h-20 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 animate-float overflow-hidden">
-              <div className="absolute inset-2 grid grid-cols-2 gap-1">
-                <div className="bg-white/25 rounded" />
-                <div className="bg-white/15 rounded" />
-                <div className="bg-white/15 rounded" />
-                <div className="bg-white/25 rounded" />
+              {/* Style 3: Elegant & Premium */}
+              <div className="relative rounded-xl bg-gray-900 shadow-xl shadow-gray-900/40 overflow-hidden mr-2 animate-float-slow">
+                {/* Browser Header */}
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-white/5 border-b border-white/10">
+                  <div className="w-2 h-2 rounded-full bg-white/30" />
+                  <div className="w-2 h-2 rounded-full bg-white/30" />
+                  <div className="w-2 h-2 rounded-full bg-white/30" />
+                </div>
+                {/* Website Content */}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-serif font-medium text-amber-200/90 truncate max-w-[130px]">
+                      {data.name || "Your Business"}
+                    </p>
+                    <div className="flex gap-1">
+                      <div className="w-1 h-1 bg-amber-400/60 rounded-full" />
+                      <div className="w-1 h-1 bg-amber-400/60 rounded-full" />
+                      <div className="w-1 h-1 bg-amber-400/60 rounded-full" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 mb-3">
+                    <div className="h-1.5 bg-white/10 rounded w-full" />
+                    <div className="h-1.5 bg-white/5 rounded w-4/5" />
+                  </div>
+                  <div className="w-20 h-5 border border-amber-400/50 rounded text-[7px] text-amber-300/80 flex items-center justify-center">
+                    Discover More
+                  </div>
+                </div>
               </div>
-              <div className="absolute bottom-1 right-1">
-                <Layout className="w-4 h-4 text-white/40" />
-              </div>
-            </div>
 
-            {/* Subtle glow effects */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+              {/* Subtle caption */}
+              <p className="text-[10px] text-muted-foreground/60 text-center pt-2">
+                Your brand, in different styles — we&apos;ll refine it together.
+              </p>
+            </div>
           </div>
 
           {/* What happens next - Desktop only */}
