@@ -2075,7 +2075,7 @@ function GuidedOnboardingVariant({
                                 <Store className="w-3.5 h-3.5 text-white" />
                               </div>
                               <span className="text-xs font-semibold text-foreground truncate max-w-[100px]">
-                                {formData.storeName || "Your Store"}
+                                {formData.name || "Your Store"}
                               </span>
                             </div>
                             <div className="flex gap-1">
@@ -2091,7 +2091,7 @@ function GuidedOnboardingVariant({
                             <div className="text-center z-10">
                               <p className="text-[10px] font-medium text-primary/80">Welcome to</p>
                               <p className="text-sm font-bold text-foreground truncate max-w-[180px]">
-                                {formData.storeName || "Your Brand"}
+                                {formData.name || "Your Brand"}
                               </p>
                             </div>
                           </div>
