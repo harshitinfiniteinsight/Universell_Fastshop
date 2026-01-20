@@ -74,6 +74,13 @@ import {
   ChevronUp,
   X,
   Plus,
+  BarChart3,
+  PieChart,
+  DollarSign,
+  Gift,
+  Monitor,
+  Smartphone,
+  Tablet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BusinessInfo } from "../wizard-container";
@@ -271,34 +278,41 @@ function CustomerGraphic({ isVisible }: { isVisible: boolean }) {
   );
 }
 
-function PackingGraphic({ isVisible }: { isVisible: boolean }) {
+function AnalyticsGraphic({ isVisible }: { isVisible: boolean }) {
   return (
     <div className={cn(
       "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-700",
       isVisible ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
     )}>
-      <div className="relative w-36 h-32">
-        {/* Open box with items */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-20">
-          {/* Box back flap */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-gradient-to-b from-violet-300 to-violet-400 rounded-t-lg transform-origin-bottom" />
-          {/* Box body */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-16 bg-gradient-to-br from-violet-400 to-purple-500 rounded-lg shadow-xl" />
-          {/* Box front */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-14 bg-gradient-to-br from-violet-500 to-purple-600 rounded-b-lg flex items-center justify-center">
-            <Package className="w-8 h-8 text-white/80" />
+      <div className="relative w-40 h-36">
+        {/* Dashboard mockup */}
+        <div className="w-full h-full bg-gradient-to-br from-indigo-50 to-purple-100 rounded-2xl border border-indigo-200/50 shadow-xl p-3">
+          {/* Mini bar chart */}
+          <div className="flex items-end gap-1 h-16 mb-2">
+            {[40, 65, 45, 80, 60, 90, 75].map((height, i) => (
+              <div 
+                key={i} 
+                className="flex-1 bg-gradient-to-t from-indigo-500 to-purple-500 rounded-t"
+                style={{ height: `${height}%` }}
+              />
+            ))}
+          </div>
+          {/* Mini stats row */}
+          <div className="flex gap-2">
+            <div className="flex-1 bg-white/80 rounded-lg p-1.5 text-center">
+              <p className="text-[8px] text-muted-foreground">Orders</p>
+              <p className="text-xs font-bold text-indigo-600">1,247</p>
+            </div>
+            <div className="flex-1 bg-white/80 rounded-lg p-1.5 text-center">
+              <p className="text-[8px] text-muted-foreground">Revenue</p>
+              <p className="text-xs font-bold text-green-600">$48K</p>
+            </div>
           </div>
         </div>
-        {/* Floating items going into box */}
-        <div className="absolute top-0 left-4 w-8 h-8 bg-gradient-to-br from-pink-400 to-rose-500 rounded-lg shadow-md animate-bounce flex items-center justify-center">
-          <Star className="w-4 h-4 text-white" />
-        </div>
-        <div className="absolute top-2 right-4 w-7 h-7 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg shadow-md animate-bounce flex items-center justify-center" style={{ animationDelay: "0.2s" }}>
-          <Sparkles className="w-3.5 h-3.5 text-white" />
-        </div>
-        {/* Checkmark badge */}
-        <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-          <Check className="w-5 h-5 text-white" />
+        {/* Growth indicator */}
+        <div className="absolute -top-3 -right-3 w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex flex-col items-center justify-center shadow-lg">
+          <TrendingUp className="w-4 h-4 text-white" />
+          <span className="text-white font-bold text-[10px]">+24%</span>
         </div>
       </div>
     </div>
@@ -488,36 +502,36 @@ function FloatingCRMCard({ className, isVisible }: { className?: string; isVisib
   );
 }
 
-// Theme 4: Order Packing
-function FloatingPackingCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+// Theme 4: Analytics Dashboard
+function FloatingAnalyticsCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
   return (
     <div className={cn(
-      "absolute glass rounded-2xl shadow-xl p-4 w-48 transition-all duration-500",
+      "absolute glass rounded-2xl shadow-xl p-4 w-52 transition-all duration-500",
       isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
       className
     )}>
       <div className="flex items-center gap-2 mb-3">
-        <PackageCheck className="w-5 h-5 text-violet-500" />
-        <span className="text-sm font-semibold text-foreground">Packing Queue</span>
+        <BarChart3 className="w-5 h-5 text-indigo-500" />
+        <span className="text-sm font-semibold text-foreground">Order Analytics</span>
       </div>
       <div className="space-y-2">
-        {["Order #4821", "Order #4822", "Order #4823"].map((order, i) => (
-          <div key={order} className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">{order}</span>
-            <span className={cn(
-              "px-1.5 py-0.5 rounded text-[10px] font-medium",
-              i === 0 ? "bg-violet-500/20 text-violet-600" : "bg-muted text-muted-foreground"
-            )}>
-              {i === 0 ? "Packing" : "Queued"}
-            </span>
-          </div>
-        ))}
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">Today</span>
+          <span className="font-bold text-green-600">+127 orders</span>
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">This Week</span>
+          <span className="font-bold text-indigo-600">842 orders</span>
+        </div>
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div className="h-full w-[78%] bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" />
+        </div>
       </div>
     </div>
   );
 }
 
-function FloatingBoxCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+function FloatingRevenueCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
   return (
     <div className={cn(
       "absolute glass rounded-2xl shadow-xl p-4 transition-all duration-500",
@@ -525,15 +539,15 @@ function FloatingBoxCard({ className, isVisible }: { className?: string; isVisib
       className
     )}>
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-400/20 to-purple-500/10 flex items-center justify-center relative">
-          <BoxSelect className="w-6 h-6 text-violet-500" />
-          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-violet-500 flex items-center justify-center">
-            <Check className="w-2.5 h-2.5 text-white" />
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400/20 to-emerald-500/10 flex items-center justify-center relative">
+          <DollarSign className="w-6 h-6 text-green-500" />
+          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+            <TrendingUp className="w-2.5 h-2.5 text-white" />
           </div>
         </div>
         <div>
-          <p className="text-sm font-semibold text-foreground">Ready to Ship</p>
-          <p className="text-xs text-muted-foreground">3 items packed</p>
+          <p className="text-sm font-semibold text-foreground">$48,294</p>
+          <p className="text-xs text-green-600">+18% vs last month</p>
         </div>
       </div>
     </div>
@@ -640,8 +654,8 @@ function FloatingLoyaltyCard({ className, isVisible }: { className?: string; isV
   );
 }
 
-// Theme 4 Extra: Shipping Label Ready
-function FloatingLabelCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+// Theme 4 Extra: Inventory Insights
+function FloatingInsightsCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
   return (
     <div className={cn(
       "absolute glass rounded-xl shadow-lg px-3 py-2 transition-all duration-500",
@@ -649,8 +663,8 @@ function FloatingLabelCard({ className, isVisible }: { className?: string; isVis
       className
     )}>
       <div className="flex items-center gap-2">
-        <Tag className="w-4 h-4 text-violet-500" />
-        <span className="text-xs font-semibold text-foreground">Label Printed</span>
+        <PieChart className="w-4 h-4 text-indigo-500" />
+        <span className="text-xs font-semibold text-foreground">Inventory Insights</span>
       </div>
     </div>
   );
@@ -685,7 +699,7 @@ function LandingStyleVariant({ onStartGuided }: { onStartGuided: () => void }) {
     "shipping",
     "payment", 
     "customer",
-    "packing",
+    "analytics",
     "inventory"
   ] as const;
 
@@ -733,6 +747,24 @@ function LandingStyleVariant({ onStartGuided }: { onStartGuided: () => void }) {
         icon: CreditCard,
         title: "Easy Checkout",
         description: "Fast and easy checkout for hassle-free orders.",
+      },
+    ],
+    // Slide 3: Analytics, Responsive Design, Gift Cards
+    [
+      {
+        icon: BarChart3,
+        title: "Analytics",
+        description: "Track orders, inventory, and revenue with powerful real-time insights.",
+      },
+      {
+        icon: Monitor,
+        title: "Compatible Website Design",
+        description: "Flexible design that works seamlessly on mobile, tablet, and desktop.",
+      },
+      {
+        icon: Gift,
+        title: "Integrated with Gift Card",
+        description: "Built-in gift card support to boost sales and customer retention.",
       },
     ],
   ];
@@ -904,20 +936,20 @@ function LandingStyleVariant({ onStartGuided }: { onStartGuided: () => void }) {
             />
             <CustomerGraphic isVisible={visualThemes[activeTheme] === "customer"} />
 
-            {/* Theme 4: Order Packing */}
-            <FloatingPackingCard 
+            {/* Theme 4: Analytics Dashboard */}
+            <FloatingAnalyticsCard 
               className="top-6 left-2 animate-float" 
-              isVisible={visualThemes[activeTheme] === "packing"} 
+              isVisible={visualThemes[activeTheme] === "analytics"} 
             />
-            <FloatingBoxCard 
+            <FloatingRevenueCard 
               className="bottom-16 right-4 animate-float-slow" 
-              isVisible={visualThemes[activeTheme] === "packing"} 
+              isVisible={visualThemes[activeTheme] === "analytics"} 
             />
-            <FloatingLabelCard 
+            <FloatingInsightsCard 
               className="top-1/3 right-12 animate-float-delayed" 
-              isVisible={visualThemes[activeTheme] === "packing"} 
+              isVisible={visualThemes[activeTheme] === "analytics"} 
             />
-            <PackingGraphic isVisible={visualThemes[activeTheme] === "packing"} />
+            <AnalyticsGraphic isVisible={visualThemes[activeTheme] === "analytics"} />
 
             {/* Theme 5: Inventory */}
             <FloatingInventoryCard 
@@ -2980,127 +3012,30 @@ function FastStartVariant({ onNext }: { onNext: () => void }) {
 }
 
 // ============================================
-// TAB SWITCHER COMPONENT
-// ============================================
-function VariantTabSwitcher({
-  activeVariant,
-  onVariantChange,
-}: {
-  activeVariant: DesignVariant;
-  onVariantChange: (variant: DesignVariant) => void;
-}) {
-  const tabs: { id: DesignVariant; label: string; description: string }[] = [
-    { id: "landing", label: "Option 1", description: "Landing Page Style" },
-    { id: "guided", label: "Option 2", description: "Guided Onboarding" },
-    { id: "fast-start", label: "Option 3", description: "Fast Start" },
-  ];
-
-  return (
-    <div className="bg-muted/50 border-b border-border px-4 py-3">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-2 h-2 rounded-full bg-amber-500" />
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Stakeholder Preview — Select Design Variant
-          </span>
-        </div>
-        <div className="flex gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => onVariantChange(tab.id)}
-              className={cn(
-                "flex-1 px-4 py-3 rounded-xl text-left transition-all duration-200",
-                activeVariant === tab.id
-                  ? "bg-background border-2 border-primary shadow-lg"
-                  : "bg-background/50 border border-border/50 hover:bg-background hover:border-border"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <div
-                  className={cn(
-                    "w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                    activeVariant === tab.id
-                      ? "border-primary bg-primary"
-                      : "border-muted-foreground/30"
-                  )}
-                >
-                  {activeVariant === tab.id && (
-                    <Check className="w-2.5 h-2.5 text-white" />
-                  )}
-                </div>
-                <span
-                  className={cn(
-                    "font-medium text-sm",
-                    activeVariant === tab.id
-                      ? "text-foreground"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {tab.label}
-                </span>
-              </div>
-              <p
-                className={cn(
-                  "text-xs mt-1 ml-6",
-                  activeVariant === tab.id
-                    ? "text-primary"
-                    : "text-muted-foreground"
-                )}
-              >
-                {tab.description}
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================
 // MAIN COMPONENT
 // ============================================
 export function WelcomeStep({ onNext, businessInfo, onUpdateBusinessInfo }: WelcomeStepProps) {
-  const [activeVariant, setActiveVariant] = useState<DesignVariant>("landing");
-  const [skipGuidedIntro, setSkipGuidedIntro] = useState(false);
+  const [showGuidedOnboarding, setShowGuidedOnboarding] = useState(false);
 
-  // Handler to switch from Landing to Guided variant (skip intro, go directly to Business Details)
+  // Handler to switch from Landing to Guided onboarding
   const handleStartGuided = () => {
-    setSkipGuidedIntro(true);
-    setActiveVariant("guided");
+    setShowGuidedOnboarding(true);
   };
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Tab Switcher (Stakeholder Review Only) */}
-      <VariantTabSwitcher
-        activeVariant={activeVariant}
-        onVariantChange={(variant) => {
-          setActiveVariant(variant);
-          // Reset skipIntro when manually switching tabs
-          if (variant !== "guided") {
-            setSkipGuidedIntro(false);
-          }
-        }}
-      />
-
-      {/* Variant Content */}
       <div className="flex-1 relative">
-        <div
-          key={activeVariant}
-          className="animate-fade-in-up"
-        >
-          {activeVariant === "landing" && <LandingStyleVariant onStartGuided={handleStartGuided} />}
-          {activeVariant === "guided" && (
+        <div className="animate-fade-in-up">
+          {!showGuidedOnboarding ? (
+            <LandingStyleVariant onStartGuided={handleStartGuided} />
+          ) : (
             <GuidedOnboardingVariant
               onNext={onNext}
               businessInfo={businessInfo}
               onUpdateBusinessInfo={onUpdateBusinessInfo}
-              skipIntro={skipGuidedIntro}
+              skipIntro={true}
             />
           )}
-          {activeVariant === "fast-start" && <FastStartVariant onNext={onNext} />}
         </div>
       </div>
     </div>
