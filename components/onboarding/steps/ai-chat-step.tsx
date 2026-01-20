@@ -48,6 +48,16 @@ import {
   Grip,
   Pencil,
   AlertCircle,
+  Upload,
+  Link,
+  Type,
+  Heart,
+  FolderOpen,
+  Target,
+  Instagram,
+  FileUp,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -89,8 +99,31 @@ interface PageCustomization {
   prompt: string;
 }
 
+// Brand Vault data structure
+interface BrandVaultData {
+  // Core
+  inspirationLinks: string[];
+  logoFile: File | null;
+  logoPreview: string | null;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  // Recommended
+  fontPreference: string;
+  brandTone: string;
+  industry: string;
+  targetAudience: string;
+  // Nice-to-have
+  moodboardImages: string[];
+  socialLinks: string[];
+  brandGuidelines: File | null;
+  additionalNotes: string;
+}
+
+const BRAND_VAULT_KEY = "universell-brand-vault";
+
 // Changed key to reset for all users - increment version to reset again
-const INTRO_SEEN_KEY = "universell-ai-intro-v2";
+const INTRO_SEEN_KEY = "universell-ai-intro-v3";
 
 interface Message {
   id: string;
@@ -674,58 +707,62 @@ function SecondaryColorPicker({
 
   return (
     <div className="animate-fade-in-up space-y-5">
-      {/* Section Header */}
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold text-foreground mb-1">Choose your secondary color</h3>
+      {/* Friendly intro text */}
+      <div className="text-center pb-2">
         <p className="text-sm text-muted-foreground">
-          This color will complement your primary and add depth to your design.
+          To complement your primary color, here are a few suggestions that pair nicely ✨
         </p>
       </div>
 
-      {/* Recommended badge */}
-      <div className="flex items-center justify-center gap-2">
-        <Star className="w-4 h-4 text-amber-500" />
-        <span className="text-xs font-medium text-amber-600">Recommended for {primaryColor.name}</span>
-      </div>
+      {/* Recommended Colors Section */}
+      <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
+        {/* Section header with badge */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-full">
+            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+            <span className="text-xs font-medium text-amber-700">Recommended for {primaryColor.name}</span>
+          </div>
+        </div>
 
-      {/* Suggestion swatches */}
-      <div className="flex flex-wrap gap-3 justify-center">
-        {suggestions.map((color) => (
-          <button
-            key={color.value}
-            onClick={() => onSecondarySelect(color)}
-            className={cn(
-              "group relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-300",
-              "focus:outline-none focus:ring-2 focus:ring-primary/30",
-              "min-w-[80px]",
-              selectedSecondary?.value === color.value
-                ? "border-primary border-[3px] bg-primary/5 shadow-lg"
-                : "border-border bg-card hover:bg-muted/50 hover:border-primary/30"
-            )}
-            aria-label={`Select ${color.name}`}
-            aria-pressed={selectedSecondary?.value === color.value}
-          >
-            {/* Selection checkmark */}
-            {selectedSecondary?.value === color.value && (
-              <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                <Check className="w-3 h-3 text-white" />
+        {/* Suggestion swatches */}
+        <div className="flex flex-wrap gap-3 justify-center">
+          {suggestions.map((color) => (
+            <button
+              key={color.value}
+              onClick={() => onSecondarySelect(color)}
+              className={cn(
+                "group relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-300",
+                "focus:outline-none focus:ring-2 focus:ring-primary/30",
+                "min-w-[80px]",
+                selectedSecondary?.value === color.value
+                  ? "border-primary border-[3px] bg-primary/5 shadow-lg"
+                  : "border-border bg-card hover:bg-muted/50 hover:border-primary/30"
+              )}
+              aria-label={`Select ${color.name}`}
+              aria-pressed={selectedSecondary?.value === color.value}
+            >
+              {/* Selection checkmark */}
+              {selectedSecondary?.value === color.value && (
+                <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              )}
+              <div className="relative">
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-full shadow-md transition-all duration-300",
+                    selectedSecondary?.value === color.value ? "scale-110" : "group-hover:scale-105",
+                    // Add visible border for light/white colors
+                    isLightColor(color.hex) ? "border-2 border-gray-300" : "border-2 border-white"
+                  )}
+                  style={{ backgroundColor: color.hex }}
+                />
               </div>
-            )}
-            <div className="relative">
-              <div
-                className={cn(
-                  "w-12 h-12 rounded-full shadow-md transition-all duration-300",
-                  selectedSecondary?.value === color.value ? "scale-110" : "group-hover:scale-105",
-                  // Add visible border for light/white colors
-                  isLightColor(color.hex) ? "border-2 border-gray-300" : "border-2 border-white"
-                )}
-                style={{ backgroundColor: color.hex }}
-              />
-            </div>
-            <span className="text-xs font-medium text-foreground">{color.name}</span>
-            <span className="text-[10px] text-muted-foreground">{color.description}</span>
-          </button>
-        ))}
+              <span className="text-xs font-medium text-foreground">{color.name}</span>
+              <span className="text-[10px] text-muted-foreground">{color.description}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Shade Editor - appears after secondary color selection */}
@@ -923,54 +960,62 @@ function SecondaryColorPicker({
       )}
 
       {/* Custom Color Picker */}
-      <div className="bg-muted/20 rounded-xl p-4 border border-border/50">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Want a different color?</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowColorPicker(!showColorPicker)}
-            className="rounded-lg"
-          >
-            <Palette className="w-4 h-4 mr-2" />
-            {showColorPicker ? "Close picker" : "Pick a custom color"}
-          </Button>
-        </div>
+      <div className="pt-2">
+        <p className="text-sm text-muted-foreground text-center mb-3">
+          Want to use your own brand color instead?
+        </p>
         
-        {showColorPicker && (
-          <div className="mt-4 animate-fade-in-up">
-            <div className="flex items-center gap-4">
-              {/* Color preview and picker */}
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-12 h-12 rounded-xl border-2 border-border shadow-inner cursor-pointer relative overflow-hidden"
-                  style={{ backgroundColor: customHex }}
-                >
-                  <input
-                    type="color"
-                    value={customHex}
-                    onChange={(e) => setCustomHex(e.target.value)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    title="Pick a color"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">Selected color</span>
-                  <span className="text-sm font-mono font-medium text-foreground">{customHex.toUpperCase()}</span>
-                </div>
-              </div>
-              
-              {/* Apply button */}
-              <Button
-                size="sm"
-                onClick={handleCustomColorApply}
-                className="rounded-lg ml-auto"
-              >
-                Apply Color
-              </Button>
+        <div className="bg-card rounded-xl p-4 border border-border shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Palette className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-foreground font-medium">Pick a custom color</span>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowColorPicker(!showColorPicker)}
+              className="rounded-lg"
+            >
+              {showColorPicker ? "Close" : "Open picker"}
+            </Button>
           </div>
-        )}
+          
+          {showColorPicker && (
+            <div className="mt-4 animate-fade-in-up pt-3 border-t border-border">
+              <div className="flex items-center gap-4">
+                {/* Color preview and picker */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-12 h-12 rounded-xl border-2 border-border shadow-inner cursor-pointer relative overflow-hidden"
+                    style={{ backgroundColor: customHex }}
+                  >
+                    <input
+                      type="color"
+                      value={customHex}
+                      onChange={(e) => setCustomHex(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      title="Pick a color"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground">Selected color</span>
+                    <span className="text-sm font-mono font-medium text-foreground">{customHex.toUpperCase()}</span>
+                  </div>
+                </div>
+                
+                {/* Apply button */}
+                <Button
+                  size="sm"
+                  onClick={handleCustomColorApply}
+                  className="rounded-lg ml-auto"
+                >
+                  Apply Color
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Action buttons */}
@@ -1290,7 +1335,7 @@ function EditPageModal({
 
           {/* Prompt Field */}
           <div className="space-y-2">
-            <Label htmlFor="page-prompt">Prompt</Label>
+            <Label htmlFor="page-prompt">What&apos;s on your mind?</Label>
             <Textarea
               id="page-prompt"
               value={prompt}
@@ -1300,7 +1345,7 @@ function EditPageModal({
               className="resize-none"
             />
             <p className="text-xs text-muted-foreground">
-              This prompt helps AI generate content for this page.
+              Describe your ideas here — include links, preferred colors, design references, or examples of pages you like so we can design a more desirable page for you.
             </p>
           </div>
         </div>
@@ -1449,9 +1494,9 @@ function SuggestedPagesPicker({
   return (
     <div className="animate-fade-in-up space-y-4">
       {/* Intro text */}
-      <div className="flex items-center gap-2 mb-2">
-        <Layout className="w-4 h-4 text-primary" />
-        <span className="text-sm font-medium">Review your site pages</span>
+      <div className="flex items-start gap-2 mb-2">
+        <Layout className="w-4 h-4 text-primary mt-0.5" />
+        <span className="text-sm font-medium">Review your site pages below. Click the edit icon to rename a page or tweak its description so it looks exactly the way you want.</span>
       </div>
 
       {/* Pages checklist */}
@@ -1503,6 +1548,11 @@ function SuggestedPagesPicker({
         {/* Add custom page input */}
         <CustomPageInput onAdd={onAddCustomPage} />
       </div>
+
+      {/* Helper text about reordering */}
+      <p className="text-xs text-muted-foreground">
+        Don&apos;t worry about the order for now. You can easily rearrange your pages later from the Website Pages section.
+      </p>
 
       {/* Summary and preview */}
       <div className="pt-3 border-t border-border/30 space-y-3">
@@ -1590,18 +1640,124 @@ function PrimaryColorPicker({
   onShadeSelect: (shade: ShadeOption) => void;
   onConfirm: () => void;
 }) {
+  const [customColorHex, setCustomColorHex] = useState("#6366f1");
+  const colorInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const hex = e.target.value;
+    setCustomColorHex(hex);
+    // Create a custom color option
+    const customColor: ColorOption = {
+      name: "Custom Color",
+      value: "custom",
+      hex: hex,
+      description: "Your custom brand color",
+    };
+    onColorSelect(customColor);
+  };
+
+  const handleCustomColorClick = () => {
+    colorInputRef.current?.click();
+  };
+
   return (
-    <div className="animate-fade-in-up space-y-4">
-      {/* Color swatches grid */}
-      <div className="grid grid-cols-3 gap-2">
-        {PRIMARY_COLORS.map((color) => (
-          <ColorSwatch
-            key={color.value}
-            color={color}
-            selected={selectedColor?.value === color.value}
-            onClick={() => onColorSelect(color)}
+    <div className="animate-fade-in-up space-y-5">
+      {/* Friendly intro text */}
+      <div className="text-center pb-2">
+        <p className="text-sm text-muted-foreground">
+          Based on what we know about your business, here are some colors that would work beautifully for your brand 🎨
+        </p>
+      </div>
+
+      {/* Recommended Colors Section */}
+      <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
+        {/* Section header with badge */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-full">
+            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+            <span className="text-xs font-medium text-amber-700">Recommended for you</span>
+          </div>
+        </div>
+
+        {/* Color swatches grid */}
+        <div className="grid grid-cols-3 gap-2">
+          {PRIMARY_COLORS.map((color) => (
+            <ColorSwatch
+              key={color.value}
+              color={color}
+              selected={selectedColor?.value === color.value}
+              onClick={() => onColorSelect(color)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Custom Color Section */}
+      <div className="pt-2">
+        <p className="text-sm text-muted-foreground text-center mb-3">
+          Want to use your own brand color?
+        </p>
+        
+        <button
+          onClick={handleCustomColorClick}
+          className={cn(
+            "w-full group relative flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-300",
+            "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2",
+            selectedColor?.value === "custom"
+              ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+              : "border-dashed border-border hover:border-primary/40 hover:bg-muted/30"
+          )}
+          aria-label="Pick a custom color"
+        >
+          {/* Hidden color input */}
+          <input
+            ref={colorInputRef}
+            type="color"
+            value={customColorHex}
+            onChange={handleCustomColorChange}
+            className="sr-only"
+            aria-hidden="true"
           />
-        ))}
+          
+          {/* Color preview circle */}
+          <div className="relative">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full shadow-md transition-all duration-300 flex items-center justify-center",
+                selectedColor?.value === "custom" ? "ring-4 ring-primary/30" : ""
+              )}
+              style={{ backgroundColor: selectedColor?.value === "custom" ? customColorHex : "#e5e7eb" }}
+            >
+              {selectedColor?.value !== "custom" && (
+                <Plus className="w-5 h-5 text-muted-foreground" />
+              )}
+              {selectedColor?.value === "custom" && (
+                <div className="w-6 h-6 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
+                  <Check className="w-4 h-4 text-primary" />
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Label */}
+          <div className="text-left flex-1">
+            <span className={cn(
+              "text-sm font-medium transition-colors block",
+              selectedColor?.value === "custom" ? "text-foreground" : "text-muted-foreground"
+            )}>
+              Pick a custom color
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {selectedColor?.value === "custom" ? `Selected: ${customColorHex.toUpperCase()}` : "Click to open color picker"}
+            </span>
+          </div>
+          
+          {/* Palette icon */}
+          <Palette className={cn(
+            "w-5 h-5 transition-colors",
+            selectedColor?.value === "custom" ? "text-primary" : "text-muted-foreground/50"
+          )} />
+        </button>
       </div>
 
       {/* Shade editor - only show when color is selected */}
@@ -1630,15 +1786,596 @@ function PrimaryColorPicker({
   );
 }
 
+// Brand Vault Modal Component
+function BrandVaultModal({
+  isOpen,
+  onClose,
+  onSave,
+  businessName,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (data: BrandVaultData) => void;
+  businessName: string;
+}) {
+  const [expandedSections, setExpandedSections] = useState({
+    core: true,
+    recommended: false,
+    optional: false,
+  });
+
+  const [vaultData, setVaultData] = useState<BrandVaultData>({
+    inspirationLinks: [""],
+    logoFile: null,
+    logoPreview: null,
+    primaryColor: "",
+    secondaryColor: "",
+    accentColor: "",
+    fontPreference: "",
+    brandTone: "",
+    industry: "",
+    targetAudience: "",
+    moodboardImages: [],
+    socialLinks: [""],
+    brandGuidelines: null,
+    additionalNotes: "",
+  });
+
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const guidelinesInputRef = useRef<HTMLInputElement>(null);
+
+  const toggleSection = (section: "core" | "recommended" | "optional") => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setVaultData(prev => ({
+          ...prev,
+          logoFile: file,
+          logoPreview: e.target?.result as string,
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const addInspirationLink = () => {
+    setVaultData(prev => ({
+      ...prev,
+      inspirationLinks: [...prev.inspirationLinks, ""],
+    }));
+  };
+
+  const updateInspirationLink = (index: number, value: string) => {
+    setVaultData(prev => {
+      const links = [...prev.inspirationLinks];
+      links[index] = value;
+      return { ...prev, inspirationLinks: links };
+    });
+  };
+
+  const removeInspirationLink = (index: number) => {
+    setVaultData(prev => ({
+      ...prev,
+      inspirationLinks: prev.inspirationLinks.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addSocialLink = () => {
+    setVaultData(prev => ({
+      ...prev,
+      socialLinks: [...prev.socialLinks, ""],
+    }));
+  };
+
+  const updateSocialLink = (index: number, value: string) => {
+    setVaultData(prev => {
+      const links = [...prev.socialLinks];
+      links[index] = value;
+      return { ...prev, socialLinks: links };
+    });
+  };
+
+  const removeSocialLink = (index: number) => {
+    setVaultData(prev => ({
+      ...prev,
+      socialLinks: prev.socialLinks.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleSave = () => {
+    // Filter out empty links
+    const cleanedData = {
+      ...vaultData,
+      inspirationLinks: vaultData.inspirationLinks.filter(l => l.trim()),
+      socialLinks: vaultData.socialLinks.filter(l => l.trim()),
+    };
+    onSave(cleanedData);
+  };
+
+  const brandTones = [
+    { id: "professional", label: "Professional", emoji: "💼" },
+    { id: "friendly", label: "Friendly", emoji: "😊" },
+    { id: "premium", label: "Premium", emoji: "✨" },
+    { id: "playful", label: "Playful", emoji: "🎉" },
+    { id: "minimal", label: "Minimal", emoji: "◻️" },
+    { id: "bold", label: "Bold", emoji: "🔥" },
+  ];
+
+  const industries = [
+    "Fashion & Apparel",
+    "Food & Beverage",
+    "Health & Wellness",
+    "Technology",
+    "Home & Living",
+    "Beauty & Skincare",
+    "Sports & Fitness",
+    "Arts & Crafts",
+    "Professional Services",
+    "Other",
+  ];
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-4 border-b border-border">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
+              <FolderOpen className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold">Create Your Brand Vault</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground mt-0.5">
+                Add everything you already have — you can always change or refine it later.
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* Helper notice */}
+          <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800">
+            <Sparkles className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              These help us design a more accurate and polished website — but you can edit everything later.
+            </p>
+          </div>
+
+          {/* Core Section */}
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <button
+              onClick={() => toggleSection("core")}
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Star className="w-4 h-4 text-primary" />
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold text-foreground">Core Brand Assets</span>
+                  <span className="text-xs text-muted-foreground block">Inspiration, logo, colors</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">Recommended</span>
+                {expandedSections.core ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+              </div>
+            </button>
+
+            {expandedSections.core && (
+              <div className="p-4 pt-0 space-y-5 border-t border-border">
+                {/* Inspiration Links */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Link className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Website Inspiration</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground -mt-1">
+                    Share websites you like — we&apos;ll use them as design references.
+                  </p>
+                  <div className="space-y-2">
+                    {vaultData.inspirationLinks.map((link, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          placeholder="https://example.com"
+                          value={link}
+                          onChange={(e) => updateInspirationLink(index, e.target.value)}
+                          className="flex-1"
+                        />
+                        {vaultData.inspirationLinks.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeInspirationLink(index)}
+                            className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addInspirationLink}
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add another link
+                  </Button>
+                </div>
+
+                {/* Logo Upload */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Image className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Brand Logo</Label>
+                  </div>
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                  {vaultData.logoPreview ? (
+                    <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl border border-border">
+                      <div className="w-16 h-16 rounded-xl bg-white border border-border flex items-center justify-center overflow-hidden">
+                        <img src={vaultData.logoPreview} alt="Logo preview" className="max-w-full max-h-full object-contain" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{vaultData.logoFile?.name}</p>
+                        <p className="text-xs text-muted-foreground">Click to replace</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => logoInputRef.current?.click()}
+                      >
+                        Replace
+                      </Button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => logoInputRef.current?.click()}
+                      className="w-full p-6 border-2 border-dashed border-border rounded-xl hover:border-primary/50 hover:bg-muted/30 transition-all flex flex-col items-center gap-2"
+                    >
+                      <Upload className="w-8 h-8 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">Upload your logo</span>
+                      <span className="text-xs text-muted-foreground">PNG, JPG, or SVG</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Brand Colors */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Brand Colors</Label>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Primary */}
+                    <div className="space-y-2">
+                      <span className="text-xs text-muted-foreground">Primary</span>
+                      <div className="relative">
+                        <input
+                          type="color"
+                          value={vaultData.primaryColor || "#6366f1"}
+                          onChange={(e) => setVaultData(prev => ({ ...prev, primaryColor: e.target.value }))}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                          className="w-full h-12 rounded-lg border-2 border-border cursor-pointer flex items-center justify-center"
+                          style={{ backgroundColor: vaultData.primaryColor || "#f3f4f6" }}
+                        >
+                          {!vaultData.primaryColor && <Plus className="w-4 h-4 text-muted-foreground" />}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Secondary */}
+                    <div className="space-y-2">
+                      <span className="text-xs text-muted-foreground">Secondary</span>
+                      <div className="relative">
+                        <input
+                          type="color"
+                          value={vaultData.secondaryColor || "#8b5cf6"}
+                          onChange={(e) => setVaultData(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                          className="w-full h-12 rounded-lg border-2 border-border cursor-pointer flex items-center justify-center"
+                          style={{ backgroundColor: vaultData.secondaryColor || "#f3f4f6" }}
+                        >
+                          {!vaultData.secondaryColor && <Plus className="w-4 h-4 text-muted-foreground" />}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Accent */}
+                    <div className="space-y-2">
+                      <span className="text-xs text-muted-foreground">Accent</span>
+                      <div className="relative">
+                        <input
+                          type="color"
+                          value={vaultData.accentColor || "#f59e0b"}
+                          onChange={(e) => setVaultData(prev => ({ ...prev, accentColor: e.target.value }))}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                          className="w-full h-12 rounded-lg border-2 border-border cursor-pointer flex items-center justify-center"
+                          style={{ backgroundColor: vaultData.accentColor || "#f3f4f6" }}
+                        >
+                          {!vaultData.accentColor && <Plus className="w-4 h-4 text-muted-foreground" />}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Recommended Section */}
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <button
+              onClick={() => toggleSection("recommended")}
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold text-foreground">Brand Personality</span>
+                  <span className="text-xs text-muted-foreground block">Fonts, tone, audience</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-amber-600 bg-amber-500/10 px-2 py-1 rounded-full">Suggested</span>
+                {expandedSections.recommended ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+              </div>
+            </button>
+
+            {expandedSections.recommended && (
+              <div className="p-4 pt-0 space-y-5 border-t border-border">
+                {/* Font Preference */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Type className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Font Preference</Label>
+                  </div>
+                  <Input
+                    placeholder="e.g., Modern sans-serif, Classic serif, Handwritten..."
+                    value={vaultData.fontPreference}
+                    onChange={(e) => setVaultData(prev => ({ ...prev, fontPreference: e.target.value }))}
+                  />
+                </div>
+
+                {/* Brand Tone */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Brand Tone</Label>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {brandTones.map((tone) => (
+                      <button
+                        key={tone.id}
+                        onClick={() => setVaultData(prev => ({ ...prev, brandTone: tone.id }))}
+                        className={cn(
+                          "p-3 rounded-lg border-2 transition-all text-left",
+                          vaultData.brandTone === tone.id
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/40"
+                        )}
+                      >
+                        <span className="text-lg">{tone.emoji}</span>
+                        <span className="text-sm font-medium block mt-1">{tone.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Industry */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Industry</Label>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {industries.map((industry) => (
+                      <button
+                        key={industry}
+                        onClick={() => setVaultData(prev => ({ ...prev, industry }))}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full border text-sm transition-all",
+                          vaultData.industry === industry
+                            ? "border-primary bg-primary/10 text-primary font-medium"
+                            : "border-border hover:border-primary/40 text-muted-foreground"
+                        )}
+                      >
+                        {industry}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Target Audience */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Target Audience</Label>
+                  </div>
+                  <Textarea
+                    placeholder="Who is your website for? e.g., Young professionals aged 25-40, health-conscious consumers..."
+                    value={vaultData.targetAudience}
+                    onChange={(e) => setVaultData(prev => ({ ...prev, targetAudience: e.target.value }))}
+                    className="min-h-[80px] resize-none"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Optional Section */}
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <button
+              onClick={() => toggleSection("optional")}
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold text-foreground">Extra Assets</span>
+                  <span className="text-xs text-muted-foreground block">Social links, guidelines, notes</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">Optional</span>
+                {expandedSections.optional ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+              </div>
+            </button>
+
+            {expandedSections.optional && (
+              <div className="p-4 pt-0 space-y-5 border-t border-border">
+                {/* Social Links */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Instagram className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Social Media Links</Label>
+                  </div>
+                  <div className="space-y-2">
+                    {vaultData.socialLinks.map((link, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          placeholder="https://instagram.com/yourbrand"
+                          value={link}
+                          onChange={(e) => updateSocialLink(index, e.target.value)}
+                          className="flex-1"
+                        />
+                        {vaultData.socialLinks.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeSocialLink(index)}
+                            className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addSocialLink}
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add another link
+                  </Button>
+                </div>
+
+                {/* Brand Guidelines */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileUp className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Brand Guidelines (PDF)</Label>
+                  </div>
+                  <input
+                    ref={guidelinesInputRef}
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setVaultData(prev => ({ ...prev, brandGuidelines: file }));
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  {vaultData.brandGuidelines ? (
+                    <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border">
+                      <FileText className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-sm flex-1">{vaultData.brandGuidelines.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setVaultData(prev => ({ ...prev, brandGuidelines: null }))}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={() => guidelinesInputRef.current?.click()}
+                      className="w-full"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload PDF
+                    </Button>
+                  )}
+                </div>
+
+                {/* Additional Notes */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Pencil className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Additional Notes</Label>
+                  </div>
+                  <Textarea
+                    placeholder="Anything else you'd like us to know about your brand..."
+                    value={vaultData.additionalNotes}
+                    onChange={(e) => setVaultData(prev => ({ ...prev, additionalNotes: e.target.value }))}
+                    className="min-h-[80px] resize-none"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Reassurance note */}
+          <div className="flex items-center gap-2 justify-center pt-2">
+            <Check className="w-4 h-4 text-green-500" />
+            <p className="text-sm text-muted-foreground">
+              Nothing here is final. You can tweak, replace, or remove any item later.
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter className="pt-4 border-t border-border gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} className="px-6">
+            <FolderOpen className="w-4 h-4 mr-2" />
+            Save Brand Vault & Continue
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Intro Screen Component - First-time entry experience
 function IntroScreen({
   businessName,
   onStartChat,
   onSkipChat,
+  onOpenBrandVault,
 }: {
   businessName: string;
   onStartChat: () => void;
   onSkipChat: () => void;
+  onOpenBrandVault: () => void;
 }) {
   return (
     <div className="relative min-h-[650px] lg:min-h-[750px] overflow-hidden">
@@ -1699,45 +2436,78 @@ function IntroScreen({
                 </span>
               </h1>
               <p className="text-base lg:text-lg text-muted-foreground leading-relaxed max-w-md mx-auto">
-                Tell us a little about your business and what you&apos;d like to create. 
-                Universell AI will guide you step by step and design a website tailored just for you.
+                Great! We&apos;ve got your business details and logo ready—now let&apos;s turn them into a beautiful website. This is where it all comes together ✨
               </p>
             </div>
 
-            {/* Feature highlights */}
-            <div className="flex flex-wrap justify-center gap-3 mb-8">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
-                <Check className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-medium text-muted-foreground">Personalized Design</span>
+            {/* Two Path Options */}
+            <div className="space-y-4 mb-6">
+              {/* Option A: Brand Vault */}
+              <button
+                onClick={onOpenBrandVault}
+                className="w-full group relative p-5 rounded-2xl border-2 border-border bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 hover:border-violet-400 hover:shadow-lg hover:shadow-violet-500/10 transition-all duration-300 text-left"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                    <FolderOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-foreground text-lg">Create a Brand Vault</span>
+                      <span className="text-xs font-medium text-violet-600 bg-violet-100 dark:bg-violet-900/50 px-2 py-0.5 rounded-full">New</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Add everything you already have — you can always change or refine it later.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">Logo</span>
+                      <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">Colors</span>
+                      <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">Inspiration</span>
+                      <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">+ More</span>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-violet-500 group-hover:translate-x-1 transition-transform flex-shrink-0 mt-2" />
+                </div>
+              </button>
+
+              {/* Divider */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs font-medium text-muted-foreground">or</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
-                <Check className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-medium text-muted-foreground">Smart Suggestions</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
-                <Check className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-medium text-muted-foreground">Ready in Minutes</span>
-              </div>
+
+              {/* Option B: Guided Questions */}
+              <button
+                onClick={onStartChat}
+                className="w-full group relative p-5 rounded-2xl border-2 border-border bg-gradient-to-br from-primary/5 to-primary/10 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 text-left"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg flex-shrink-0">
+                    <MessageCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-semibold text-foreground text-lg block mb-1">Guided Questions</span>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Answer a few quick questions and we&apos;ll handle the rest.
+                    </p>
+                    <div className="flex items-center gap-2 mt-3">
+                      <Check className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs text-muted-foreground">Takes about 2 minutes</span>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform flex-shrink-0 mt-2" />
+                </div>
+              </button>
             </div>
 
-            {/* CTAs */}
-            <div className="space-y-4">
-              {/* Primary CTA */}
-              <Button
-                onClick={onStartChat}
-                size="lg"
-                className="w-full h-14 text-lg font-semibold rounded-2xl shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.02] transition-all duration-300"
-              >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Start with AI Chat
-              </Button>
-
-              {/* Secondary CTA */}
+            {/* Skip option */}
+            <div className="pt-2 border-t border-border/50">
               <button
                 onClick={onSkipChat}
                 className="w-full py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 group"
               >
-                Create website without chat
+                Skip for now and explore
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
@@ -1762,18 +2532,9 @@ const ONBOARDING_DATA_KEY = "universell-onboarding-data";
 export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
   const router = useRouter();
   
-  // Start with intro, then check localStorage on mount
-  const [screenState, setScreenState] = useState<ScreenState>("intro");
-  const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
-
-  // Check localStorage on client side only
-  useEffect(() => {
-    const hasSeenIntro = localStorage.getItem(INTRO_SEEN_KEY);
-    if (hasSeenIntro === "true") {
-      setScreenState("chat");
-    }
-    setHasCheckedStorage(true);
-  }, []);
+  // Start directly with chat (intro is now handled in welcome-step.tsx Phase 3)
+  const [screenState, setScreenState] = useState<ScreenState>("chat");
+  const [hasCheckedStorage, setHasCheckedStorage] = useState(true);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState("");
@@ -1803,6 +2564,10 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
+  // Brand Vault state
+  const [showBrandVaultModal, setShowBrandVaultModal] = useState(false);
+  const [brandVaultData, setBrandVaultData] = useState<BrandVaultData | null>(null);
+
   // Handle starting the AI chat
   const handleStartChat = () => {
     localStorage.setItem(INTRO_SEEN_KEY, "true");
@@ -1815,6 +2580,39 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
     onSkip();
   };
 
+  // Handle opening Brand Vault modal
+  const handleOpenBrandVault = () => {
+    setShowBrandVaultModal(true);
+  };
+
+  // Handle saving Brand Vault and proceeding
+  const handleSaveBrandVault = (data: BrandVaultData) => {
+    setBrandVaultData(data);
+    localStorage.setItem(BRAND_VAULT_KEY, JSON.stringify(data));
+    localStorage.setItem(INTRO_SEEN_KEY, "true");
+    setShowBrandVaultModal(false);
+    
+    // Use vault data to skip to website creation
+    // Store the vault data in onboarding data
+    const onboardingData = {
+      inspiration: data.inspirationLinks.filter(l => l.trim()).join(", "),
+      color: data.primaryColor || "",
+      secondaryColor: data.secondaryColor || "",
+      accentColor: data.accentColor || "",
+      brandTone: data.brandTone || "",
+      industry: data.industry || "",
+      targetAudience: data.targetAudience || "",
+      fontPreference: data.fontPreference || "",
+      hasLogo: !!data.logoPreview,
+      logoPreview: data.logoPreview || "",
+      fromBrandVault: true,
+    };
+    localStorage.setItem(ONBOARDING_DATA_KEY, JSON.stringify(onboardingData));
+    
+    // Proceed to next step (website creation)
+    onSkip();
+  };
+
   // Initial AI greeting - only when in chat mode
   useEffect(() => {
     if (screenState !== "chat") return;
@@ -1824,7 +2622,7 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
         {
           id: "1",
           type: "ai",
-          content: `Hi! I'm excited to help create a stunning website for ${businessName}. To get started, can you share a sample website you like or describe the kind of website you want?`,
+          content: `Do you already have a website, or is there a website you really like? Share a link or example so we can use it as inspiration for your design.`,
         },
       ]);
     }, 500);
@@ -2320,11 +3118,20 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
   // Show intro screen for first-time users
   if (screenState === "intro") {
     return (
-      <IntroScreen
-        businessName={businessName}
-        onStartChat={handleStartChat}
-        onSkipChat={handleSkipChat}
-      />
+      <>
+        <IntroScreen
+          businessName={businessName}
+          onStartChat={handleStartChat}
+          onSkipChat={handleSkipChat}
+          onOpenBrandVault={handleOpenBrandVault}
+        />
+        <BrandVaultModal
+          isOpen={showBrandVaultModal}
+          onClose={() => setShowBrandVaultModal(false)}
+          onSave={handleSaveBrandVault}
+          businessName={businessName}
+        />
+      </>
     );
   }
 

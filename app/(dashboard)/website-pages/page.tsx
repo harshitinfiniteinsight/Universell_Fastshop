@@ -46,6 +46,8 @@ import {
   Layers,
   CheckCircle2,
   PartyPopper,
+  Menu,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -157,17 +159,21 @@ export default function WebsitePagesPage() {
   const [selectedItem, setSelectedItem] = useState("");
   const [aiPrompt, setAiPrompt] = useState("");
   const [showWelcomeToast, setShowWelcomeToast] = useState(false);
+  const [selectedPageId, setSelectedPageId] = useState<string>("1"); // Default to Homepage
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [onboardingData, setOnboardingData] = useState<{
     selectedPages?: string[];
     customPages?: string[];
     primaryColor?: { name: string; hex: string };
     secondaryColor?: { name: string; hex: string };
   } | null>(null);
+  const [generatedPages, setGeneratedPages] = useState<PageData[]>([]);
 
-  // Check for welcome toast on mount
+  // Check for welcome toast and generated pages on mount
   useEffect(() => {
     const shouldShowToast = localStorage.getItem("universell-show-welcome-toast");
     const savedOnboardingData = localStorage.getItem("universell-onboarding-data");
+    const savedGeneratedPages = localStorage.getItem("universell-generated-pages");
     
     if (shouldShowToast === "true") {
       setShowWelcomeToast(true);
@@ -186,11 +192,42 @@ export default function WebsitePagesPage() {
         console.error("Error parsing onboarding data:", e);
       }
     }
+
+    // Load auto-generated pages from onboarding
+    if (savedGeneratedPages) {
+      try {
+        const pages = JSON.parse(savedGeneratedPages);
+        setGeneratedPages(pages.map((page: { id: string; name: string; slug: string; blocks: number; status: string; modifiedDate: string }) => ({
+          ...page,
+          editPath: `/website-pages/edit/${page.id}`,
+        })));
+      } catch (e) {
+        console.error("Error parsing generated pages:", e);
+      }
+    }
   }, []);
 
-  const filteredActivePages = activePages.filter((page) =>
+  // Combine default pages with generated pages (generated pages take priority)
+  const allActivePages = generatedPages.length > 0 
+    ? generatedPages 
+    : activePages;
+
+  const filteredActivePages = allActivePages.filter((page) =>
     page.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Get selected page data
+  const selectedPage = [...allActivePages, ...archivedPages].find(p => p.id === selectedPageId) || allActivePages[0];
+
+  // Handle page selection with loading simulation
+  const handleSelectPage = (pageId: string) => {
+    if (pageId !== selectedPageId) {
+      setPreviewLoading(true);
+      setSelectedPageId(pageId);
+      // Simulate loading delay
+      setTimeout(() => setPreviewLoading(false), 500);
+    }
+  };
 
   const handleCreatePage = () => {
     // Simulate page creation
@@ -200,42 +237,42 @@ export default function WebsitePagesPage() {
     setAiPrompt("");
   };
 
-  const PageRow = ({ page }: { page: PageData }) => (
-    <div className="flex items-center justify-between py-4 px-4 border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-          <FileText className="w-5 h-5 text-primary" />
+  const PageRow = ({ page, isSelected, onSelect }: { page: PageData; isSelected?: boolean; onSelect?: () => void }) => (
+    <div 
+      onClick={onSelect}
+      className={`flex items-center justify-between py-3 px-4 border-b border-border last:border-0 transition-colors cursor-pointer ${
+        isSelected 
+          ? "bg-primary/10 border-l-2 border-l-primary" 
+          : "hover:bg-muted/30"
+      }`}
+    >
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+          isSelected ? "bg-primary/20" : "bg-primary/10"
+        }`}>
+          <FileText className={`w-4 h-4 ${isSelected ? "text-primary" : "text-primary"}`} />
         </div>
-        <div>
-          <p className="font-medium text-foreground">{page.name}</p>
-          <p className="text-sm text-muted-foreground">/{page.slug}</p>
+        <div className="min-w-0 flex-1">
+          <p className={`font-medium truncate ${isSelected ? "text-primary" : "text-foreground"}`}>{page.name}</p>
+          <p className="text-xs text-muted-foreground truncate">/{page.slug}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
-        <div className="text-right">
-          <p className="text-sm font-medium text-foreground">
-            {page.blocks} blocks
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Modified {page.modifiedDate}
-          </p>
-        </div>
-
+      <div className="flex items-center gap-3 flex-shrink-0">
         <Badge
           variant={page.status === "published" ? "default" : "secondary"}
-          className={
+          className={`text-xs ${
             page.status === "published"
               ? "bg-green-500 hover:bg-green-600"
               : "bg-orange-500 hover:bg-orange-600 text-white"
-          }
+          }`}
         >
           {page.status === "published" ? "Published" : "Draft"}
         </Badge>
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
               <MoreVertical className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -388,59 +425,214 @@ export default function WebsitePagesPage() {
             Manage your website pages and create new ones with AI
           </p>
         </div>
-        <Button onClick={() => setActiveModal("main")}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Page
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" asChild>
+            <Link href="/settings/menu">
+              <Menu className="w-4 h-4 mr-2" />
+              Manage Fastshop Menu
+            </Link>
+          </Button>
+          <Button onClick={() => setActiveModal("main")}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Page
+          </Button>
+        </div>
       </div>
 
-      {/* Tabs and Search */}
-      <Card>
-        <Tabs defaultValue="active" className="w-full">
-          <div className="flex items-center justify-between px-4 pt-4">
-            <TabsList>
-              <TabsTrigger value="active" className="gap-2">
-                Active Pages
-                <Badge variant="secondary" className="ml-1">
-                  {activePages.length}
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger value="archived" className="gap-2">
-                Archived Pages
-                <Badge variant="secondary" className="ml-1">
-                  {archivedPages.length}
-                </Badge>
-              </TabsTrigger>
-            </TabsList>
+      {/* Split Layout: Pages List + Preview */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left Panel: Pages List (40%) */}
+        <div className="w-full lg:w-[40%]">
+          <Card className="h-full">
+            <Tabs defaultValue="active" className="w-full">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-4">
+                <TabsList>
+                  <TabsTrigger value="active" className="gap-2 text-sm">
+                    Active
+                    <Badge variant="secondary" className="ml-1 text-xs">
+                      {allActivePages.length}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="archived" className="gap-2 text-sm">
+                    Archived
+                    <Badge variant="secondary" className="ml-1 text-xs">
+                      {archivedPages.length}
+                    </Badge>
+                  </TabsTrigger>
+                </TabsList>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search pages..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 pl-10"
-              />
-            </div>
-          </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full sm:w-48 pl-10"
+                  />
+                </div>
+              </div>
 
-          <TabsContent value="active" className="mt-4">
-            <div className="divide-y divide-border">
-              {filteredActivePages.map((page) => (
-                <PageRow key={page.id} page={page} />
-              ))}
-            </div>
-          </TabsContent>
+              <TabsContent value="active" className="mt-4">
+                <div className="divide-y divide-border max-h-[calc(100vh-300px)] overflow-y-auto">
+                  {filteredActivePages.map((page) => (
+                    <PageRow 
+                      key={page.id} 
+                      page={page} 
+                      isSelected={selectedPageId === page.id}
+                      onSelect={() => handleSelectPage(page.id)}
+                    />
+                  ))}
+                  {filteredActivePages.length === 0 && (
+                    <div className="py-8 text-center text-muted-foreground">
+                      No pages found
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
 
-          <TabsContent value="archived" className="mt-4">
-            <div className="divide-y divide-border">
-              {archivedPages.map((page) => (
-                <PageRow key={page.id} page={page} />
-              ))}
+              <TabsContent value="archived" className="mt-4">
+                <div className="divide-y divide-border max-h-[calc(100vh-300px)] overflow-y-auto">
+                  {archivedPages.map((page) => (
+                    <PageRow 
+                      key={page.id} 
+                      page={page}
+                      isSelected={selectedPageId === page.id}
+                      onSelect={() => handleSelectPage(page.id)}
+                    />
+                  ))}
+                  {archivedPages.length === 0 && (
+                    <div className="py-8 text-center text-muted-foreground">
+                      No archived pages
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </Card>
+        </div>
+
+        {/* Right Panel: Page Preview (60%) */}
+        <div className="w-full lg:w-[60%]">
+          <Card className="h-full min-h-[500px] lg:min-h-[calc(100vh-200px)] flex flex-col">
+            {/* Preview Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">Page Preview</span>
+              </div>
+              {selectedPage && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-foreground font-medium">{selectedPage.name}</span>
+                  <Badge
+                    variant={selectedPage.status === "published" ? "default" : "secondary"}
+                    className={`text-xs ${
+                      selectedPage.status === "published"
+                        ? "bg-green-500 hover:bg-green-600"
+                        : "bg-orange-500 hover:bg-orange-600 text-white"
+                    }`}
+                  >
+                    {selectedPage.status === "published" ? "Published" : "Draft"}
+                  </Badge>
+                </div>
+              )}
             </div>
-          </TabsContent>
-        </Tabs>
-      </Card>
+
+            {/* Preview Content */}
+            <div className="flex-1 bg-muted/30 relative overflow-hidden">
+              {previewLoading ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Loading preview...</span>
+                  </div>
+                </div>
+              ) : selectedPage ? (
+                <div className="h-full flex flex-col">
+                  {/* Mock Preview Frame */}
+                  <div className="flex-1 p-4">
+                    <div className="h-full bg-background rounded-lg border border-border shadow-sm overflow-hidden">
+                      {/* Mock Browser Header */}
+                      <div className="h-8 bg-muted/50 border-b border-border flex items-center px-3 gap-2">
+                        <div className="flex gap-1.5">
+                          <div className="w-3 h-3 rounded-full bg-red-400" />
+                          <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                          <div className="w-3 h-3 rounded-full bg-green-400" />
+                        </div>
+                        <div className="flex-1 mx-4">
+                          <div className="bg-background rounded px-3 py-1 text-xs text-muted-foreground text-center">
+                            yourstore.com/{selectedPage.slug}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mock Page Content */}
+                      <div className="p-6 space-y-6">
+                        {/* Hero Section Mock */}
+                        <div className="space-y-4">
+                          <div className="h-32 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg flex items-center justify-center">
+                            <div className="text-center">
+                              <h2 className="text-xl font-bold text-foreground">{selectedPage.name}</h2>
+                              <p className="text-sm text-muted-foreground mt-1">/{selectedPage.slug}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content Blocks Mock */}
+                        <div className="grid grid-cols-3 gap-3">
+                          {Array.from({ length: Math.min(selectedPage.blocks, 6) }).map((_, i) => (
+                            <div key={i} className="h-16 bg-muted rounded animate-pulse" />
+                          ))}
+                        </div>
+
+                        {/* Text Content Mock */}
+                        <div className="space-y-2">
+                          <div className="h-4 bg-muted rounded w-3/4" />
+                          <div className="h-4 bg-muted rounded w-1/2" />
+                          <div className="h-4 bg-muted rounded w-2/3" />
+                        </div>
+
+                        {/* Additional Blocks */}
+                        {selectedPage.blocks > 3 && (
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="h-24 bg-muted/50 rounded" />
+                            <div className="h-24 bg-muted/50 rounded" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preview Actions */}
+                  <div className="p-4 border-t border-border bg-background flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      {selectedPage.blocks} blocks • Modified {selectedPage.modifiedDate}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => window.open(`/${selectedPage.slug}`, "_blank")}>
+                        <Eye className="w-4 h-4 mr-2" />
+                        Open in New Tab
+                      </Button>
+                      <Button size="sm" asChild>
+                        <Link href={selectedPage.editPath || `/website-pages/edit/${selectedPage.id}`}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Page
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <FileText className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-muted-foreground">Select a page to preview</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
 
       {/* Main Create Page Modal */}
       <Dialog open={activeModal === "main"} onOpenChange={(open) => !open && setActiveModal(null)}>

@@ -1,10 +1,19 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Rocket,
   Store,
@@ -27,6 +36,42 @@ import {
   Phone,
   MapPin,
   ChevronLeft,
+  ChevronRight,
+  Layers,
+  Truck,
+  Palette,
+  Circle,
+  Hexagon,
+  Square,
+  Triangle,
+  Diamond,
+  Gem,
+  Crown,
+  Coffee,
+  User,
+  Users,
+  Wallet,
+  QrCode,
+  Banknote,
+  PackageCheck,
+  BoxSelect,
+  Warehouse,
+  ClipboardList,
+  BadgeCheck,
+  Heart,
+  Tag,
+  Bell,
+  FolderOpen,
+  MessageCircle,
+  Target,
+  Link,
+  Type,
+  Instagram,
+  FileUp,
+  ChevronDown,
+  ChevronUp,
+  X,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BusinessInfo } from "../wizard-container";
@@ -128,26 +173,574 @@ function FloatingCheckoutCard({ className }: { className?: string }) {
 }
 
 // ============================================
+// ROTATING THEMED FLOATING CARDS
+// ============================================
+
+// Central Graphics for each theme
+function ShippingGraphic({ isVisible }: { isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-700",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
+    )}>
+      <div className="relative w-32 h-32">
+        {/* Main truck graphic */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-3xl flex items-center justify-center">
+          <Truck className="w-16 h-16 text-blue-500" />
+        </div>
+        {/* Animated delivery path */}
+        <div className="absolute -bottom-2 left-0 right-0 flex justify-center">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+            <div className="w-8 h-0.5 bg-gradient-to-r from-blue-400 to-blue-300" />
+            <div className="w-2 h-2 rounded-full bg-blue-300 animate-pulse" style={{ animationDelay: "0.2s" }} />
+            <div className="w-8 h-0.5 bg-gradient-to-r from-blue-300 to-blue-200" />
+            <div className="w-2 h-2 rounded-full bg-blue-200 animate-pulse" style={{ animationDelay: "0.4s" }} />
+          </div>
+        </div>
+        {/* Flying package */}
+        <div className="absolute -top-4 -right-4 w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg animate-bounce">
+          <Package className="w-5 h-5 text-white" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PaymentGraphic({ isVisible }: { isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-700",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
+    )}>
+      <div className="relative w-36 h-28">
+        {/* Stacked cards effect */}
+        <div className="absolute bottom-0 left-2 w-28 h-20 bg-gradient-to-br from-violet-400 to-purple-600 rounded-xl transform rotate-[-8deg] opacity-60" />
+        <div className="absolute bottom-1 left-4 w-28 h-20 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl transform rotate-[-4deg] opacity-80" />
+        <div className="absolute bottom-2 left-6 w-28 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-xl flex flex-col justify-between p-3">
+          <div className="flex justify-between items-start">
+            <div className="w-8 h-6 bg-amber-300 rounded-sm" />
+            <Sparkles className="w-4 h-4 text-white/80" />
+          </div>
+          <div className="space-y-1">
+            <div className="h-1.5 bg-white/30 rounded-full w-16" />
+            <div className="h-1.5 bg-white/20 rounded-full w-12" />
+          </div>
+        </div>
+        {/* Floating coins */}
+        <div className="absolute -top-2 right-0 w-8 h-8 bg-gradient-to-br from-amber-300 to-amber-500 rounded-full flex items-center justify-center shadow-lg animate-float">
+          <span className="text-amber-800 font-bold text-xs">$</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CustomerGraphic({ isVisible }: { isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-700",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
+    )}>
+      <div className="relative w-40 h-32">
+        {/* Central profile card */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-24 bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl shadow-xl border border-amber-200/50 flex flex-col items-center justify-center gap-2 p-3">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+            <User className="w-6 h-6 text-white" />
+          </div>
+          <div className="space-y-1 w-full">
+            <div className="h-1.5 bg-amber-300/50 rounded-full w-full" />
+            <div className="h-1.5 bg-amber-200/50 rounded-full w-3/4 mx-auto" />
+          </div>
+        </div>
+        {/* Orbiting user icons */}
+        <div className="absolute top-0 left-4 w-8 h-8 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full flex items-center justify-center shadow-md animate-float">
+          <User className="w-4 h-4 text-white" />
+        </div>
+        <div className="absolute bottom-0 right-4 w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center shadow-md animate-float-delayed">
+          <User className="w-4 h-4 text-white" />
+        </div>
+        <div className="absolute top-4 right-0 w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-md animate-float-slow">
+          <User className="w-3 h-3 text-white" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PackingGraphic({ isVisible }: { isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-700",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
+    )}>
+      <div className="relative w-36 h-32">
+        {/* Open box with items */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-20">
+          {/* Box back flap */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-gradient-to-b from-violet-300 to-violet-400 rounded-t-lg transform-origin-bottom" />
+          {/* Box body */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-16 bg-gradient-to-br from-violet-400 to-purple-500 rounded-lg shadow-xl" />
+          {/* Box front */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-14 bg-gradient-to-br from-violet-500 to-purple-600 rounded-b-lg flex items-center justify-center">
+            <Package className="w-8 h-8 text-white/80" />
+          </div>
+        </div>
+        {/* Floating items going into box */}
+        <div className="absolute top-0 left-4 w-8 h-8 bg-gradient-to-br from-pink-400 to-rose-500 rounded-lg shadow-md animate-bounce flex items-center justify-center">
+          <Star className="w-4 h-4 text-white" />
+        </div>
+        <div className="absolute top-2 right-4 w-7 h-7 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg shadow-md animate-bounce flex items-center justify-center" style={{ animationDelay: "0.2s" }}>
+          <Sparkles className="w-3.5 h-3.5 text-white" />
+        </div>
+        {/* Checkmark badge */}
+        <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+          <Check className="w-5 h-5 text-white" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InventoryGraphic({ isVisible }: { isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-700",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
+    )}>
+      <div className="relative w-36 h-32">
+        {/* Warehouse/shelf graphic */}
+        <div className="w-full h-full bg-gradient-to-br from-teal-50 to-emerald-100 rounded-2xl border border-teal-200/50 shadow-xl p-3 flex flex-col gap-2">
+          {/* Shelf rows */}
+          {[0, 1, 2].map((row) => (
+            <div key={row} className="flex-1 bg-teal-100/80 rounded-lg flex items-center justify-around px-2">
+              {[0, 1, 2, 3].map((item) => (
+                <div 
+                  key={item} 
+                  className={cn(
+                    "w-5 h-5 rounded",
+                    row === 0 && item < 3 ? "bg-gradient-to-br from-teal-400 to-teal-500" :
+                    row === 1 ? "bg-gradient-to-br from-teal-400 to-teal-500" :
+                    item < 2 ? "bg-gradient-to-br from-teal-400 to-teal-500" : "bg-teal-200/50 border border-dashed border-teal-300"
+                  )}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+        {/* Stock indicator */}
+        <div className="absolute -top-3 -right-3 w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl flex flex-col items-center justify-center shadow-lg">
+          <span className="text-white font-bold text-sm">85%</span>
+          <span className="text-white/70 text-[8px]">Stock</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Theme 1: Shipping
+function FloatingShippingCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-2xl shadow-xl p-4 w-48 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+          <Truck className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Shipping</p>
+          <p className="text-sm font-bold text-foreground">In Transit</p>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-blue-500" />
+          <div className="flex-1 h-1 bg-blue-500 rounded-full" />
+          <div className="w-2 h-2 rounded-full bg-blue-500" />
+          <div className="flex-1 h-1 bg-muted rounded-full" />
+          <div className="w-2 h-2 rounded-full bg-muted" />
+        </div>
+        <p className="text-xs text-muted-foreground">Arrives in 2-3 days</p>
+      </div>
+    </div>
+  );
+}
+
+function FloatingDeliveryCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-2xl shadow-xl p-4 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400/20 to-blue-500/10 flex items-center justify-center">
+          <Package className="w-6 h-6 text-blue-500" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground">Order #4821</p>
+          <p className="text-xs text-green-600 flex items-center gap-1">
+            <Check className="w-3 h-3" /> Shipped
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Theme 2: Easy Payment
+function FloatingPaymentCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-2xl shadow-xl p-4 w-52 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-2 mb-3">
+        <Wallet className="w-5 h-5 text-emerald-500" />
+        <span className="text-sm font-semibold text-foreground">Payment Methods</span>
+      </div>
+      <div className="flex gap-2">
+        <div className="flex-1 h-10 rounded-lg bg-gradient-to-r from-violet-500 to-purple-600 flex items-center justify-center">
+          <CreditCard className="w-5 h-5 text-white" />
+        </div>
+        <div className="flex-1 h-10 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-center">
+          <Banknote className="w-5 h-5 text-white" />
+        </div>
+        <div className="flex-1 h-10 rounded-lg bg-muted flex items-center justify-center">
+          <QrCode className="w-5 h-5 text-foreground" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FloatingPaymentSuccessCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-2xl shadow-xl p-4 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+          <Check className="w-5 h-5 text-green-600" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground">Payment Complete</p>
+          <p className="text-xs text-muted-foreground">$247.50 received</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Theme 3: Customer Profile
+function FloatingCustomerCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-2xl shadow-xl p-4 w-48 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+          <User className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-foreground">Sarah M.</p>
+          <p className="text-xs text-muted-foreground">VIP Customer</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-1">
+        {[...Array(5)].map((_, i) => (
+          <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+        ))}
+        <span className="text-xs text-muted-foreground ml-1">12 orders</span>
+      </div>
+    </div>
+  );
+}
+
+function FloatingCRMCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-2xl shadow-xl p-4 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+          <Users className="w-5 h-5 text-amber-600" />
+        </div>
+        <div>
+          <p className="text-lg font-bold text-foreground">2,847</p>
+          <p className="text-xs text-muted-foreground">Active Customers</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Theme 4: Order Packing
+function FloatingPackingCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-2xl shadow-xl p-4 w-48 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-2 mb-3">
+        <PackageCheck className="w-5 h-5 text-violet-500" />
+        <span className="text-sm font-semibold text-foreground">Packing Queue</span>
+      </div>
+      <div className="space-y-2">
+        {["Order #4821", "Order #4822", "Order #4823"].map((order, i) => (
+          <div key={order} className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">{order}</span>
+            <span className={cn(
+              "px-1.5 py-0.5 rounded text-[10px] font-medium",
+              i === 0 ? "bg-violet-500/20 text-violet-600" : "bg-muted text-muted-foreground"
+            )}>
+              {i === 0 ? "Packing" : "Queued"}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FloatingBoxCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-2xl shadow-xl p-4 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-400/20 to-purple-500/10 flex items-center justify-center relative">
+          <BoxSelect className="w-6 h-6 text-violet-500" />
+          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-violet-500 flex items-center justify-center">
+            <Check className="w-2.5 h-2.5 text-white" />
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground">Ready to Ship</p>
+          <p className="text-xs text-muted-foreground">3 items packed</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Theme 5: Inventory
+function FloatingInventoryCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-2xl shadow-xl p-4 w-52 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-2 mb-3">
+        <Warehouse className="w-5 h-5 text-teal-500" />
+        <span className="text-sm font-semibold text-foreground">Inventory Status</span>
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">In Stock</span>
+          <span className="text-xs font-bold text-green-600">1,247</span>
+        </div>
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div className="h-full w-[85%] bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full" />
+        </div>
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-amber-600">23 low stock</span>
+          <span className="text-muted-foreground">85% capacity</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FloatingStockCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-2xl shadow-xl p-4 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center">
+          <ClipboardList className="w-5 h-5 text-teal-600" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground flex items-center gap-1">
+            <BadgeCheck className="w-4 h-4 text-green-500" /> All Synced
+          </p>
+          <p className="text-xs text-muted-foreground">Last update: 2m ago</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Additional themed cards for richer visuals
+// Theme 1 Extra: Express Shipping Badge
+function FloatingExpressCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-xl shadow-lg px-3 py-2 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-2">
+        <Zap className="w-4 h-4 text-amber-500" />
+        <span className="text-xs font-semibold text-foreground">Express Available</span>
+      </div>
+    </div>
+  );
+}
+
+// Theme 2 Extra: Payment Security Badge
+function FloatingSecurePayCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-xl shadow-lg px-3 py-2 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-2">
+        <Shield className="w-4 h-4 text-green-500" />
+        <span className="text-xs font-semibold text-foreground">256-bit SSL</span>
+      </div>
+    </div>
+  );
+}
+
+// Theme 3 Extra: Customer Loyalty Badge
+function FloatingLoyaltyCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-xl shadow-lg px-3 py-2 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-2">
+        <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+        <span className="text-xs font-semibold text-foreground">+50 Loyalty Points</span>
+      </div>
+    </div>
+  );
+}
+
+// Theme 4 Extra: Shipping Label Ready
+function FloatingLabelCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-xl shadow-lg px-3 py-2 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-2">
+        <Tag className="w-4 h-4 text-violet-500" />
+        <span className="text-xs font-semibold text-foreground">Label Printed</span>
+      </div>
+    </div>
+  );
+}
+
+// Theme 5 Extra: Stock Alert
+function FloatingAlertCard({ className, isVisible }: { className?: string; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute glass rounded-xl shadow-lg px-3 py-2 transition-all duration-500",
+      isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+      className
+    )}>
+      <div className="flex items-center gap-2">
+        <Bell className="w-4 h-4 text-amber-500" />
+        <span className="text-xs font-semibold text-foreground">Restock Alert</span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
 // OPTION 1: Landing Style (Original)
 // ============================================
-function LandingStyleVariant({ onNext }: { onNext: () => void }) {
-  const features = [
-    {
-      icon: Store,
-      title: "Professional Store",
-      description: "Beautiful, conversion-optimized storefronts that sell",
-    },
-    {
-      icon: Sparkles,
-      title: "AI-Powered Design",
-      description: "Generate stunning pages with intelligent automation",
-    },
-    {
-      icon: Zap,
-      title: "Launch in Minutes",
-      description: "From zero to live store faster than ever before",
-    },
+function LandingStyleVariant({ onStartGuided }: { onStartGuided: () => void }) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [activeTheme, setActiveTheme] = useState(0);
+  
+  // Themes for rotating visuals
+  const visualThemes = [
+    "overview",
+    "shipping",
+    "payment", 
+    "customer",
+    "packing",
+    "inventory"
+  ] as const;
+
+  // Auto-rotate visual themes every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveTheme((prev) => (prev + 1) % visualThemes.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [visualThemes.length]);
+
+  // Feature slides - each slide contains 3 feature cards
+  const featureSlides = [
+    // Slide 1: Original features
+    [
+      {
+        icon: Store,
+        title: "Professional Store",
+        description: "Beautiful, conversion-optimized storefronts that sell.",
+      },
+      {
+        icon: Sparkles,
+        title: "AI-Powered Design",
+        description: "Generate stunning pages with intelligent automation.",
+      },
+      {
+        icon: Zap,
+        title: "Launch in Minutes",
+        description: "From zero to live store faster than ever before.",
+      },
+    ],
+    // Slide 2: New features
+    [
+      {
+        icon: Layers,
+        title: "Unified Platform",
+        description: "A single platform connected with all modules like CRM, orders, inventory, and payments.",
+      },
+      {
+        icon: Truck,
+        title: "Shipping Options",
+        description: "Give your customers local delivery, shipping, or store pickup options.",
+      },
+      {
+        icon: CreditCard,
+        title: "Easy Checkout",
+        description: "Fast and easy checkout for hassle-free orders.",
+      },
+    ],
   ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % featureSlides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + featureSlides.length) % featureSlides.length);
+  };
 
   return (
     <div className="relative overflow-hidden">
@@ -190,12 +783,12 @@ function LandingStyleVariant({ onNext }: { onNext: () => void }) {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button
-                onClick={onNext}
+                onClick={onStartGuided}
                 size="lg"
                 className="group relative px-8 py-6 text-lg font-semibold btn-primary-enhanced animate-pulse-glow rounded-xl"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Get Started Free
+                  Get Started Now
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </span>
               </Button>
@@ -234,30 +827,122 @@ function LandingStyleVariant({ onNext }: { onNext: () => void }) {
             </div>
           </div>
 
-          {/* Right: Floating Elements */}
+          {/* Right: Rotating Floating Elements */}
           <div className="relative h-[400px] lg:h-[500px] hidden md:block">
             {/* Central glow */}
             <div className="absolute inset-0 bg-primary-glow" />
 
-            {/* Floating cards */}
-            <FloatingProductCard
-              className="top-8 left-8 animate-float"
-              delay="0"
-            />
-            <FloatingStatsCard className="top-4 right-4 animate-float-delayed" />
-            <FloatingCheckoutCard className="bottom-16 left-16 animate-float-slow" />
-
-            {/* Additional floating elements */}
-            <div className="absolute bottom-8 right-12 glass rounded-xl p-3 animate-float shadow-lg">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
-                  <ShoppingBag className="w-4 h-4 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">New Order!</p>
-                  <p className="text-sm font-semibold">+$89.99</p>
+            {/* Theme 0: Overview - Original Stats & Product Cards */}
+            <div className={cn(
+              "transition-all duration-700",
+              visualThemes[activeTheme] === "overview" ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}>
+              <FloatingProductCard
+                className="top-8 left-8 animate-float"
+                delay="0"
+              />
+              <FloatingStatsCard className="top-4 right-8 animate-float-delayed" />
+              <FloatingCheckoutCard className="bottom-20 right-4 animate-float-slow" />
+              {/* Central Store Graphic */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="relative w-32 h-32">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/10 rounded-3xl flex items-center justify-center">
+                    <Store className="w-16 h-16 text-primary" />
+                  </div>
+                  <div className="absolute -top-3 -right-3 w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg animate-bounce">
+                    <TrendingUp className="w-5 h-5 text-white" />
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {/* Theme 1: Shipping */}
+            <FloatingShippingCard 
+              className="top-4 left-4 animate-float" 
+              isVisible={visualThemes[activeTheme] === "shipping"} 
+            />
+            <FloatingDeliveryCard 
+              className="bottom-16 right-4 animate-float-delayed" 
+              isVisible={visualThemes[activeTheme] === "shipping"} 
+            />
+            <FloatingExpressCard 
+              className="top-1/3 right-12 animate-float-slow" 
+              isVisible={visualThemes[activeTheme] === "shipping"} 
+            />
+            <ShippingGraphic isVisible={visualThemes[activeTheme] === "shipping"} />
+
+            {/* Theme 2: Easy Payment */}
+            <FloatingPaymentCard 
+              className="top-6 left-2 animate-float" 
+              isVisible={visualThemes[activeTheme] === "payment"} 
+            />
+            <FloatingPaymentSuccessCard 
+              className="bottom-20 right-2 animate-float-slow" 
+              isVisible={visualThemes[activeTheme] === "payment"} 
+            />
+            <FloatingSecurePayCard 
+              className="top-1/4 right-16 animate-float-delayed" 
+              isVisible={visualThemes[activeTheme] === "payment"} 
+            />
+            <PaymentGraphic isVisible={visualThemes[activeTheme] === "payment"} />
+
+            {/* Theme 3: Customer Profile */}
+            <FloatingCustomerCard 
+              className="top-4 left-4 animate-float" 
+              isVisible={visualThemes[activeTheme] === "customer"} 
+            />
+            <FloatingCRMCard 
+              className="bottom-20 right-4 animate-float-delayed" 
+              isVisible={visualThemes[activeTheme] === "customer"} 
+            />
+            <FloatingLoyaltyCard 
+              className="bottom-1/3 left-12 animate-float-slow" 
+              isVisible={visualThemes[activeTheme] === "customer"} 
+            />
+            <CustomerGraphic isVisible={visualThemes[activeTheme] === "customer"} />
+
+            {/* Theme 4: Order Packing */}
+            <FloatingPackingCard 
+              className="top-6 left-2 animate-float" 
+              isVisible={visualThemes[activeTheme] === "packing"} 
+            />
+            <FloatingBoxCard 
+              className="bottom-16 right-4 animate-float-slow" 
+              isVisible={visualThemes[activeTheme] === "packing"} 
+            />
+            <FloatingLabelCard 
+              className="top-1/3 right-12 animate-float-delayed" 
+              isVisible={visualThemes[activeTheme] === "packing"} 
+            />
+            <PackingGraphic isVisible={visualThemes[activeTheme] === "packing"} />
+
+            {/* Theme 5: Inventory */}
+            <FloatingInventoryCard 
+              className="top-4 left-4 animate-float" 
+              isVisible={visualThemes[activeTheme] === "inventory"} 
+            />
+            <FloatingStockCard 
+              className="bottom-20 right-4 animate-float-delayed" 
+              isVisible={visualThemes[activeTheme] === "inventory"} 
+            />
+            <FloatingAlertCard 
+              className="bottom-1/3 left-12 animate-float-slow" 
+              isVisible={visualThemes[activeTheme] === "inventory"} 
+            />
+            <InventoryGraphic isVisible={visualThemes[activeTheme] === "inventory"} />
+
+            {/* Theme indicator dots */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {visualThemes.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveTheme(index)}
+                  className={cn(
+                    "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                    activeTheme === index ? "w-4 bg-primary" : "bg-primary/30"
+                  )}
+                />
+              ))}
             </div>
 
             {/* Decorative circles */}
@@ -266,30 +951,81 @@ function LandingStyleVariant({ onNext }: { onNext: () => void }) {
           </div>
         </div>
 
-        {/* Features Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="group relative p-6 rounded-2xl bg-card border border-border card-hover-lift animate-fade-in-up"
-              style={{ animationDelay: `${(index + 1) * 150}ms` }}
+        {/* Features Slider Section */}
+        <div className="mt-8 relative">
+          {/* Slider Container */}
+          <div className="relative overflow-hidden rounded-2xl">
+            {/* Slides Wrapper */}
+            <div 
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
-              {/* Gradient overlay on hover */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {featureSlides.map((slide, slideIndex) => (
+                <div 
+                  key={slideIndex} 
+                  className="w-full flex-shrink-0"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {slide.map((feature, featureIndex) => (
+                      <div
+                        key={featureIndex}
+                        className="group relative p-6 rounded-2xl bg-card border border-border card-hover-lift animate-fade-in-up"
+                        style={{ animationDelay: `${(featureIndex + 1) * 150}ms` }}
+                      >
+                        {/* Gradient overlay on hover */}
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-              <div className="relative z-10">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-4 shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
-                  <feature.icon className="w-7 h-7 text-white" />
+                        <div className="relative z-10">
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-4 shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
+                            <feature.icon className="w-7 h-7 text-white" />
+                          </div>
+                          <h3 className="text-xl font-bold text-foreground mb-2">
+                            {feature.title}
+                          </h3>
+                          <p className="text-muted-foreground leading-relaxed">
+                            {feature.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Navigation Arrows */}
+          <button
+            onClick={prevSlide}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all duration-200 hidden md:flex"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all duration-200 hidden md:flex"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+
+          {/* Pagination Dots */}
+          <div className="flex items-center justify-center gap-2 mt-6">
+            {featureSlides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={cn(
+                  "transition-all duration-300 rounded-full",
+                  currentSlide === index
+                    ? "w-8 h-2 bg-primary"
+                    : "w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                )}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Bottom helper text */}
@@ -297,7 +1033,7 @@ function LandingStyleVariant({ onNext }: { onNext: () => void }) {
           <p className="text-sm text-muted-foreground">
             ⏱️ Takes about{" "}
             <span className="font-semibold text-foreground">5 minutes</span> to
-            complete • No credit card required
+            complete
           </p>
         </div>
       </div>
@@ -312,20 +1048,232 @@ function GuidedOnboardingVariant({
   onNext,
   businessInfo,
   onUpdateBusinessInfo,
+  skipIntro = false,
 }: {
   onNext: () => void;
   businessInfo?: BusinessInfo;
   onUpdateBusinessInfo?: (data: BusinessInfo) => void;
+  skipIntro?: boolean;
 }) {
   // Phase states for Option 2 flow
   // Phase 1: hasStartedGuidedOnboarding = false → show intro screen
   // Phase 2: hasStartedGuidedOnboarding = true, guidedStepsCompleted = false → show step flow
   // Phase 3: guidedStepsCompleted = true → show AI Guided Intro screen
-  const [hasStartedGuidedOnboarding, setHasStartedGuidedOnboarding] = useState(false);
+  const [hasStartedGuidedOnboarding, setHasStartedGuidedOnboarding] = useState(skipIntro);
   const [guidedStepsCompleted, setGuidedStepsCompleted] = useState(false);
   const [currentGuidedStep, setCurrentGuidedStep] = useState<GuidedStep>(1);
   const [logoPreview, setLogoPreview] = useState<string | null>(businessInfo?.logoPreview || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // AI Description Modal state
+  const [isAIDescriptionModalOpen, setIsAIDescriptionModalOpen] = useState(false);
+  const [aiDescriptionInput, setAIDescriptionInput] = useState("");
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+
+  // Business Model Modal state
+  const [isBusinessModelModalOpen, setIsBusinessModelModalOpen] = useState(false);
+  const [selectedBusinessModel, setSelectedBusinessModel] = useState<string | null>(null);
+  const [isCreatingWebsite, setIsCreatingWebsite] = useState(false);
+  const router = useRouter();
+
+  // Brand Vault state
+  const [isBrandVaultOpen, setIsBrandVaultOpen] = useState(false);
+  const [brandVaultExpandedSections, setBrandVaultExpandedSections] = useState({
+    core: true,
+    recommended: false,
+    optional: false,
+  });
+  const [brandVaultData, setBrandVaultData] = useState({
+    inspirationLinks: [""],
+    logoFile: null as File | null,
+    logoPreview: null as string | null,
+    primaryColor: "",
+    secondaryColor: "",
+    accentColor: "",
+    fontPreference: "",
+    brandTone: "",
+    industry: "",
+    targetAudience: "",
+    socialLinks: [""],
+    brandGuidelines: null as File | null,
+    additionalNotes: "",
+  });
+  const brandLogoInputRef = useRef<HTMLInputElement>(null);
+  const brandGuidelinesInputRef = useRef<HTMLInputElement>(null);
+
+  const brandTones = [
+    { id: "professional", label: "Professional", emoji: "💼" },
+    { id: "friendly", label: "Friendly", emoji: "😊" },
+    { id: "premium", label: "Premium", emoji: "✨" },
+    { id: "playful", label: "Playful", emoji: "🎉" },
+    { id: "minimal", label: "Minimal", emoji: "◻️" },
+    { id: "bold", label: "Bold", emoji: "🔥" },
+  ];
+
+  const industries = [
+    "Fashion & Apparel",
+    "Food & Beverage",
+    "Health & Wellness",
+    "Technology",
+    "Home & Living",
+    "Beauty & Skincare",
+    "Sports & Fitness",
+    "Arts & Crafts",
+    "Professional Services",
+    "Other",
+  ];
+
+  const handleBrandVaultSave = () => {
+    // Clean up and save vault data
+    const cleanedData = {
+      ...brandVaultData,
+      inspirationLinks: brandVaultData.inspirationLinks.filter(l => l.trim()),
+      socialLinks: brandVaultData.socialLinks.filter(l => l.trim()),
+    };
+    
+    // Store in localStorage
+    localStorage.setItem("universell-brand-vault", JSON.stringify(cleanedData));
+    
+    // Store onboarding data
+    const onboardingData = {
+      inspiration: cleanedData.inspirationLinks.join(", "),
+      color: cleanedData.primaryColor || "",
+      secondaryColor: cleanedData.secondaryColor || "",
+      accentColor: cleanedData.accentColor || "",
+      brandTone: cleanedData.brandTone || "",
+      industry: cleanedData.industry || "",
+      targetAudience: cleanedData.targetAudience || "",
+      fontPreference: cleanedData.fontPreference || "",
+      hasLogo: !!cleanedData.logoPreview,
+      logoPreview: cleanedData.logoPreview || "",
+      fromBrandVault: true,
+    };
+    localStorage.setItem("universell-onboarding-data", JSON.stringify(onboardingData));
+    
+    // Close modal and proceed
+    setIsBrandVaultOpen(false);
+    setIsBusinessModelModalOpen(true);
+  };
+
+  // Page templates based on business model
+  const pageTemplates: Record<string, Array<{ name: string; slug: string; blocks: number }>> = {
+    products: [
+      { name: "Homepage", slug: "home", blocks: 8 },
+      { name: "Shop / Products", slug: "products", blocks: 6 },
+      { name: "Product Detail", slug: "product-detail", blocks: 5 },
+      { name: "Cart", slug: "cart", blocks: 4 },
+      { name: "Checkout", slug: "checkout", blocks: 5 },
+      { name: "About Us", slug: "about", blocks: 4 },
+      { name: "Contact", slug: "contact", blocks: 3 },
+    ],
+    services: [
+      { name: "Homepage", slug: "home", blocks: 7 },
+      { name: "Services", slug: "services", blocks: 5 },
+      { name: "Service Detail", slug: "service-detail", blocks: 4 },
+      { name: "About Us", slug: "about", blocks: 4 },
+      { name: "Contact", slug: "contact", blocks: 3 },
+    ],
+    booking: [
+      { name: "Homepage", slug: "home", blocks: 7 },
+      { name: "Book Appointment", slug: "booking", blocks: 5 },
+      { name: "Our Services", slug: "services", blocks: 4 },
+      { name: "About Us", slug: "about", blocks: 4 },
+      { name: "Contact", slug: "contact", blocks: 3 },
+    ],
+    "products-services": [
+      { name: "Homepage", slug: "home", blocks: 8 },
+      { name: "Shop / Products", slug: "products", blocks: 6 },
+      { name: "Services", slug: "services", blocks: 5 },
+      { name: "Book Appointment", slug: "booking", blocks: 4 },
+      { name: "About Us", slug: "about", blocks: 4 },
+      { name: "Contact", slug: "contact", blocks: 3 },
+    ],
+  };
+
+  // Function to create website pages and redirect
+  const handleCreateWebsiteWithoutChat = async () => {
+    if (!selectedBusinessModel) return;
+    
+    setIsCreatingWebsite(true);
+    
+    try {
+      // Get pages for selected business model
+      const templates = pageTemplates[selectedBusinessModel] || pageTemplates.products;
+      
+      // Generate pages with IDs and metadata
+      const generatedPages = templates.map((template, index) => ({
+        id: `auto-${Date.now()}-${index}`,
+        name: template.name,
+        slug: template.slug,
+        blocks: template.blocks,
+        status: "draft" as const,
+        modifiedDate: new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }),
+        autoGenerated: true,
+        businessModel: selectedBusinessModel,
+      }));
+      
+      // Store generated pages in localStorage
+      localStorage.setItem("universell-generated-pages", JSON.stringify(generatedPages));
+      localStorage.setItem("universell-business-model", selectedBusinessModel);
+      localStorage.setItem("universell-show-welcome-toast", "true");
+      
+      // Store business info
+      if (onUpdateBusinessInfo && businessInfo) {
+        onUpdateBusinessInfo({
+          ...businessInfo,
+          ...formData,
+          businessModel: selectedBusinessModel,
+        });
+      }
+      
+      // Simulate brief creation delay for UX
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Close modal and redirect to website pages
+      setIsBusinessModelModalOpen(false);
+      router.push("/website-pages");
+      
+    } catch (error) {
+      console.error("Error creating website:", error);
+      setIsCreatingWebsite(false);
+    }
+  };
+
+  // Business model options
+  const businessModels = [
+    {
+      id: "products",
+      title: "Products Only",
+      description: "Sell physical or digital products through an online store",
+      examples: "e.g. Clothing, Electronics, Digital Downloads",
+      icon: Package,
+      color: "from-blue-500 to-indigo-500",
+    },
+    {
+      id: "services",
+      title: "Services Only",
+      description: "Offer professional services to your customers",
+      examples: "e.g. Consulting, Design, Marketing",
+      icon: Sparkles,
+      color: "from-violet-500 to-purple-500",
+    },
+    {
+      id: "booking",
+      title: "Booking Type",
+      description: "Allow customers to book appointments or reservations",
+      examples: "e.g. Salon, Restaurant, Medical Practice",
+      icon: Clock,
+      color: "from-amber-500 to-orange-500",
+    },
+    {
+      id: "products-services",
+      title: "Products + Services",
+      description: "Sell products and offer services together",
+      examples: "e.g. Spa with Products, Auto Shop with Parts",
+      icon: Layers,
+      color: "from-emerald-500 to-teal-500",
+    },
+  ];
 
   // Local form state
   const [formData, setFormData] = useState({
@@ -358,10 +1306,21 @@ function GuidedOnboardingVariant({
   const handleConfirmStep = () => {
     // Save current step data
     if (onUpdateBusinessInfo && businessInfo) {
+      // If a recommended logo is selected on step 3, generate a preview for it
+      let finalLogoPreview = logoPreview;
+      if (currentGuidedStep === 3 && selectedRecommendedLogo) {
+        const selectedLogo = recommendedLogos.find(l => l.id === selectedRecommendedLogo);
+        if (selectedLogo) {
+          // Store the logo info with current colors
+          const colors = getCurrentColors();
+          finalLogoPreview = `recommended:${selectedLogo.id}:${selectedLogo.style}:${colors.primary}:${colors.secondary}`;
+        }
+      }
+      
       onUpdateBusinessInfo({
         ...businessInfo,
         ...formData,
-        logoPreview,
+        logoPreview: finalLogoPreview,
       });
     }
 
@@ -380,9 +1339,151 @@ function GuidedOnboardingVariant({
   };
 
   const stepTitles = {
-    1: "Business Logo",
-    2: "Business Details",
-    3: "Business Address",
+    1: "Business Details",
+    2: "Business Address",
+    3: "Logo Upload",
+  };
+
+  // Get business initials for logos
+  const getInitials = () => {
+    if (!formData.name) return "AB";
+    return formData.name.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
+  };
+
+  // Preset color themes
+  const colorThemes = [
+    { id: "warm", name: "Warm", primary: "#f04f29", secondary: "#ff7043", accent: "#fbbf24" },
+    { id: "modern", name: "Modern", primary: "#3b82f6", secondary: "#60a5fa", accent: "#1e40af" },
+    { id: "minimal", name: "Minimal", primary: "#1f2937", secondary: "#4b5563", accent: "#9ca3af" },
+    { id: "bold", name: "Bold", primary: "#7c3aed", secondary: "#a78bfa", accent: "#c4b5fd" },
+    { id: "pastel", name: "Pastel", primary: "#f472b6", secondary: "#fbcfe8", accent: "#fce7f3" },
+    { id: "nature", name: "Nature", primary: "#059669", secondary: "#34d399", accent: "#a7f3d0" },
+  ];
+
+  // Logo style types
+  type LogoStyle = "icon-only" | "icon-text" | "badge" | "wordmark" | "minimal" | "geometric" | "elegant" | "playful";
+
+  interface RecommendedLogo {
+    id: number;
+    name: string;
+    style: LogoStyle;
+    icon: typeof Store;
+    themeId: string;
+  }
+
+  // Enhanced recommended logos with different styles
+  const recommendedLogos: RecommendedLogo[] = [
+    { id: 1, name: "Icon Modern", style: "icon-only", icon: Store, themeId: "warm" },
+    { id: 2, name: "Text Badge", style: "badge", icon: Shield, themeId: "modern" },
+    { id: 3, name: "Wordmark", style: "wordmark", icon: Building2, themeId: "minimal" },
+    { id: 4, name: "Icon + Text", style: "icon-text", icon: Star, themeId: "bold" },
+    { id: 5, name: "Minimal", style: "minimal", icon: Circle, themeId: "pastel" },
+    { id: 6, name: "Geometric", style: "geometric", icon: Hexagon, themeId: "nature" },
+    { id: 7, name: "Elegant", style: "elegant", icon: Crown, themeId: "modern" },
+    { id: 8, name: "Playful", style: "playful", icon: Coffee, themeId: "warm" },
+  ];
+
+  const [selectedRecommendedLogo, setSelectedRecommendedLogo] = useState<number | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState(colorThemes[0]);
+  const [customPrimaryColor, setCustomPrimaryColor] = useState(colorThemes[0].primary);
+  const [customSecondaryColor, setCustomSecondaryColor] = useState(colorThemes[0].secondary);
+
+  // Get current colors (custom or from theme)
+  const getCurrentColors = () => ({
+    primary: customPrimaryColor,
+    secondary: customSecondaryColor,
+  });
+
+  // Handle theme selection
+  const handleThemeSelect = (theme: typeof colorThemes[0]) => {
+    setSelectedTheme(theme);
+    setCustomPrimaryColor(theme.primary);
+    setCustomSecondaryColor(theme.secondary);
+  };
+
+  // Render logo preview based on style
+  const renderLogoPreview = (logo: RecommendedLogo, colors: { primary: string; secondary: string }, size: "sm" | "lg" = "sm") => {
+    const initials = getInitials();
+    const businessName = formData.name || "Your Business";
+    const sizeClasses = size === "lg" ? "w-full h-full" : "w-full h-full";
+    const iconSize = size === "lg" ? "w-8 h-8" : "w-5 h-5";
+    const textSize = size === "lg" ? "text-lg" : "text-xs";
+    const initialsSize = size === "lg" ? "text-2xl" : "text-sm";
+    
+    switch (logo.style) {
+      case "icon-only":
+        return (
+          <div className={cn(sizeClasses, "flex items-center justify-center rounded-xl")} style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}>
+            <logo.icon className={cn(iconSize, "text-white drop-shadow-sm")} />
+          </div>
+        );
+      case "icon-text":
+        return (
+          <div className={cn(sizeClasses, "flex flex-col items-center justify-center gap-1 rounded-xl p-2")} style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}>
+            <logo.icon className={cn(size === "lg" ? "w-6 h-6" : "w-4 h-4", "text-white drop-shadow-sm")} />
+            <span className={cn(textSize, "text-white font-bold truncate max-w-full px-1")}>{initials}</span>
+          </div>
+        );
+      case "badge":
+        return (
+          <div className={cn(sizeClasses, "flex items-center justify-center rounded-xl border-2")} style={{ borderColor: colors.primary, background: `${colors.primary}10` }}>
+            <div className="flex flex-col items-center">
+              <span className={cn(initialsSize, "font-black")} style={{ color: colors.primary }}>{initials}</span>
+              {size === "lg" && <div className="w-8 h-0.5 mt-1 rounded-full" style={{ background: colors.secondary }} />}
+            </div>
+          </div>
+        );
+      case "wordmark":
+        return (
+          <div className={cn(sizeClasses, "flex items-center justify-center rounded-xl")} style={{ background: colors.primary }}>
+            <span className={cn(size === "lg" ? "text-xl" : "text-[10px]", "text-white font-bold tracking-wider uppercase truncate px-2")}>
+              {size === "lg" ? businessName.split(" ")[0] : initials}
+            </span>
+          </div>
+        );
+      case "minimal":
+        return (
+          <div className={cn(sizeClasses, "flex items-center justify-center rounded-xl bg-white border-2")} style={{ borderColor: colors.primary }}>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full" style={{ background: colors.primary }} />
+              <span className={cn(initialsSize, "font-semibold")} style={{ color: colors.primary }}>{initials}</span>
+            </div>
+          </div>
+        );
+      case "geometric":
+        return (
+          <div className={cn(sizeClasses, "flex items-center justify-center rounded-xl")} style={{ background: `linear-gradient(180deg, ${colors.primary}, ${colors.secondary})` }}>
+            <div className="relative">
+              <Hexagon className={cn(size === "lg" ? "w-12 h-12" : "w-8 h-8", "text-white/30")} />
+              <span className={cn("absolute inset-0 flex items-center justify-center font-bold text-white", size === "lg" ? "text-lg" : "text-xs")}>{initials}</span>
+            </div>
+          </div>
+        );
+      case "elegant":
+        return (
+          <div className={cn(sizeClasses, "flex items-center justify-center rounded-xl")} style={{ background: `linear-gradient(135deg, ${colors.primary}ee, ${colors.primary})` }}>
+            <div className="flex flex-col items-center">
+              <Crown className={cn(size === "lg" ? "w-5 h-5" : "w-3 h-3", "text-white/80 mb-0.5")} />
+              <span className={cn(size === "lg" ? "text-lg" : "text-[10px]", "text-white font-serif font-bold tracking-widest")}>{initials}</span>
+            </div>
+          </div>
+        );
+      case "playful":
+        return (
+          <div className={cn(sizeClasses, "flex items-center justify-center rounded-2xl")} style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}>
+            <div className="relative">
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full" style={{ background: colors.secondary }} />
+              <span className={cn(initialsSize, "text-white font-black")} style={{ textShadow: "2px 2px 0 rgba(0,0,0,0.1)" }}>{initials}</span>
+            </div>
+          </div>
+        );
+      default:
+        return (
+          <div className={cn(sizeClasses, "flex items-center justify-center rounded-xl")} style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}>
+            <span className={cn(initialsSize, "text-white font-bold")}>{initials}</span>
+          </div>
+        );
+    }
   };
 
   // ==========================================
@@ -581,132 +1682,671 @@ function GuidedOnboardingVariant({
   // ==========================================
   if (guidedStepsCompleted) {
     return (
-      <div className="relative overflow-hidden min-h-[600px]">
+      <div className="relative overflow-hidden min-h-[650px] lg:min-h-[750px]">
         {/* Animated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-background" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute top-10 left-[10%] w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float-slow" />
+        <div className="absolute bottom-10 right-[10%] w-80 h-80 bg-orange-400/10 rounded-full blur-3xl animate-float-delayed" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rose-400/5 rounded-full blur-3xl" />
 
         {/* Floating Feature Tags */}
-        <div className="absolute top-20 left-16 hidden lg:block animate-float" style={{ animationDelay: "0s" }}>
-          <div className="px-4 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">
-            <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              AI Guided
-            </span>
-          </div>
+        <div className="hidden lg:flex absolute top-24 left-[12%] glass rounded-full px-4 py-2 shadow-lg animate-float items-center gap-2">
+          <MessageCircle className="w-4 h-4 text-primary" />
+          <span className="text-xs font-medium">AI Guided</span>
         </div>
-        <div className="absolute top-32 right-20 hidden lg:block animate-float" style={{ animationDelay: "0.5s" }}>
-          <div className="px-4 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">
-            <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-500" />
-              Instant Setup
-            </span>
-          </div>
+        <div className="hidden lg:flex absolute bottom-32 left-[8%] glass rounded-full px-4 py-2 shadow-lg animate-float-delayed items-center gap-2">
+          <Zap className="w-4 h-4 text-amber-500" />
+          <span className="text-xs font-medium">Instant Setup</span>
         </div>
-        <div className="absolute bottom-32 left-24 hidden lg:block animate-float" style={{ animationDelay: "1s" }}>
-          <div className="px-4 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">
-            <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Star className="w-4 h-4 text-violet-500" />
-              Custom Design
-            </span>
-          </div>
+        <div className="hidden lg:flex absolute top-28 right-[10%] glass rounded-full px-4 py-2 shadow-lg animate-float-slow items-center gap-2">
+          <Star className="w-4 h-4 text-violet-500" />
+          <span className="text-xs font-medium">Custom Design</span>
         </div>
-        <div className="absolute bottom-24 right-32 hidden lg:block animate-float" style={{ animationDelay: "1.5s" }}>
-          <div className="px-4 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">
-            <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-green-500" />
-              Smart Layout
-            </span>
-          </div>
+        <div className="hidden lg:flex absolute bottom-28 right-[12%] glass rounded-full px-4 py-2 shadow-lg animate-float items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-emerald-500" />
+          <span className="text-xs font-medium">Smart Layout</span>
         </div>
 
-        <div className="relative z-10 flex items-center justify-center min-h-[600px] px-4">
-          <div className="max-w-2xl mx-auto">
+        <div className="relative z-10 flex items-center justify-center min-h-[650px] lg:min-h-[750px] px-4">
+          <div className="w-full max-w-xl animate-fade-in-up">
             {/* Main Card */}
-            <div className="bg-card/95 backdrop-blur-xl rounded-3xl border border-border/50 shadow-2xl p-8 md:p-12 text-center">
-              {/* Success Badge */}
-              <div className="flex justify-center mb-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span className="text-sm font-medium text-green-600">
-                    Business details saved
-                  </span>
-                </div>
-              </div>
-
-              {/* AI Icon with glow */}
-              <div className="relative inline-flex mb-8">
-                <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl animate-pulse" />
-                <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-2xl shadow-primary/30">
-                  <Sparkles className="w-10 h-10 text-white" />
+            <div className="bg-card/95 backdrop-blur-xl rounded-3xl border border-border/50 shadow-2xl p-8 lg:p-12">
+              {/* AI Icon */}
+              <div className="flex justify-center mb-8">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-2xl shadow-primary/30">
+                    <Sparkles className="w-10 h-10 text-white" />
+                  </div>
+                  {/* Animated ring */}
+                  <div className="absolute inset-0 rounded-3xl ring-4 ring-primary/20 animate-pulse" />
+                  {/* Subtle glow */}
+                  <div className="absolute -inset-4 bg-primary/10 rounded-full blur-2xl -z-10" />
                 </div>
               </div>
 
               {/* Headline */}
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
-                Bring your website to life with{" "}
-                <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  Universell AI
-                </span>
-              </h1>
-
-              {/* Supporting text */}
-              <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto">
-                Tell us a little about your business and what you'd like to create.
-                Universell AI will guide you step by step and design a website tailored just for you.
-              </p>
-
-              {/* Feature Pills */}
-              <div className="flex flex-wrap justify-center gap-3 mb-10">
-                {[
-                  { label: "Personalized Design", color: "text-primary" },
-                  { label: "Smart Suggestions", color: "text-amber-500" },
-                  { label: "Ready in Minutes", color: "text-green-500" },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border border-border/50"
-                  >
-                    <div className={cn("w-2 h-2 rounded-full", 
-                      item.color === "text-primary" ? "bg-primary" :
-                      item.color === "text-amber-500" ? "bg-amber-500" : "bg-green-500"
-                    )} />
-                    <span className="text-sm text-muted-foreground">{item.label}</span>
-                  </div>
-                ))}
+              <div className="text-center mb-8">
+                <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-4 tracking-tight leading-tight">
+                  Bring your website to life with{" "}
+                  <span className="bg-gradient-to-r from-primary via-primary to-primary/80 bg-clip-text text-transparent">
+                    Universell AI
+                  </span>
+                </h1>
+                <p className="text-base lg:text-lg text-muted-foreground leading-relaxed max-w-md mx-auto">
+                  Great! We&apos;ve got your business details and logo ready—now let&apos;s turn them into a beautiful website. This is where it all comes together ✨
+                </p>
               </div>
 
-              {/* Primary CTA */}
-              <Button
-                onClick={onNext}
-                size="lg"
-                className="group relative px-12 py-7 text-lg font-semibold rounded-2xl shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.02] transition-all duration-300 mb-4"
-              >
-                <Sparkles className="w-5 h-5 mr-2" />
-                Start with AI Chat
-                <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
-              </Button>
+              {/* Two Path Options */}
+              <div className="space-y-4 mb-6">
+                {/* Option A: Brand Vault */}
+                <button
+                  onClick={() => setIsBrandVaultOpen(true)}
+                  className="w-full group relative p-5 rounded-2xl border-2 border-border bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 hover:border-violet-400 hover:shadow-lg hover:shadow-violet-500/10 transition-all duration-300 text-left"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                      <FolderOpen className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-foreground text-lg">Create a Brand Vault</span>
+                        <span className="text-xs font-medium text-violet-600 bg-violet-100 dark:bg-violet-900/50 px-2 py-0.5 rounded-full">New</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Add everything you already have — you can always change or refine it later.
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">Logo</span>
+                        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">Colors</span>
+                        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">Inspiration</span>
+                        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">+ More</span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-violet-500 group-hover:translate-x-1 transition-transform flex-shrink-0 mt-2" />
+                  </div>
+                </button>
 
-              {/* Secondary Action */}
-              <div className="mt-4">
+                {/* Divider */}
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs font-medium text-muted-foreground">or</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+
+                {/* Option B: Guided Questions */}
                 <button
                   onClick={onNext}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 mx-auto"
+                  className="w-full group relative p-5 rounded-2xl border-2 border-border bg-gradient-to-br from-primary/5 to-primary/10 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 text-left"
                 >
-                  Create website without chat
-                  <ArrowRight className="w-4 h-4" />
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg flex-shrink-0">
+                      <MessageCircle className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="font-semibold text-foreground text-lg block mb-1">Guided Questions</span>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Answer a few quick questions and we&apos;ll handle the rest.
+                      </p>
+                      <div className="flex items-center gap-2 mt-3">
+                        <Check className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-xs text-muted-foreground">Takes about 2 minutes</span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform flex-shrink-0 mt-2" />
+                  </div>
+                </button>
+              </div>
+
+              {/* Skip option */}
+              <div className="pt-2 border-t border-border/50">
+                <button
+                  onClick={() => setIsBusinessModelModalOpen(true)}
+                  className="w-full py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 group"
+                >
+                  Skip for now and explore
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
             </div>
 
-            {/* Reassurance below card */}
-            <p className="text-sm text-muted-foreground mt-6 flex items-center justify-center gap-2">
-              <Shield className="w-4 h-4" />
-              You can always customize everything later
-            </p>
+            {/* Trust indicator */}
+            <div className="text-center mt-6">
+              <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                <Shield className="w-4 h-4 text-primary/60" />
+                You can always customize everything later
+              </p>
+            </div>
           </div>
         </div>
+
+        {/* Brand Vault Modal */}
+        <Dialog open={isBrandVaultOpen} onOpenChange={setIsBrandVaultOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-4 border-b border-border">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <FolderOpen className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold">Create Your Brand Vault</DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground mt-0.5">
+                    Add everything you already have — you can always change or refine it later.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {/* Helper notice */}
+              <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800">
+                <Sparkles className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  These help us design a more accurate and polished website — but you can edit everything later.
+                </p>
+              </div>
+
+              {/* Core Section */}
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <button
+                  onClick={() => setBrandVaultExpandedSections(prev => ({ ...prev, core: !prev.core }))}
+                  className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Star className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <span className="font-semibold text-foreground">Core Brand Assets</span>
+                      <span className="text-xs text-muted-foreground block">Inspiration, logo, colors</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">Recommended</span>
+                    {brandVaultExpandedSections.core ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+                  </div>
+                </button>
+
+                {brandVaultExpandedSections.core && (
+                  <div className="p-4 pt-0 space-y-5 border-t border-border">
+                    {/* Inspiration Links */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Link className="w-4 h-4 text-muted-foreground" />
+                        <Label className="font-medium">Website Inspiration</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground -mt-1">
+                        Share websites you like — we&apos;ll use them as design references.
+                      </p>
+                      <div className="space-y-2">
+                        {brandVaultData.inspirationLinks.map((link, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Input
+                              placeholder="https://example.com"
+                              value={link}
+                              onChange={(e) => {
+                                const links = [...brandVaultData.inspirationLinks];
+                                links[index] = e.target.value;
+                                setBrandVaultData(prev => ({ ...prev, inspirationLinks: links }));
+                              }}
+                              className="flex-1"
+                            />
+                            {brandVaultData.inspirationLinks.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setBrandVaultData(prev => ({
+                                    ...prev,
+                                    inspirationLinks: prev.inspirationLinks.filter((_, i) => i !== index),
+                                  }));
+                                }}
+                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setBrandVaultData(prev => ({ ...prev, inspirationLinks: [...prev.inspirationLinks, ""] }))}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add another link
+                      </Button>
+                    </div>
+
+                    {/* Logo Upload */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                        <Label className="font-medium">Brand Logo</Label>
+                      </div>
+                      <input
+                        ref={brandLogoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              setBrandVaultData(prev => ({
+                                ...prev,
+                                logoFile: file,
+                                logoPreview: ev.target?.result as string,
+                              }));
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      {brandVaultData.logoPreview ? (
+                        <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl border border-border">
+                          <div className="w-16 h-16 rounded-xl bg-white border border-border flex items-center justify-center overflow-hidden">
+                            <img src={brandVaultData.logoPreview} alt="Logo preview" className="max-w-full max-h-full object-contain" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-foreground">{brandVaultData.logoFile?.name}</p>
+                            <p className="text-xs text-muted-foreground">Click to replace</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => brandLogoInputRef.current?.click()}
+                          >
+                            Replace
+                          </Button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => brandLogoInputRef.current?.click()}
+                          className="w-full p-6 border-2 border-dashed border-border rounded-xl hover:border-primary/50 hover:bg-muted/30 transition-all flex flex-col items-center gap-2"
+                        >
+                          <Upload className="w-8 h-8 text-muted-foreground" />
+                          <span className="text-sm font-medium text-foreground">Upload your logo</span>
+                          <span className="text-xs text-muted-foreground">PNG, JPG, or SVG</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Brand Colors */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Palette className="w-4 h-4 text-muted-foreground" />
+                        <Label className="font-medium">Brand Colors</Label>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        {/* Primary */}
+                        <div className="space-y-2">
+                          <span className="text-xs text-muted-foreground">Primary</span>
+                          <div className="relative">
+                            <input
+                              type="color"
+                              value={brandVaultData.primaryColor || "#6366f1"}
+                              onChange={(e) => setBrandVaultData(prev => ({ ...prev, primaryColor: e.target.value }))}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            <div
+                              className="w-full h-12 rounded-lg border-2 border-border cursor-pointer flex items-center justify-center"
+                              style={{ backgroundColor: brandVaultData.primaryColor || "#f3f4f6" }}
+                            >
+                              {!brandVaultData.primaryColor && <Plus className="w-4 h-4 text-muted-foreground" />}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Secondary */}
+                        <div className="space-y-2">
+                          <span className="text-xs text-muted-foreground">Secondary</span>
+                          <div className="relative">
+                            <input
+                              type="color"
+                              value={brandVaultData.secondaryColor || "#8b5cf6"}
+                              onChange={(e) => setBrandVaultData(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            <div
+                              className="w-full h-12 rounded-lg border-2 border-border cursor-pointer flex items-center justify-center"
+                              style={{ backgroundColor: brandVaultData.secondaryColor || "#f3f4f6" }}
+                            >
+                              {!brandVaultData.secondaryColor && <Plus className="w-4 h-4 text-muted-foreground" />}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Accent */}
+                        <div className="space-y-2">
+                          <span className="text-xs text-muted-foreground">Accent</span>
+                          <div className="relative">
+                            <input
+                              type="color"
+                              value={brandVaultData.accentColor || "#f59e0b"}
+                              onChange={(e) => setBrandVaultData(prev => ({ ...prev, accentColor: e.target.value }))}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            <div
+                              className="w-full h-12 rounded-lg border-2 border-border cursor-pointer flex items-center justify-center"
+                              style={{ backgroundColor: brandVaultData.accentColor || "#f3f4f6" }}
+                            >
+                              {!brandVaultData.accentColor && <Plus className="w-4 h-4 text-muted-foreground" />}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Recommended Section */}
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <button
+                  onClick={() => setBrandVaultExpandedSections(prev => ({ ...prev, recommended: !prev.recommended }))}
+                  className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                      <Heart className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <div className="text-left">
+                      <span className="font-semibold text-foreground">Brand Personality</span>
+                      <span className="text-xs text-muted-foreground block">Fonts, tone, audience</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-amber-600 bg-amber-500/10 px-2 py-1 rounded-full">Suggested</span>
+                    {brandVaultExpandedSections.recommended ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+                  </div>
+                </button>
+
+                {brandVaultExpandedSections.recommended && (
+                  <div className="p-4 pt-0 space-y-5 border-t border-border">
+                    {/* Font Preference */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Type className="w-4 h-4 text-muted-foreground" />
+                        <Label className="font-medium">Font Preference</Label>
+                      </div>
+                      <Input
+                        placeholder="e.g., Modern sans-serif, Classic serif, Handwritten..."
+                        value={brandVaultData.fontPreference}
+                        onChange={(e) => setBrandVaultData(prev => ({ ...prev, fontPreference: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Brand Tone */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                        <Label className="font-medium">Brand Tone</Label>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {brandTones.map((tone) => (
+                          <button
+                            key={tone.id}
+                            onClick={() => setBrandVaultData(prev => ({ ...prev, brandTone: tone.id }))}
+                            className={cn(
+                              "p-3 rounded-lg border-2 transition-all text-left",
+                              brandVaultData.brandTone === tone.id
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/40"
+                            )}
+                          >
+                            <span className="text-lg">{tone.emoji}</span>
+                            <span className="text-sm font-medium block mt-1">{tone.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Industry */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Store className="w-4 h-4 text-muted-foreground" />
+                        <Label className="font-medium">Industry</Label>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {industries.map((industry) => (
+                          <button
+                            key={industry}
+                            onClick={() => setBrandVaultData(prev => ({ ...prev, industry }))}
+                            className={cn(
+                              "px-3 py-1.5 rounded-full border text-sm transition-all",
+                              brandVaultData.industry === industry
+                                ? "border-primary bg-primary/10 text-primary font-medium"
+                                : "border-border hover:border-primary/40 text-muted-foreground"
+                            )}
+                          >
+                            {industry}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Target Audience */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Target className="w-4 h-4 text-muted-foreground" />
+                        <Label className="font-medium">Target Audience</Label>
+                      </div>
+                      <Textarea
+                        placeholder="Who is your website for? e.g., Young professionals aged 25-40, health-conscious consumers..."
+                        value={brandVaultData.targetAudience}
+                        onChange={(e) => setBrandVaultData(prev => ({ ...prev, targetAudience: e.target.value }))}
+                        className="min-h-[80px] resize-none"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Optional Section */}
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <button
+                  onClick={() => setBrandVaultExpandedSections(prev => ({ ...prev, optional: !prev.optional }))}
+                  className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                      <Plus className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="text-left">
+                      <span className="font-semibold text-foreground">Extra Assets</span>
+                      <span className="text-xs text-muted-foreground block">Social links, guidelines, notes</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">Optional</span>
+                    {brandVaultExpandedSections.optional ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+                  </div>
+                </button>
+
+                {brandVaultExpandedSections.optional && (
+                  <div className="p-4 pt-0 space-y-5 border-t border-border">
+                    {/* Social Links */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Instagram className="w-4 h-4 text-muted-foreground" />
+                        <Label className="font-medium">Social Media Links</Label>
+                      </div>
+                      <div className="space-y-2">
+                        {brandVaultData.socialLinks.map((link, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Input
+                              placeholder="https://instagram.com/yourbrand"
+                              value={link}
+                              onChange={(e) => {
+                                const links = [...brandVaultData.socialLinks];
+                                links[index] = e.target.value;
+                                setBrandVaultData(prev => ({ ...prev, socialLinks: links }));
+                              }}
+                              className="flex-1"
+                            />
+                            {brandVaultData.socialLinks.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setBrandVaultData(prev => ({
+                                    ...prev,
+                                    socialLinks: prev.socialLinks.filter((_, i) => i !== index),
+                                  }));
+                                }}
+                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setBrandVaultData(prev => ({ ...prev, socialLinks: [...prev.socialLinks, ""] }))}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add another link
+                      </Button>
+                    </div>
+
+                    {/* Additional Notes */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-muted-foreground" />
+                        <Label className="font-medium">Additional Notes</Label>
+                      </div>
+                      <Textarea
+                        placeholder="Anything else you'd like us to know about your brand..."
+                        value={brandVaultData.additionalNotes}
+                        onChange={(e) => setBrandVaultData(prev => ({ ...prev, additionalNotes: e.target.value }))}
+                        className="min-h-[80px] resize-none"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Reassurance note */}
+              <div className="flex items-center gap-2 justify-center pt-2">
+                <Check className="w-4 h-4 text-green-500" />
+                <p className="text-sm text-muted-foreground">
+                  Nothing here is final. You can tweak, replace, or remove any item later.
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4 border-t border-border gap-2">
+              <Button variant="outline" onClick={() => setIsBrandVaultOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleBrandVaultSave} className="px-6">
+                <FolderOpen className="w-4 h-4 mr-2" />
+                Save Brand Vault & Continue
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+              {/* Business Model Selection Modal */}
+              <Dialog open={isBusinessModelModalOpen} onOpenChange={setIsBusinessModelModalOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl">
+                      Choose your business model
+                    </DialogTitle>
+                    <DialogDescription className="text-base pt-1">
+                      This information is required so we can create the right website structure for your business.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="py-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {businessModels.map((model) => {
+                        const IconComponent = model.icon;
+                        const isSelected = selectedBusinessModel === model.id;
+                        return (
+                          <button
+                            key={model.id}
+                            type="button"
+                            onClick={() => setSelectedBusinessModel(model.id)}
+                            className={cn(
+                              "relative p-5 rounded-2xl border-2 text-left transition-all duration-200",
+                              isSelected
+                                ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                                : "border-border hover:border-primary/40 hover:bg-muted/30"
+                            )}
+                          >
+                            {/* Selection indicator */}
+                            {isSelected && (
+                              <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                <Check className="w-3 h-3 text-white" />
+                              </div>
+                            )}
+                            
+                            {/* Icon */}
+                            <div className={cn(
+                              "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3",
+                              model.color
+                            )}>
+                              <IconComponent className="w-5 h-5 text-white" />
+                            </div>
+                            
+                            {/* Content */}
+                            <h3 className="font-semibold text-foreground mb-1">
+                              {model.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {model.description}
+                            </p>
+                            <p className="text-xs text-muted-foreground/70 italic">
+                              {model.examples}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <DialogFooter className="gap-2 sm:gap-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsBusinessModelModalOpen(false);
+                        setSelectedBusinessModel(null);
+                      }}
+                      className="rounded-xl"
+                      disabled={isCreatingWebsite}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleCreateWebsiteWithoutChat}
+                      disabled={!selectedBusinessModel || isCreatingWebsite}
+                      className="rounded-xl gap-2"
+                    >
+                      {isCreatingWebsite ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Creating your website…
+                        </>
+                      ) : (
+                        <>
+                          Continue
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
       </div>
     );
   }
@@ -723,220 +2363,277 @@ function GuidedOnboardingVariant({
 
       <div className="relative z-10 py-10 px-4 md:px-8 lg:px-12">
         <div className="max-w-4xl mx-auto">
-          {/* Progress Badge */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-              <div className="flex items-center gap-1.5">
-                {[1, 2, 3].map((step) => (
-                  <div
-                    key={step}
-                    className={cn(
-                      "w-2 h-2 rounded-full transition-all duration-300",
-                      step === currentGuidedStep
-                        ? "w-6 bg-primary"
-                        : step < currentGuidedStep
-                        ? "bg-primary"
-                        : "bg-muted-foreground/30"
-                    )}
-                  />
-                ))}
-              </div>
-              <span className="text-sm font-medium text-foreground">
-                Step {currentGuidedStep} of 3 — {stepTitles[currentGuidedStep]}
-              </span>
-            </div>
-          </div>
-
           {/* Main Content Card */}
           <div className="bg-card/95 backdrop-blur-xl rounded-3xl border border-border/50 shadow-2xl overflow-hidden">
             <div className="p-8 lg:p-10">
-              {/* Step 1: Business Logo */}
+              {/* Step 1: Business Details */}
               {currentGuidedStep === 1 && (
                 <div className="animate-fade-in-up">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <ImageIcon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-foreground">Business Logo</h2>
-                      <p className="text-sm text-muted-foreground">Upload your logo for your website</p>
-                    </div>
+                  {/* Engaging Header */}
+                  <div className="mb-8">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                      Business Details — let&apos;s build something impressive ✨
+                    </h2>
+                    <p className="text-base text-muted-foreground max-w-2xl">
+                      Tell us about your business so we can help you sell better. You can even let AI help you write the description.
+                    </p>
                   </div>
 
-                  {/* Logo Upload Area */}
-                  <div className="max-w-md mx-auto">
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className={cn(
-                        "relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300",
-                        logoPreview
-                          ? "border-primary/40 bg-primary/5"
-                          : "border-border hover:border-primary/40 hover:bg-muted/30"
-                      )}
-                    >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                        className="hidden"
-                      />
-                      
-                      {logoPreview ? (
-                        <div className="space-y-4">
-                          <div className="w-24 h-24 mx-auto rounded-xl overflow-hidden bg-muted">
-                            <img
-                              src={logoPreview}
-                              alt="Logo preview"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <p className="text-sm text-muted-foreground">Click to change logo</p>
+                  {/* Two Column Layout: Form + Visuals */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                    {/* Left: Form Fields */}
+                    <div className="space-y-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="name" className="text-sm font-medium">
+                          Business Name <span className="text-primary">*</span>
+                        </Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => updateField("name", e.target.value)}
+                          placeholder="Your business name"
+                          className="h-11 rounded-xl"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="description" className="text-sm font-medium">
+                            Business Description / Tagline
+                          </Label>
+                          <button
+                            type="button"
+                            className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors"
+                            onClick={() => setIsAIDescriptionModalOpen(true)}
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            Generate with AI
+                          </button>
                         </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="w-16 h-16 mx-auto rounded-xl bg-muted/50 flex items-center justify-center">
-                            <Upload className="w-8 h-8 text-muted-foreground/60" />
+                        <Textarea
+                          id="description"
+                          value={formData.description}
+                          onChange={(e) => updateField("description", e.target.value)}
+                          placeholder="Brief description of your business"
+                          className="rounded-xl resize-none"
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="email" className="text-sm font-medium flex items-center gap-1.5">
+                            <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                            Contact Email <span className="text-primary">*</span>
+                          </Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => updateField("email", e.target.value)}
+                            placeholder="hello@example.com"
+                            className="h-11 rounded-xl"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-1.5">
+                            <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                            Phone Number
+                          </Label>
+                          <Input
+                            id="phone"
+                            type="tel"
+                            value={formData.phone}
+                            onChange={(e) => updateField("phone", e.target.value)}
+                            placeholder="+1 (555) 000-0000"
+                            className="h-11 rounded-xl"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Creative Floating Visuals (Desktop/Tablet only) */}
+                    <div className="hidden lg:block relative h-[320px]">
+                      {/* Background gradient glow */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5 rounded-3xl" />
+                      
+                      {/* Floating Store Card */}
+                      <div 
+                        className="absolute top-4 left-4 glass rounded-2xl shadow-xl p-4 w-44 animate-float"
+                        style={{ animationDelay: "0s" }}
+                      >
+                        <div className="w-full h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl mb-3 flex items-center justify-center">
+                          <Store className="w-10 h-10 text-primary/70" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="h-2.5 bg-foreground/10 rounded-full w-3/4" />
+                          <div className="h-2 bg-foreground/5 rounded-full w-1/2" />
+                        </div>
+                      </div>
+
+                      {/* Floating Growth Chart Card */}
+                      <div 
+                        className="absolute top-8 right-4 glass rounded-2xl shadow-xl p-4 animate-float-delayed"
+                        style={{ animationDelay: "0.3s" }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
+                            <TrendingUp className="w-5 h-5 text-white" />
                           </div>
                           <div>
-                            <p className="font-medium text-foreground">Upload your logo</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              PNG, JPG up to 2MB • AI will generate if not provided
-                            </p>
+                            <p className="text-xs text-muted-foreground">Growth</p>
+                            <p className="text-lg font-bold text-foreground">+127%</p>
                           </div>
                         </div>
-                      )}
+                      </div>
+
+                      {/* Floating Happy Customer Card */}
+                      <div 
+                        className="absolute bottom-16 left-8 glass rounded-2xl shadow-xl p-3 animate-float-slow"
+                        style={{ animationDelay: "0.6s" }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                            <User className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="flex gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Floating Product Card */}
+                      <div 
+                        className="absolute bottom-4 right-8 glass rounded-2xl shadow-xl p-3 w-36 animate-float"
+                        style={{ animationDelay: "0.9s" }}
+                      >
+                        <div className="w-full h-16 bg-gradient-to-br from-violet-400/20 to-purple-500/10 rounded-xl mb-2 flex items-center justify-center">
+                          <Package className="w-6 h-6 text-violet-500/70" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-primary">$29.99</span>
+                          <div className="flex gap-0.5">
+                            {[...Array(4)].map((_, i) => (
+                              <Star key={i} className="w-2.5 h-2.5 fill-primary/60 text-primary/60" />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Decorative Sparkles */}
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <Sparkles className="w-6 h-6 text-primary/30 animate-pulse" />
+                      </div>
+
+                      {/* Decorative gradient shapes */}
+                      <div className="absolute top-1/4 right-1/4 w-16 h-16 bg-gradient-to-br from-primary/20 to-violet-500/20 rounded-full blur-xl" />
+                      <div className="absolute bottom-1/4 left-1/4 w-12 h-12 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-full blur-xl" />
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center justify-between mt-10 pt-6 border-t border-border/50">
-                    <button
-                      onClick={handleConfirmStep}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      Skip for now
-                    </button>
-                    <Button
-                      onClick={handleConfirmStep}
-                      size="lg"
-                      className="px-8 rounded-xl shadow-lg shadow-primary/20"
-                    >
-                      Confirm & Continue
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Business Details */}
-              {currentGuidedStep === 2 && (
-                <div className="animate-fade-in-up">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-foreground">Business Details</h2>
-                      <p className="text-sm text-muted-foreground">Review and confirm your business information</p>
-                    </div>
-                  </div>
-
-                  {/* Form Fields */}
-                  <div className="space-y-5 max-w-lg">
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-sm font-medium">
-                        Business Name <span className="text-primary">*</span>
-                      </Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => updateField("name", e.target.value)}
-                        placeholder="Your business name"
-                        className="h-11 rounded-xl"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="description" className="text-sm font-medium">
-                        Business Description / Tagline
-                      </Label>
-                      <Textarea
-                        id="description"
-                        value={formData.description}
-                        onChange={(e) => updateField("description", e.target.value)}
-                        placeholder="Brief description of your business"
-                        className="rounded-xl resize-none"
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email" className="text-sm font-medium flex items-center gap-1.5">
-                          <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                          Contact Email <span className="text-primary">*</span>
-                        </Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => updateField("email", e.target.value)}
-                          placeholder="hello@example.com"
-                          className="h-11 rounded-xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-1.5">
-                          <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                          Phone Number
-                        </Label>
-                        <Input
-                          id="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(e) => updateField("phone", e.target.value)}
-                          placeholder="+1 (555) 000-0000"
-                          className="h-11 rounded-xl"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-between mt-10 pt-6 border-t border-border/50">
-                    <Button
-                      variant="ghost"
-                      onClick={handleBack}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <ChevronLeft className="w-4 h-4 mr-1" />
-                      Back
-                    </Button>
+                  <div className="flex items-center justify-end mt-10 pt-6 border-t border-border/50">
                     <Button
                       onClick={handleConfirmStep}
                       size="lg"
                       className="px-8 rounded-xl shadow-lg shadow-primary/20"
                       disabled={!formData.name || !formData.email}
                     >
-                      Confirm & Continue
+                      Continue
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </div>
+
+                  {/* AI Description Generation Modal */}
+                  <Dialog open={isAIDescriptionModalOpen} onOpenChange={setIsAIDescriptionModalOpen}>
+                    <DialogContent className="sm:max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="text-xl flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-primary" />
+                          Let&apos;s get to know your business better 👋
+                        </DialogTitle>
+                        <DialogDescription className="text-base pt-1">
+                          A few details here will help us write a great description for you.
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="ai-business-input" className="text-sm font-medium">
+                            Tell us about your business
+                          </Label>
+                          <Textarea
+                            id="ai-business-input"
+                            value={aiDescriptionInput}
+                            onChange={(e) => setAIDescriptionInput(e.target.value)}
+                            placeholder="What do you sell? Who is it for? What makes you different?"
+                            className="min-h-[120px] resize-none rounded-xl"
+                            rows={5}
+                          />
+                        </div>
+                      </div>
+
+                      <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setIsAIDescriptionModalOpen(false);
+                            setAIDescriptionInput("");
+                          }}
+                          className="rounded-xl"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setIsGeneratingDescription(true);
+                            // Simulate AI generation (replace with actual AI call)
+                            setTimeout(() => {
+                              const generatedDescription = aiDescriptionInput
+                                ? `${formData.name || "Our business"} - ${aiDescriptionInput.slice(0, 100)}${aiDescriptionInput.length > 100 ? "..." : ""}`
+                                : `${formData.name || "Your Business"} offers exceptional products and services tailored to meet your needs.`;
+                              updateField("description", generatedDescription);
+                              setIsGeneratingDescription(false);
+                              setIsAIDescriptionModalOpen(false);
+                              setAIDescriptionInput("");
+                            }, 1000);
+                          }}
+                          disabled={isGeneratingDescription}
+                          className="rounded-xl gap-2"
+                        >
+                          {isGeneratingDescription ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4" />
+                              Generate Description
+                            </>
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               )}
 
-              {/* Step 3: Business Address */}
-              {currentGuidedStep === 3 && (
+              {/* Step 2: Business Address */}
+              {currentGuidedStep === 2 && (
                 <div className="animate-fade-in-up">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-foreground">Business Address</h2>
-                      <p className="text-sm text-muted-foreground">Where is your business located?</p>
-                    </div>
+                  {/* Engaging Header */}
+                  <div className="mb-8">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                      Business Location — the boring details 😄
+                    </h2>
+                    <p className="text-base text-muted-foreground max-w-2xl">
+                      We know it&apos;s not exciting, but we still need these details to run your business smoothly.
+                    </p>
                   </div>
 
                   {/* Form Fields */}
@@ -1025,9 +2722,271 @@ function GuidedOnboardingVariant({
                       className="px-8 rounded-xl shadow-lg shadow-primary/20"
                       disabled={!formData.country || !formData.state || !formData.city || !formData.zipcode || !formData.streetAddress}
                     >
-                      Confirm & Continue
+                      Continue
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Logo Upload + Recommended Logos */}
+              {currentGuidedStep === 3 && (
+                <div className="animate-fade-in-up">
+                  {/* Engaging Header */}
+                  <div className="mb-8">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                      Logo Time — let&apos;s have some fun 🎨
+                    </h2>
+                    <p className="text-base text-muted-foreground max-w-2xl">
+                      Pick a logo, play with colors, and make it feel like <em>you</em>. Don&apos;t worry, you can always change it later.
+                    </p>
+                  </div>
+
+                  {/* Two Column Layout */}
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+                    {/* Left Column - Logo Selection */}
+                    <div className="space-y-6">
+                      {/* Logo Upload Area */}
+                      <div>
+                        <Label className="text-sm font-medium mb-3 block">Upload Your Logo</Label>
+                        <div
+                          onClick={() => {
+                            setSelectedRecommendedLogo(null);
+                            fileInputRef.current?.click();
+                          }}
+                          className={cn(
+                            "relative border-2 border-dashed rounded-2xl p-5 cursor-pointer transition-all duration-300",
+                            logoPreview && !selectedRecommendedLogo
+                              ? "border-primary/40 bg-primary/5"
+                              : "border-border hover:border-primary/40 hover:bg-muted/30"
+                          )}
+                        >
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                            className="hidden"
+                          />
+                          
+                          {logoPreview && !selectedRecommendedLogo ? (
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 rounded-xl overflow-hidden bg-muted flex-shrink-0">
+                                <img
+                                  src={logoPreview}
+                                  alt="Logo preview"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="text-left">
+                                <p className="font-medium text-foreground">Logo uploaded</p>
+                                <p className="text-sm text-muted-foreground">Click to change</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center flex-shrink-0">
+                                <Upload className="w-6 h-6 text-muted-foreground/60" />
+                              </div>
+                              <div className="text-left">
+                                <p className="font-medium text-foreground">Upload your logo</p>
+                                <p className="text-sm text-muted-foreground">PNG, JPG up to 2MB</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Recommended Logos Section */}
+                      <div className="pt-4 border-t border-border/50">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          <Label className="text-sm font-medium">AI-Generated Logos for {formData.name || "Your Business"}</Label>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Select a logo style that fits your brand. You can customize colors after selection.
+                        </p>
+                        
+                        <div className="grid grid-cols-4 gap-3">
+                          {recommendedLogos.map((logo) => {
+                            const theme = colorThemes.find(t => t.id === logo.themeId) || colorThemes[0];
+                            const displayColors = selectedRecommendedLogo === logo.id ? getCurrentColors() : { primary: theme.primary, secondary: theme.secondary };
+                            
+                            return (
+                              <button
+                                key={logo.id}
+                                onClick={() => {
+                                  setSelectedRecommendedLogo(logo.id);
+                                  setLogoPreview(null);
+                                  // Set initial colors from the logo's theme
+                                  const logoTheme = colorThemes.find(t => t.id === logo.themeId) || colorThemes[0];
+                                  handleThemeSelect(logoTheme);
+                                }}
+                                className={cn(
+                                  "relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02]",
+                                  selectedRecommendedLogo === logo.id
+                                    ? "border-primary ring-2 ring-primary/20 bg-primary/5"
+                                    : "border-border hover:border-primary/40 bg-card"
+                                )}
+                              >
+                                <div className="w-14 h-14 rounded-lg overflow-hidden">
+                                  {renderLogoPreview(logo, displayColors, "sm")}
+                                </div>
+                                <span className="text-xs font-medium text-muted-foreground">{logo.name}</span>
+                                {selectedRecommendedLogo === logo.id && (
+                                  <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                                    <Check className="w-3 h-3 text-white" />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column - Preview & Color Customization */}
+                    <div className="space-y-6">
+                      {/* Live Logo Preview */}
+                      {selectedRecommendedLogo && (
+                        <div className="rounded-2xl bg-gradient-to-br from-muted/30 to-muted/10 border border-border/50 p-5">
+                          <Label className="text-sm font-medium mb-4 block">Logo Preview</Label>
+                          <div className="aspect-square w-full max-w-[200px] mx-auto rounded-2xl overflow-hidden shadow-lg">
+                            {renderLogoPreview(
+                              recommendedLogos.find(l => l.id === selectedRecommendedLogo)!,
+                              getCurrentColors(),
+                              "lg"
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground text-center mt-3">
+                            {formData.name || "Your Business"}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Color Customization Section */}
+                      {selectedRecommendedLogo && (
+                        <div className="rounded-2xl bg-card border border-border/50 p-5 space-y-5">
+                          <div className="flex items-center gap-2">
+                            <Palette className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-medium">Customize Logo Colors</Label>
+                          </div>
+
+                          {/* Color Theme Presets */}
+                          <div className="space-y-3">
+                            <Label className="text-xs text-muted-foreground">Color Themes</Label>
+                            <div className="grid grid-cols-3 gap-2">
+                              {colorThemes.map((theme) => (
+                                <button
+                                  key={theme.id}
+                                  onClick={() => handleThemeSelect(theme)}
+                                  className={cn(
+                                    "flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all duration-200",
+                                    selectedTheme.id === theme.id
+                                      ? "border-primary bg-primary/5"
+                                      : "border-border hover:border-primary/40"
+                                  )}
+                                >
+                                  <div className="flex gap-0.5">
+                                    <div className="w-4 h-4 rounded-full" style={{ background: theme.primary }} />
+                                    <div className="w-4 h-4 rounded-full" style={{ background: theme.secondary }} />
+                                  </div>
+                                  <span className="text-[10px] font-medium text-muted-foreground">{theme.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Custom Color Pickers */}
+                          <div className="space-y-3 pt-3 border-t border-border/50">
+                            <Label className="text-xs text-muted-foreground">Custom Colors</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1.5">
+                                <Label className="text-xs font-medium">Primary</Label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="color"
+                                    value={customPrimaryColor}
+                                    onChange={(e) => setCustomPrimaryColor(e.target.value)}
+                                    className="w-8 h-8 rounded-lg border border-border cursor-pointer"
+                                  />
+                                  <Input
+                                    value={customPrimaryColor}
+                                    onChange={(e) => setCustomPrimaryColor(e.target.value)}
+                                    className="h-8 text-xs font-mono uppercase"
+                                    maxLength={7}
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-xs font-medium">Secondary</Label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="color"
+                                    value={customSecondaryColor}
+                                    onChange={(e) => setCustomSecondaryColor(e.target.value)}
+                                    className="w-8 h-8 rounded-lg border border-border cursor-pointer"
+                                  />
+                                  <Input
+                                    value={customSecondaryColor}
+                                    onChange={(e) => setCustomSecondaryColor(e.target.value)}
+                                    className="h-8 text-xs font-mono uppercase"
+                                    maxLength={7}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Helper Text */}
+                          <div className="rounded-lg bg-muted/50 p-3">
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              💡 You can change your logo colors now or later. These colors will also be used as your store&apos;s theme.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Placeholder when no logo selected */}
+                      {!selectedRecommendedLogo && !logoPreview && (
+                        <div className="rounded-2xl bg-muted/20 border border-dashed border-border p-8 text-center">
+                          <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                            <ImageIcon className="w-8 h-8 text-muted-foreground/40" />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Select a logo to preview and customize colors
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between mt-10 pt-6 border-t border-border/50">
+                    <Button
+                      variant="ghost"
+                      onClick={handleBack}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Back
+                    </Button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleConfirmStep}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Skip for now
+                      </button>
+                      <Button
+                        onClick={handleConfirmStep}
+                        size="lg"
+                        className="px-8 rounded-xl shadow-lg shadow-primary/20"
+                      >
+                        Complete Setup
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1434,13 +3393,26 @@ function VariantTabSwitcher({
 // ============================================
 export function WelcomeStep({ onNext, businessInfo, onUpdateBusinessInfo }: WelcomeStepProps) {
   const [activeVariant, setActiveVariant] = useState<DesignVariant>("landing");
+  const [skipGuidedIntro, setSkipGuidedIntro] = useState(false);
+
+  // Handler to switch from Landing to Guided variant (skip intro, go directly to Business Details)
+  const handleStartGuided = () => {
+    setSkipGuidedIntro(true);
+    setActiveVariant("guided");
+  };
 
   return (
     <div className="flex flex-col min-h-full">
       {/* Tab Switcher (Stakeholder Review Only) */}
       <VariantTabSwitcher
         activeVariant={activeVariant}
-        onVariantChange={setActiveVariant}
+        onVariantChange={(variant) => {
+          setActiveVariant(variant);
+          // Reset skipIntro when manually switching tabs
+          if (variant !== "guided") {
+            setSkipGuidedIntro(false);
+          }
+        }}
       />
 
       {/* Variant Content */}
@@ -1449,12 +3421,13 @@ export function WelcomeStep({ onNext, businessInfo, onUpdateBusinessInfo }: Welc
           key={activeVariant}
           className="animate-fade-in-up"
         >
-          {activeVariant === "landing" && <LandingStyleVariant onNext={onNext} />}
+          {activeVariant === "landing" && <LandingStyleVariant onStartGuided={handleStartGuided} />}
           {activeVariant === "guided" && (
             <GuidedOnboardingVariant
               onNext={onNext}
               businessInfo={businessInfo}
               onUpdateBusinessInfo={onUpdateBusinessInfo}
+              skipIntro={skipGuidedIntro}
             />
           )}
           {activeVariant === "fast-start" && <FastStartVariant onNext={onNext} />}

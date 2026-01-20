@@ -27,6 +27,8 @@ export interface BusinessInfo {
   logoPreview: string | null;
   banner: File | null;
   bannerPreview: string | null;
+  // Business model for website creation
+  businessModel?: string;
 }
 
 export interface Product {
