@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastShop AI Website Builder - Implementation Specification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        code, pre {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            background: #0f172a;
+            padding: 24px 16px;
+            z-index: 50;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            padding: 40px 60px;
+            max-width: 1200px;
+        }
+        
+        .nav-link {
+            display: block;
+            padding: 8px 12px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            background: #1e293b;
+            color: #f1f5f9;
+        }
+        
+        .nav-link.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .nav-section {
+            margin-bottom: 24px;
+        }
+        
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+        
+        .section {
+            margin-bottom: 60px;
+            scroll-margin-top: 40px;
+        }
+        
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 3px solid #3b82f6;
+        }
+        
+        .subsection-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 40px;
+            margin-bottom: 16px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card-header .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .feature-card h4 {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        
+        .feature-card p {
+            font-size: 14px;
+            color: #64748b;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+        
+        th {
+            background: #f8fafc;
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4b5563;
+        }
+        
+        tr:hover td {
+            background: #f8fafc;
+        }
+        
+        .code-block {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        
+        .code-block code {
+            color: #e2e8f0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .prompt-block {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+            border-radius: 0 8px 8px 0;
+            padding: 20px;
+            margin: 16px 0;
+        }
+        
+        .prompt-block h5 {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 12px;
+        }
+        
+        .prompt-block pre {
+            background: rgba(255,255,255,0.7);
+            padding: 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #1e293b;
+            white-space: pre-wrap;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .flow-step-number {
+            width: 36px;
+            height: 36px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .flow-step-content h4 {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        
+        .flow-step-content p {
+            color: #64748b;
+            font-size: 14px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        
+        .badge-green {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        
+        .badge-orange {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+        
+        .badge-purple {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+        
+        .endpoint-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .method {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .method-get { background: #dcfce7; color: #15803d; }
+        .method-post { background: #dbeafe; color: #1d4ed8; }
+        .method-put { background: #fef3c7; color: #b45309; }
+        .method-delete { background: #fee2e2; color: #dc2626; }
+        
+        .endpoint-path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #1e293b;
+        }
+        
+        .endpoint-body {
+            padding: 16px;
+        }
+        
+        .color-swatch {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            margin: 4px;
+        }
+        
+        .color-swatch .color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .mermaid {
+            background: #f8fafc;
+            padding: 24px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .cost-highlight {
+            font-size: 28px;
+            font-weight: 700;
+            color: #059669;
+        }
+        
+        .toc-progress {
+            position: fixed;
+            top: 0;
+            left: 280px;
+            right: 0;
+            height: 3px;
+            background: #e2e8f0;
+            z-index: 100;
+        }
+        
+        .toc-progress-bar {
+            height: 100%;
+            background: #3b82f6;
+            width: 0%;
+            transition: width 0.1s;
+        }
+        
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 24px;
+            }
+            .toc-progress {
+                left: 0;
+            }
+        }
+        
+        .architecture-diagram {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 24px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Progress Bar -->
+    <div class="toc-progress">
+        <div class="toc-progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="mb-8">
+            <div class="flex items-center gap-3 px-3 mb-2">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-lg">FS</span>
+                </div>
+                <div>
+                    <div class="text-white font-semibold">FastShop</div>
+                    <div class="text-slate-400 text-xs">Implementation Spec</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">Overview</div>
+            <a href="#executive-summary" class="nav-link">Executive Summary</a>
+            <a href="#onboarding-flow" class="nav-link">Onboarding Flow</a>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">AI Features</div>
+            <a href="#ai-chat" class="nav-link">AI Chat Integration</a>
+            <a href="#ai-page-generation" class="nav-link">AI Page Generation</a>
+            <a href="#dalle-image-generation" class="nav-link">DALL-E 3 Images</a>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">Core Features</div>
+            <a href="#website-scraping" class="nav-link">Website Scraping</a>
+            <a href="#grapejs-builder" class="nav-link">GrapeJS Page Builder</a>
+            <a href="#menu-builder" class="nav-link">Menu Builder</a>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">Technical</div>
+            <a href="#api-endpoints" class="nav-link">API Endpoints</a>
+            <a href="#cost-estimation" class="nav-link">Cost Estimation</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="badge badge-blue">v1.0</span>
+                <span class="badge badge-green">January 2026</span>
+            </div>
+            <h1 class="text-5xl font-bold text-slate-900 mb-4">FastShop AI Website Builder</h1>
+            <p class="text-xl text-slate-600">Implementation Specification Document for Universell Platform</p>
+        </header>
+
+        <!-- Section 1: Executive Summary -->
+        <section id="executive-summary" class="section">
+            <h2 class="section-title">1. Executive Summary</h2>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon bg-blue-100">🎯</div>
+                    Product Overview
+                </div>
+                <p class="text-slate-600 mb-6">
+                    Universell FastShop is an AI-powered website builder module that enables users to create fully customized online stores through intelligent automation and visual editing tools. The system combines conversational AI for design consultation with automated content generation and a visual page builder.
+                </p>
+            </div>
+
+            <h3 class="subsection-title">Key Features</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="text-3xl mb-3">💬</div>
+                    <h4>Conversational AI Onboarding</h4>
+                    <p>GPT-5 powered design consultation that guides users through brand setup</p>
+                </div>
+                <div class="feature-card">
+                    <div class="text-3xl mb-3">🔍</div>
+                    <h4>Reference Website Analysis</h4>
+                    <p>Scrape and learn from inspiration sites (WordPress, Shopify, custom)</p>
+                </div>
+                <div class="feature-card">
+                    <div class="text-3xl mb-3">⚡</div>
+                    <h4>Automated Page Generation</h4>
+                    <p>AI creates complete page structures with content and styling</p>
+                </div>
+                <div class="feature-card">
+                    <div class="text-3xl mb-3">🎨</div>
+                    <h4>AI Image Generation</h4>
+                    <p>DALL-E 3 integration for custom hero images, products, and banners</p>
+                </div>
+                <div class="feature-card">
+                    <div class="text-3xl mb-3">🖱️</div>
+                    <h4>Visual Page Builder</h4>
+                    <p>GrapeJS-based drag-and-drop editor with custom blocks</p>
+                </div>
+                <div class="feature-card">
+                    <div class="text-3xl mb-3">📑</div>
+                    <h4>Smart Menu Builder</h4>
+                    <p>Drag-and-drop navigation management for header and footer</p>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">System Architecture</h3>
+            <div class="architecture-diagram">
+<pre>┌─────────────────────────────────────────────────────────────────┐
+│                        USER INTERFACE                            │
+│  (Onboarding Wizard, Dashboard, Page Editor, Menu Builder)       │
+└─────────────────────────────────┬───────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         API LAYER                                │
+│              (REST API with JWT Authentication)                  │
+└──────────┬──────────────────┬───────────────────┬───────────────┘
+           │                  │                   │
+           ▼                  ▼                   ▼
+┌──────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐
+│   AI SERVICES    │ │  CORE SERVICES  │ │    EXTERNAL SERVICES    │
+│                  │ │                 │ │                         │
+│ • GPT-5 Chat     │ │ • Site Manager  │ │ • OpenAI API (GPT-5)    │
+│ • Page Generator │ │ • Page Manager  │ │ • OpenAI DALL-E 3       │
+│ • Content Writer │ │ • Menu Manager  │ │ • CDN Storage           │
+│ • Site Analyzer  │ │ • Brand Vault   │ │                         │
+└──────────────────┘ └─────────────────┘ └─────────────────────────┘
+           │                  │
+           ▼                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      DATA PERSISTENCE                            │
+│                    (MySQL Database + File Storage)               │
+└─────────────────────────────────────────────────────────────────┘</pre>
+            </div>
+        </section>
+
+        <!-- Section 2: Onboarding Flow -->
+        <section id="onboarding-flow" class="section">
+            <h2 class="section-title">2. Onboarding Flow</h2>
+            
+            <p class="text-slate-600 mb-8">The onboarding wizard guides users through a 7-step process to collect business information, establish brand identity, and generate their initial website structure.</p>
+
+            <div class="mermaid">
+                flowchart LR
+                    A[Welcome] --> B[Brand Vault]
+                    B --> C[AI Chat]
+                    C --> D[Shop Type]
+                    D --> E[Select Items]
+                    E --> F[Generate Pages]
+                    F --> G[Review & Launch]
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <div class="card">
+                    <div class="flow-step">
+                        <div class="flow-step-number">1</div>
+                        <div class="flow-step-content">
+                            <h4>Welcome</h4>
+                            <p>Collect business name, tagline, description, and logo upload</p>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-step-number">2</div>
+                        <div class="flow-step-content">
+                            <h4>Brand Vault</h4>
+                            <p>Configure colors, design styles, typography, and brand personality</p>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-step-number">3</div>
+                        <div class="flow-step-content">
+                            <h4>AI Chat Design</h4>
+                            <p>Interactive conversation with AI design consultant</p>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-step-number">4</div>
+                        <div class="flow-step-content">
+                            <h4>Shop Type</h4>
+                            <p>Select Products, Services, Booking, or Hybrid model</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="flow-step">
+                        <div class="flow-step-number">5</div>
+                        <div class="flow-step-content">
+                            <h4>Select Products/Services</h4>
+                            <p>Choose items from inventory to feature on website</p>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-step-number">6</div>
+                        <div class="flow-step-content">
+                            <h4>AI Page Generation</h4>
+                            <p>Automatically generate all website pages with AI</p>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-step-number">7</div>
+                        <div class="flow-step-content">
+                            <h4>Review & Launch</h4>
+                            <p>Preview pages, make final edits, and publish</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Brand Vault Configuration</h3>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Section</th>
+                            <th>Fields</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-blue">Core Assets</span></td>
+                            <td>Inspiration Links, Logo, Primary/Secondary/Accent Colors</td>
+                            <td>Essential brand identity elements</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-purple">Brand Style</span></td>
+                            <td>Design Styles (Modern, Minimal, etc.), Typography Preference</td>
+                            <td>Visual aesthetic preferences</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-orange">Personality</span></td>
+                            <td>Brand Tones (Friendly, Professional, etc.), Target Audience</td>
+                            <td>Voice and messaging tone</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-green">Extras</span></td>
+                            <td>Social Links, Brand Guidelines URL, Notes for AI</td>
+                            <td>Additional context for AI</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 3: AI Chat Integration -->
+        <section id="ai-chat" class="section">
+            <h2 class="section-title">3. AI Chat Integration</h2>
+            
+            <p class="text-slate-600 mb-8">The AI Chat provides conversational design consultation during onboarding, helping users define their brand identity, select colors, choose page structures, and customize content through natural language interaction.</p>
+
+            <div class="mermaid">
+                sequenceDiagram
+                    participant User
+                    participant ChatUI as Chat UI
+                    participant API as API Layer
+                    participant GPT as GPT-5
+
+                    User->>ChatUI: Send message
+                    ChatUI->>API: POST /api/ai/chat
+                    API->>GPT: Stream completion
+                    GPT-->>API: Token stream
+                    API-->>ChatUI: SSE events
+                    ChatUI-->>User: Display response
+            </div>
+
+            <h3 class="subsection-title">Conversation States</h3>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>State</th>
+                            <th>Purpose</th>
+                            <th>User Action</th>
+                            <th>Next State</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>inspiration</code></td>
+                            <td>Collect reference websites</td>
+                            <td>Share URLs or skip</td>
+                            <td>color</td>
+                        </tr>
+                        <tr>
+                            <td><code>color</code></td>
+                            <td>Primary color selection</td>
+                            <td>Choose from palette</td>
+                            <td>color-shade</td>
+                        </tr>
+                        <tr>
+                            <td><code>color-shade</code></td>
+                            <td>Refine primary color</td>
+                            <td>Select shade</td>
+                            <td>secondary-color</td>
+                        </tr>
+                        <tr>
+                            <td><code>secondary-color</code></td>
+                            <td>Secondary color selection</td>
+                            <td>Choose color</td>
+                            <td>shop-type</td>
+                        </tr>
+                        <tr>
+                            <td><code>shop-type</code></td>
+                            <td>Business model selection</td>
+                            <td>Select type</td>
+                            <td>pages</td>
+                        </tr>
+                        <tr>
+                            <td><code>pages</code></td>
+                            <td>Page structure selection</td>
+                            <td>Select/customize pages</td>
+                            <td>complete</td>
+                        </tr>
+                        <tr>
+                            <td><code>complete</code></td>
+                            <td>Ready for generation</td>
+                            <td>Confirm</td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="subsection-title">System Prompt: Design Consultant</h3>
+            <div class="prompt-block">
+                <h5>🤖 GPT-5 System Prompt</h5>
+                <pre>You are FastShop AI, an expert website design consultant helping users create 
+their perfect online store. You guide users through brand discovery and website 
+configuration with friendly, professional dialogue.
+
+CONTEXT:
+- Business Name: {{businessName}}
+- Business Description: {{businessDescription}}
+- Brand Colors: Primary: {{primaryColor}}, Secondary: {{secondaryColor}}, Accent: {{accentColor}}
+- Design Style: {{designStyles}}
+- Brand Tone: {{brandTones}}
+- Target Audience: {{targetAudience}}
+- Shop Type: {{shopType}}
+
+CAPABILITIES:
+1. Help users refine their brand identity
+2. Suggest color palettes based on industry and brand personality
+3. Recommend page structures for their business type
+4. Generate content prompts for each page
+5. Provide design style recommendations
+
+CONVERSATION FLOW:
+1. Acknowledge user's brand and show understanding
+2. Ask clarifying questions about their vision
+3. Offer specific, actionable suggestions
+4. Confirm choices before proceeding
+
+OUTPUT FORMAT:
+- Keep responses concise (2-3 sentences max)
+- Use encouraging, supportive tone
+- Include specific examples when suggesting options
+- End with clear next step or question
+
+CONSTRAINTS:
+- Never generate code directly in chat
+- Focus on design and content decisions
+- Defer technical implementation to the page generator</pre>
+            </div>
+
+            <h3 class="subsection-title">Color Palette</h3>
+            <div class="card">
+                <p class="text-slate-600 mb-4">Available primary colors with shade variations:</p>
+                <div class="flex flex-wrap gap-2">
+                    <div class="color-swatch"><div class="color" style="background: #EF4444"></div>Red</div>
+                    <div class="color-swatch"><div class="color" style="background: #F97316"></div>Orange</div>
+                    <div class="color-swatch"><div class="color" style="background: #EAB308"></div>Yellow</div>
+                    <div class="color-swatch"><div class="color" style="background: #22C55E"></div>Green</div>
+                    <div class="color-swatch"><div class="color" style="background: #14B8A6"></div>Teal</div>
+                    <div class="color-swatch"><div class="color" style="background: #3B82F6"></div>Blue</div>
+                    <div class="color-swatch"><div class="color" style="background: #6366F1"></div>Indigo</div>
+                    <div class="color-swatch"><div class="color" style="background: #A855F7"></div>Purple</div>
+                    <div class="color-swatch"><div class="color" style="background: #EC4899"></div>Pink</div>
+                    <div class="color-swatch"><div class="color" style="background: #6B7280"></div>Gray</div>
+                </div>
+                <p class="text-sm text-slate-500 mt-4">Each color has 5 shade variations: Lightest (100), Light (300), Medium (500), Dark (700), Darkest (900)</p>
+            </div>
+        </section>
+
+        <!-- Section 4: AI Page Generation -->
+        <section id="ai-page-generation" class="section">
+            <h2 class="section-title">4. AI Page Generation</h2>
+            
+            <p class="text-slate-600 mb-8">The AI Page Generator creates complete website pages with structured content, appropriate sections, and styling based on the user's brand configuration and business context.</p>
+
+            <div class="mermaid">
+                flowchart TD
+                    A[Load Context] --> B[Load Brand Vault]
+                    B --> C{Has Reference Site?}
+                    C -->|Yes| D[Enhance with Patterns]
+                    C -->|No| E[Use Base Prompt]
+                    D --> F[Generate Page Structure]
+                    E --> F
+                    F --> G[Generate Section Content]
+                    G --> H{Need Images?}
+                    H -->|Yes| I[Generate Images DALL-E 3]
+                    H -->|No| J[Assemble Page]
+                    I --> J
+                    J --> K[Validate HTML]
+                    K --> L[Save Page]
+            </div>
+
+            <h3 class="subsection-title">Section Types</h3>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Section</th>
+                            <th>Purpose</th>
+                            <th>Required Fields</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>hero</code></td>
+                            <td>Full-width hero banner</td>
+                            <td>headline, subheadline, ctaText, backgroundImage</td>
+                        </tr>
+                        <tr>
+                            <td><code>features</code></td>
+                            <td>Feature highlights</td>
+                            <td>headline, features[] with icon, title, description</td>
+                        </tr>
+                        <tr>
+                            <td><code>testimonials</code></td>
+                            <td>Customer reviews</td>
+                            <td>headline, testimonials[] with quote, author, role</td>
+                        </tr>
+                        <tr>
+                            <td><code>cta</code></td>
+                            <td>Call to action</td>
+                            <td>headline, subheadline, ctaText, ctaLink</td>
+                        </tr>
+                        <tr>
+                            <td><code>products</code></td>
+                            <td>Product showcase</td>
+                            <td>headline, productIds[], layout</td>
+                        </tr>
+                        <tr>
+                            <td><code>services</code></td>
+                            <td>Service listing</td>
+                            <td>headline, serviceIds[], layout</td>
+                        </tr>
+                        <tr>
+                            <td><code>contact</code></td>
+                            <td>Contact information</td>
+                            <td>headline, address, phone, email, formEnabled</td>
+                        </tr>
+                        <tr>
+                            <td><code>faq</code></td>
+                            <td>FAQ accordion</td>
+                            <td>headline, questions[] with question, answer</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="subsection-title">Page Generation Prompt</h3>
+            <div class="prompt-block">
+                <h5>🤖 GPT-5 Page Generator Prompt</h5>
+                <pre>You are FastShop Page Generator, an AI that creates complete website page 
+structures and content based on business context and user preferences.
+
+INPUTS:
+- businessInfo: {name, tagline, description, contact details, address}
+- brandVault: {colors, styles, typography, tones, target audience}
+- pageType: homepage | about | shop | services | contact | booking | terms | privacy
+- customPrompt: User's specific requirements for this page
+
+TASK: Generate a complete page structure with:
+
+1. PAGE_METADATA:
+   - title: SEO-optimized page title
+   - description: Meta description (150-160 chars)
+   - slug: URL-friendly slug
+
+2. SECTIONS: Array of page sections with:
+   - sectionType, headline, subheadline, content
+   - ctaText, ctaLink (if applicable)
+   - style: {backgroundColor, textColor, layout}
+
+3. DESIGN_TOKENS:
+   - Apply brand colors throughout
+   - Match typography preference
+   - Align with selected design style
+
+QUALITY GUIDELINES:
+- Content must be specific to the business, not generic
+- Headlines should be compelling and benefit-focused
+- Include social proof elements where appropriate
+- Ensure mobile-responsive layout recommendations</pre>
+            </div>
+
+            <h3 class="subsection-title">Output Schema</h3>
+            <div class="code-block">
+                <code><pre>{
+  "metadata": {
+    "title": "Welcome to Sunrise Cafe & Bakery",
+    "description": "Fresh baked goods daily...",
+    "slug": "home"
+  },
+  "sections": [
+    {
+      "id": "hero-1",
+      "sectionType": "hero",
+      "headline": "Where Every Morning Starts with Warmth",
+      "subheadline": "Fresh baked goods and artisan coffee crafted with love",
+      "ctaText": "View Our Menu",
+      "ctaLink": "/products",
+      "style": {
+        "backgroundColor": "{{primaryColor}}",
+        "textColor": "#ffffff",
+        "layout": "center"
+      },
+      "backgroundImage": {
+        "generate": true,
+        "prompt": "Warm bakery interior with fresh bread"
+      }
+    }
+  ],
+  "designTokens": {
+    "primaryColor": "#F97316",
+    "secondaryColor": "#FED7AA",
+    "fontFamily": "Inter, system-ui, sans-serif"
+  }
+}</pre></code>
+            </div>
+        </section>
+
+        <!-- Section 5: DALL-E Image Generation -->
+        <section id="dalle-image-generation" class="section">
+            <h2 class="section-title">5. DALL-E 3 Image Generation</h2>
+            
+            <p class="text-slate-600 mb-8">AI-powered image generation creates custom visuals for hero sections, product placeholders, team photos, banners, and background patterns tailored to the user's brand.</p>
+
+            <div class="mermaid">
+                sequenceDiagram
+                    participant User
+                    participant API as API Layer
+                    participant DALLE as DALL-E 3
+                    participant CDN as CDN Storage
+
+                    User->>API: Request image
+                    API->>API: Build prompt with context
+                    API->>DALLE: Generate image
+                    DALLE-->>API: Temporary URL
+                    API->>API: Download image
+                    API->>CDN: Upload to storage
+                    CDN-->>API: Permanent URL
+                    API-->>User: Return image URL
+            </div>
+
+            <h3 class="subsection-title">Size Selection</h3>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Image Type</th>
+                            <th>Size</th>
+                            <th>Aspect Ratio</th>
+                            <th>Use Case</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Hero Image</td>
+                            <td><code>1792x1024</code></td>
+                            <td>Landscape (16:9)</td>
+                            <td>Page hero banners</td>
+                        </tr>
+                        <tr>
+                            <td>Product Image</td>
+                            <td><code>1024x1024</code></td>
+                            <td>Square (1:1)</td>
+                            <td>Product placeholders</td>
+                        </tr>
+                        <tr>
+                            <td>Banner</td>
+                            <td><code>1792x1024</code></td>
+                            <td>Landscape (16:9)</td>
+                            <td>Promotional banners</td>
+                        </tr>
+                        <tr>
+                            <td>Social Media</td>
+                            <td><code>1024x1024</code></td>
+                            <td>Square (1:1)</td>
+                            <td>Social sharing</td>
+                        </tr>
+                        <tr>
+                            <td>Vertical Banner</td>
+                            <td><code>1024x1792</code></td>
+                            <td>Portrait (9:16)</td>
+                            <td>Mobile banners</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="subsection-title">Prompt Templates</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="prompt-block">
+                    <h5>🖼️ Hero Image</h5>
+                    <pre>Professional hero image for {{businessName}}, 
+a {{businessDescription}}. 
+{{styleDescriptors}} aesthetic, 
+{{brandTones}} mood. 
+High-quality commercial photography style.
+No text or logos in the image.</pre>
+                </div>
+                
+                <div class="prompt-block">
+                    <h5>📦 Product Image</h5>
+                    <pre>Product photography of {{productName}} 
+for {{businessName}}. 
+Clean {{styleDescriptors}} aesthetic, 
+studio lighting, 
+professional e-commerce style, 
+white or neutral background.</pre>
+                </div>
+                
+                <div class="prompt-block">
+                    <h5>👥 Team Photo</h5>
+                    <pre>Professional team photo placeholder 
+for {{businessName}}. 
+{{brandTones}} atmosphere, 
+modern office or workspace setting.
+Diverse group of professionals, 
+natural poses, warm lighting.</pre>
+                </div>
+                
+                <div class="prompt-block">
+                    <h5>🎨 Background Pattern</h5>
+                    <pre>Abstract background pattern 
+for {{businessName}} website. 
+Subtle {{styleDescriptors}} style, 
+{{primaryColor}} and {{secondaryColor}} tones, 
+seamless texture, minimal, 
+suitable for text overlay.</pre>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Cost & Optimization</h3>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Quality</th>
+                            <th>Size</th>
+                            <th>Cost per Image</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-green">Standard</span></td>
+                            <td>1024x1024</td>
+                            <td>$0.040</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-green">Standard</span></td>
+                            <td>1792x1024</td>
+                            <td>$0.080</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-purple">HD</span></td>
+                            <td>1024x1024</td>
+                            <td>$0.080</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-purple">HD</span></td>
+                            <td>1792x1024</td>
+                            <td>$0.120</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-sm text-slate-500 mt-4"><strong>Strategy:</strong> Use standard quality for drafts/previews, HD only for final published hero images.</p>
+            </div>
+        </section>
+
+        <!-- Section 6: Website Scraping -->
+        <section id="website-scraping" class="section">
+            <h2 class="section-title">6. Website Scraping System</h2>
+            
+            <p class="text-slate-600 mb-8">The scraping system analyzes reference websites provided by users during onboarding. It extracts design patterns, content structure, color palettes, and navigation to inform AI-generated content.</p>
+
+            <div class="mermaid">
+                flowchart TD
+                    A[Reference URL] --> B[Validate URL]
+                    B --> C[Check robots.txt]
+                    C --> D[Detect Platform]
+                    D --> E{Platform?}
+                    E -->|WordPress| F[WP Scraper]
+                    E -->|Shopify| G[Shopify Scraper]
+                    E -->|Other| H[Generic Scraper]
+                    F --> I[Parse Sitemap]
+                    G --> I
+                    H --> I
+                    I --> J[Scrape Pages]
+                    J --> K[Extract Assets]
+                    J --> L[Analyze Content]
+                    K --> M[AI Analysis]
+                    L --> M
+                    M --> N[Store Results]
+            </div>
+
+            <h3 class="subsection-title">Platform Detection</h3>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Platform</th>
+                            <th>Detection Method</th>
+                            <th>Sitemap Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-blue">WordPress</span></td>
+                            <td>Meta generator tag, /wp-content/ paths, /wp-json/ API</td>
+                            <td>/wp-sitemap.xml, /sitemap_index.xml</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-green">Shopify</span></td>
+                            <td>cdn.shopify.com URLs, /cart.js endpoint</td>
+                            <td>/sitemap.xml (auto-generated)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-purple">WooCommerce</span></td>
+                            <td>WordPress + /product/, /shop/ paths</td>
+                            <td>/product-sitemap.xml</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-orange">Generic</span></td>
+                            <td>Fallback detection</td>
+                            <td>/sitemap.xml, robots.txt parsing</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="subsection-title">Data Extraction</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon bg-blue-100">📄</div>
+                        DOM Scraper
+                    </div>
+                    <ul class="text-sm text-slate-600 space-y-2">
+                        <li>• Page title and meta</li>
+                        <li>• Heading hierarchy</li>
+                        <li>• Section structure</li>
+                        <li>• Navigation menus</li>
+                        <li>• CSS styles</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon bg-green-100">🎨</div>
+                        Asset Extractor
+                    </div>
+                    <ul class="text-sm text-slate-600 space-y-2">
+                        <li>• Logo images</li>
+                        <li>• Hero/banner images</li>
+                        <li>• Favicon</li>
+                        <li>• Primary colors</li>
+                        <li>• Font families</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon bg-purple-100">🤖</div>
+                        AI Analysis
+                    </div>
+                    <ul class="text-sm text-slate-600 space-y-2">
+                        <li>• Structure analysis</li>
+                        <li>• Design patterns</li>
+                        <li>• Content patterns</li>
+                        <li>• Style recommendations</li>
+                        <li>• Page suggestions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Rate Limiting & Ethics</h3>
+            <div class="card bg-red-50 border-red-200">
+                <ul class="text-sm text-slate-700 space-y-2">
+                    <li>✓ Check robots.txt before scraping any URL</li>
+                    <li>✓ Maximum 1 request per second per domain</li>
+                    <li>✓ Timeout: 30 seconds per page</li>
+                    <li>✓ Maximum: 50 pages per reference site</li>
+                    <li>✓ Do not scrape password-protected content</li>
+                    <li>✓ Cache responses to avoid duplicate requests</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 7: GrapeJS Page Builder -->
+        <section id="grapejs-builder" class="section">
+            <h2 class="section-title">7. GrapeJS Page Builder</h2>
+            
+            <p class="text-slate-600 mb-8">GrapeJS provides a visual drag-and-drop page editor allowing users to customize AI-generated pages or build new pages from scratch using pre-built blocks.</p>
+
+            <div class="card">
+                <div class="bg-slate-100 rounded-lg p-4 font-mono text-sm">
+<pre class="text-slate-700">┌────────────────────────────────────────────────────────────────────┐
+│                         EDITOR HEADER                               │
+│  [← Back] [Page Name]                    [Preview] [Save] [Publish] │
+├─────────────┬──────────────────────────────────────────┬───────────┤
+│             │                                          │           │
+│   AI CHAT   │            VISUAL CANVAS                 │  BLOCKS   │
+│   SIDEBAR   │                                          │  PANEL    │
+│             │     ┌────────────────────────────┐       │           │
+│  [Describe  │     │                            │       │  [Hero]   │
+│   changes]  │     │     Page Preview           │       │  [Text]   │
+│             │     │     with Live Editing      │       │  [Image]  │
+│  [AI       │     │                            │       │  [Gallery]│
+│   Response] │     │                            │       │  [CTA]    │
+│             │     └────────────────────────────┘       │  [Contact]│
+│             │                                          │  [...]    │
+├─────────────┴──────────────────────────────────────────┴───────────┤
+│                         STYLE MANAGER                               │
+│  [Typography] [Colors] [Spacing] [Layout] [Effects]                 │
+└────────────────────────────────────────────────────────────────────┘</pre>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Custom Block Categories</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="feature-card text-center">
+                    <div class="text-2xl mb-2">🏠</div>
+                    <h4>Hero Section</h4>
+                    <p>Full-width banner with CTA</p>
+                </div>
+                <div class="feature-card text-center">
+                    <div class="text-2xl mb-2">📝</div>
+                    <h4>Text Block</h4>
+                    <p>Rich text content</p>
+                </div>
+                <div class="feature-card text-center">
+                    <div class="text-2xl mb-2">🖼️</div>
+                    <h4>Image Gallery</h4>
+                    <p>Grid or carousel</p>
+                </div>
+                <div class="feature-card text-center">
+                    <div class="text-2xl mb-2">⭐</div>
+                    <h4>Features Grid</h4>
+                    <p>Icon + text highlights</p>
+                </div>
+                <div class="feature-card text-center">
+                    <div class="text-2xl mb-2">💬</div>
+                    <h4>Testimonials</h4>
+                    <p>Customer reviews</p>
+                </div>
+                <div class="feature-card text-center">
+                    <div class="text-2xl mb-2">📢</div>
+                    <h4>Call to Action</h4>
+                    <p>CTA section</p>
+                </div>
+                <div class="feature-card text-center">
+                    <div class="text-2xl mb-2">📧</div>
+                    <h4>Contact Form</h4>
+                    <p>Customizable form</p>
+                </div>
+                <div class="feature-card text-center">
+                    <div class="text-2xl mb-2">❓</div>
+                    <h4>FAQ</h4>
+                    <p>Accordion Q&A</p>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">AI Block Generation</h3>
+            <div class="card">
+                <div class="flex gap-4 items-start">
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-slate-800 mb-2">Workflow</h4>
+                        <ol class="text-sm text-slate-600 space-y-2 list-decimal list-inside">
+                            <li>User opens AI sidebar in editor</li>
+                            <li>Describes desired section: <em>"Add a section showing our 3 main services with icons"</em></li>
+                            <li>AI generates appropriate HTML block with content</li>
+                            <li>Block inserted at cursor position in canvas</li>
+                            <li>User can further customize visually</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Brand Color Injection</h3>
+            <div class="code-block">
+                <code><pre>:root {
+  --primary: #F97316;
+  --secondary: #FED7AA;
+  --accent: #EA580C;
+  --text: #1F2937;
+  --background: #FFFFFF;
+  --muted: #9CA3AF;
+}
+
+/* All blocks use these variables */
+.hero-section { background: var(--primary); }
+.cta-button { background: var(--accent); }</pre></code>
+            </div>
+        </section>
+
+        <!-- Section 8: Menu Builder -->
+        <section id="menu-builder" class="section">
+            <h2 class="section-title">8. Menu Builder</h2>
+            
+            <p class="text-slate-600 mb-8">The Menu Builder allows users to create and manage navigation menus for their website header and footer through a visual drag-and-drop interface.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon bg-blue-100">📑</div>
+                        Header Menu
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-4 font-mono text-sm">
+<pre>├── Home
+├── Products ▼
+│   ├── Category 1
+│   ├── Category 2
+│   └── Category 3
+├── Services
+├── About Us
+└── Contact</pre>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon bg-green-100">📑</div>
+                        Footer Menu
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-4 font-mono text-sm">
+<pre>├── Privacy Policy
+├── Terms of Service
+├── Contact Us
+└── FAQ</pre>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Menu Item Types</h3>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Properties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>page</code></td>
+                            <td>Internal page link</td>
+                            <td>label, pageId, url</td>
+                        </tr>
+                        <tr>
+                            <td><code>category</code></td>
+                            <td>Product/service category</td>
+                            <td>label, categoryId, url</td>
+                        </tr>
+                        <tr>
+                            <td><code>product</code></td>
+                            <td>Single product link</td>
+                            <td>label, productId, url</td>
+                        </tr>
+                        <tr>
+                            <td><code>custom</code></td>
+                            <td>Custom URL</td>
+                            <td>label, url, openInNewTab</td>
+                        </tr>
+                        <tr>
+                            <td><code>dropdown</code></td>
+                            <td>Parent with children</td>
+                            <td>label, children[]</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="subsection-title">Operations</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg text-center">
+                    <div class="text-2xl mb-2">➕</div>
+                    <h4 class="font-medium">Add Item</h4>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg text-center">
+                    <div class="text-2xl mb-2">🗑️</div>
+                    <h4 class="font-medium">Remove</h4>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg text-center">
+                    <div class="text-2xl mb-2">↕️</div>
+                    <h4 class="font-medium">Reorder</h4>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg text-center">
+                    <div class="text-2xl mb-2">📂</div>
+                    <h4 class="font-medium">Nest</h4>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg text-center">
+                    <div class="text-2xl mb-2">✏️</div>
+                    <h4 class="font-medium">Edit</h4>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg text-center">
+                    <div class="text-2xl mb-2">👁️</div>
+                    <h4 class="font-medium">Toggle Visibility</h4>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 9: API Endpoints -->
+        <section id="api-endpoints" class="section">
+            <h2 class="section-title">9. API Endpoints</h2>
+            
+            <p class="text-slate-600 mb-8">All API endpoints require JWT Bearer token authentication.</p>
+
+            <h3 class="subsection-title">Site Management</h3>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/v1/sites</span>
+                    <span class="text-slate-500 text-sm ml-auto">List user's sites</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/v1/sites</span>
+                    <span class="text-slate-500 text-sm ml-auto">Create new site</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-put">PUT</span>
+                    <span class="endpoint-path">/api/v1/sites/{id}</span>
+                    <span class="text-slate-500 text-sm ml-auto">Update site</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/v1/sites/{id}/publish</span>
+                    <span class="text-slate-500 text-sm ml-auto">Publish site</span>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Pages</h3>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/v1/sites/{id}/pages</span>
+                    <span class="text-slate-500 text-sm ml-auto">List site pages</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/v1/sites/{id}/pages</span>
+                    <span class="text-slate-500 text-sm ml-auto">Create page</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-put">PUT</span>
+                    <span class="endpoint-path">/api/v1/sites/{id}/pages/{pageId}</span>
+                    <span class="text-slate-500 text-sm ml-auto">Update page</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-delete">DELETE</span>
+                    <span class="endpoint-path">/api/v1/sites/{id}/pages/{pageId}</span>
+                    <span class="text-slate-500 text-sm ml-auto">Delete page</span>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">AI Generation</h3>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/v1/ai/chat</span>
+                    <span class="text-slate-500 text-sm ml-auto">Send chat message (SSE stream)</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/v1/ai/generate-page</span>
+                    <span class="text-slate-500 text-sm ml-auto">Generate full page</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/v1/ai/generate-section</span>
+                    <span class="text-slate-500 text-sm ml-auto">Generate single section</span>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Image Generation</h3>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/v1/images/generate</span>
+                    <span class="text-slate-500 text-sm ml-auto">Generate AI image</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/v1/images/{id}</span>
+                    <span class="text-slate-500 text-sm ml-auto">Get image details</span>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Website Scraping</h3>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/v1/scrape</span>
+                    <span class="text-slate-500 text-sm ml-auto">Start scraping job</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/v1/scrape/{jobId}</span>
+                    <span class="text-slate-500 text-sm ml-auto">Get job status</span>
+                </div>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/v1/scrape/{jobId}/results</span>
+                    <span class="text-slate-500 text-sm ml-auto">Get scraping results</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 10: Cost Estimation -->
+        <section id="cost-estimation" class="section">
+            <h2 class="section-title">10. Cost Estimation</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card text-center">
+                    <h4 class="text-slate-500 text-sm mb-2">Avg. Cost per User</h4>
+                    <div class="cost-highlight">~$0.70</div>
+                    <p class="text-sm text-slate-500 mt-2">Complete onboarding journey</p>
+                </div>
+                <div class="card text-center">
+                    <h4 class="text-slate-500 text-sm mb-2">With Optimization</h4>
+                    <div class="cost-highlight">~$0.50</div>
+                    <p class="text-sm text-slate-500 mt-2">With caching enabled</p>
+                </div>
+                <div class="card text-center">
+                    <h4 class="text-slate-500 text-sm mb-2">Monthly (1K users)</h4>
+                    <div class="cost-highlight">~$600</div>
+                    <p class="text-sm text-slate-500 mt-2">Estimated AI costs</p>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Per-Operation Costs</h3>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Operation</th>
+                            <th>Tokens</th>
+                            <th>Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Chat message</td>
+                            <td>~500 in + ~300 out</td>
+                            <td>$0.008</td>
+                        </tr>
+                        <tr>
+                            <td>Page generation</td>
+                            <td>~2,000 in + ~4,000 out</td>
+                            <td>$0.060</td>
+                        </tr>
+                        <tr>
+                            <td>Section generation</td>
+                            <td>~800 in + ~1,500 out</td>
+                            <td>$0.023</td>
+                        </tr>
+                        <tr>
+                            <td>Site analysis</td>
+                            <td>~5,000 in + ~2,000 out</td>
+                            <td>$0.070</td>
+                        </tr>
+                        <tr>
+                            <td>Image (standard)</td>
+                            <td>—</td>
+                            <td>$0.04-0.08</td>
+                        </tr>
+                        <tr>
+                            <td>Image (HD)</td>
+                            <td>—</td>
+                            <td>$0.08-0.12</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="subsection-title">Typical User Journey Breakdown</h3>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Step</th>
+                            <th>Operations</th>
+                            <th>Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Onboarding chat</td>
+                            <td>10 messages</td>
+                            <td>$0.08</td>
+                        </tr>
+                        <tr>
+                            <td>Reference site analysis</td>
+                            <td>1 job</td>
+                            <td>$0.07</td>
+                        </tr>
+                        <tr>
+                            <td>Page generation</td>
+                            <td>5 pages</td>
+                            <td>$0.30</td>
+                        </tr>
+                        <tr>
+                            <td>Image generation</td>
+                            <td>3 images (standard)</td>
+                            <td>$0.15</td>
+                        </tr>
+                        <tr>
+                            <td>Content refinement</td>
+                            <td>5 refinements</td>
+                            <td>$0.10</td>
+                        </tr>
+                        <tr class="font-semibold bg-slate-50">
+                            <td>Total</td>
+                            <td></td>
+                            <td>~$0.70</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="subsection-title">Optimization Strategies</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="card">
+                    <h4 class="font-semibold text-slate-800 mb-2">🔄 Semantic Caching</h4>
+                    <p class="text-sm text-slate-600">Cache similar prompt responses. Expected savings: 40-50%</p>
+                </div>
+                <div class="card">
+                    <h4 class="font-semibold text-slate-800 mb-2">✂️ Prompt Optimization</h4>
+                    <p class="text-sm text-slate-600">Shorter, focused prompts. Expected savings: 20-30%</p>
+                </div>
+                <div class="card">
+                    <h4 class="font-semibold text-slate-800 mb-2">🔀 Model Routing</h4>
+                    <p class="text-sm text-slate-600">Use GPT-4o-mini for simple tasks. Expected savings: 50-70%</p>
+                </div>
+                <div class="card">
+                    <h4 class="font-semibold text-slate-800 mb-2">🖼️ Image Quality Tiering</h4>
+                    <p class="text-sm text-slate-600">Standard for drafts, HD for final. Expected savings: 40-50%</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 pt-8 border-t border-slate-200">
+            <div class="flex items-center justify-between text-sm text-slate-500">
+                <div>FastShop Implementation Specification v1.0</div>
+                <div>Universell Platform • January 2026</div>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // Progress bar
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('progressBar').style.width = scrolled + '%';
+        });
+
+        // Active nav link
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
