@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useBrandTokens } from "@/hooks/use-brand-tokens";
 import {
   ArrowLeft,
   Eye,
@@ -28,6 +29,7 @@ import {
   Trash2,
   Copy,
   Edit,
+  Palette,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -77,6 +79,9 @@ export default function PageEditorPage() {
   const [inputMessage, setInputMessage] = useState("");
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Brand tokens integration
+  const { brand, colors, brandName, getBrandStyles } = useBrandTokens();
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -227,36 +232,64 @@ export default function PageEditorPage() {
               </div>
 
               {/* Page Content Preview */}
-              <div className="min-h-[600px]">
+              <div className="min-h-[600px]" style={getBrandStyles()}>
                 {/* Hero Section */}
-                <div className="relative h-80 bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center text-white">
+                <div 
+                  className="relative h-80 flex items-center justify-center text-white"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)` 
+                  }}
+                >
                   <div className="text-center">
-                    <h1 className="text-4xl font-bold mb-4">
-                      Sunrise Cafe & Bakery
+                    <h1 
+                      className="text-4xl font-bold mb-4"
+                      style={{ fontFamily: brand.typography.headingFont }}
+                    >
+                      {brandName || "Sunrise Cafe & Bakery"}
                     </h1>
                     <p className="text-xl opacity-90 mb-6">
-                      Fresh baked goods and artisan coffee
+                      {brand.tagline || "Fresh baked goods and artisan coffee"}
                     </p>
-                    <button className="bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold">
+                    <button 
+                      className="px-6 py-3 rounded-lg font-semibold"
+                      style={{ 
+                        backgroundColor: colors.background || "#ffffff",
+                        color: colors.primary
+                      }}
+                    >
                       View Our Menu
                     </button>
                   </div>
                 </div>
 
                 {/* Features Section */}
-                <div className="py-16 px-8">
-                  <h2 className="text-2xl font-bold text-center mb-8">
+                <div className="py-16 px-8" style={{ backgroundColor: colors.background }}>
+                  <h2 
+                    className="text-2xl font-bold text-center mb-8"
+                    style={{ color: colors.text, fontFamily: brand.typography.headingFont }}
+                  >
                     Why Choose Us
                   </h2>
                   <div className="grid grid-cols-3 gap-8">
                     {["Fresh Daily", "Local Ingredients", "Expert Bakers"].map(
                       (item) => (
                         <div key={item} className="text-center">
-                          <div className="w-16 h-16 bg-orange-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                            <Star className="w-8 h-8 text-orange-500" />
+                          <div 
+                            className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+                            style={{ backgroundColor: `${colors.primary}20` }}
+                          >
+                            <Star className="w-8 h-8" style={{ color: colors.primary }} />
                           </div>
-                          <h3 className="font-semibold mb-2">{item}</h3>
-                          <p className="text-sm text-gray-600">
+                          <h3 
+                            className="font-semibold mb-2"
+                            style={{ color: colors.text }}
+                          >
+                            {item}
+                          </h3>
+                          <p 
+                            className="text-sm"
+                            style={{ color: colors.secondary }}
+                          >
                             Lorem ipsum dolor sit amet consectetur.
                           </p>
                         </div>
@@ -266,14 +299,26 @@ export default function PageEditorPage() {
                 </div>
 
                 {/* CTA Section */}
-                <div className="py-12 px-8 bg-gray-50 text-center">
-                  <h2 className="text-2xl font-bold mb-4">
+                <div 
+                  className="py-12 px-8 text-center"
+                  style={{ backgroundColor: `${colors.primary}10` }}
+                >
+                  <h2 
+                    className="text-2xl font-bold mb-4"
+                    style={{ color: colors.text, fontFamily: brand.typography.headingFont }}
+                  >
                     Ready to Order?
                   </h2>
-                  <p className="text-gray-600 mb-6">
+                  <p 
+                    className="mb-6"
+                    style={{ color: colors.secondary }}
+                  >
                     Visit us today or order online for pickup
                   </p>
-                  <button className="bg-orange-500 text-white px-8 py-3 rounded-lg font-semibold">
+                  <button 
+                    className="text-white px-8 py-3 rounded-lg font-semibold"
+                    style={{ backgroundColor: colors.primary }}
+                  >
                     Order Now
                   </button>
                 </div>
@@ -285,8 +330,9 @@ export default function PageEditorPage() {
         {/* Right Panel - Blocks */}
         <div className="w-72 bg-card border-l border-border flex flex-col shrink-0">
           <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
-            <TabsList className="m-4 grid grid-cols-2">
+            <TabsList className="m-4 grid grid-cols-3">
               <TabsTrigger value="blocks">Blocks</TabsTrigger>
+              <TabsTrigger value="brand">Brand</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
 
@@ -344,6 +390,105 @@ export default function PageEditorPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="brand" className="flex-1 p-4 overflow-auto">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">Brand Tokens</h3>
+                  <Link href="/settings/brand-vault">
+                    <Button variant="ghost" size="sm" className="h-7 text-xs">
+                      <Palette className="w-3 h-3 mr-1" />
+                      Edit
+                    </Button>
+                  </Link>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  These values sync from your Brand Vault
+                </p>
+                
+                {/* Colors */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase">Colors</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                      <div 
+                        className="w-4 h-4 rounded-sm border" 
+                        style={{ backgroundColor: colors.primary }}
+                      />
+                      <span className="text-xs">Primary</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                      <div 
+                        className="w-4 h-4 rounded-sm border" 
+                        style={{ backgroundColor: colors.secondary }}
+                      />
+                      <span className="text-xs">Secondary</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                      <div 
+                        className="w-4 h-4 rounded-sm border" 
+                        style={{ backgroundColor: colors.accent }}
+                      />
+                      <span className="text-xs">Accent</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                      <div 
+                        className="w-4 h-4 rounded-sm border" 
+                        style={{ backgroundColor: colors.background }}
+                      />
+                      <span className="text-xs">Background</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Typography */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase">Typography</label>
+                  <div className="space-y-1">
+                    <div className="p-2 rounded bg-muted/50">
+                      <span className="text-xs text-muted-foreground">Headings:</span>
+                      <span className="text-xs ml-2 font-medium">{brand.typography.headingFont || "Default"}</span>
+                    </div>
+                    <div className="p-2 rounded bg-muted/50">
+                      <span className="text-xs text-muted-foreground">Body:</span>
+                      <span className="text-xs ml-2 font-medium">{brand.typography.bodyFont || "Default"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Brand Info */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase">Brand Info</label>
+                  <div className="space-y-1">
+                    <div className="p-2 rounded bg-muted/50">
+                      <span className="text-xs text-muted-foreground">Name:</span>
+                      <span className="text-xs ml-2 font-medium">{brandName || "Not set"}</span>
+                    </div>
+                    <div className="p-2 rounded bg-muted/50">
+                      <span className="text-xs text-muted-foreground">Tagline:</span>
+                      <span className="text-xs ml-2 font-medium truncate">{brand.tagline || "Not set"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Voice */}
+                {brand.voice.tones.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground uppercase">Brand Voice</label>
+                    <div className="flex flex-wrap gap-1">
+                      {brand.voice.tones.map((tone) => (
+                        <span 
+                          key={tone}
+                          className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full capitalize"
+                        >
+                          {tone}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
 

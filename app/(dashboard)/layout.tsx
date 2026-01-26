@@ -165,6 +165,7 @@ export default function DashboardLayout({
       label: "Website Settings",
       isAccordion: true,
       children: [
+        { icon: Sparkles, label: "Brand Vault", href: "/settings/brand-vault" },
         { icon: Image, label: "Change Logo", href: "/settings/logo" },
         { icon: Bookmark, label: "Product Positioning", href: "/settings/positioning" },
         { icon: FolderTree, label: "Categories", href: "/settings/categories" },
