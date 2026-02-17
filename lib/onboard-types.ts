@@ -74,6 +74,7 @@ export const PAIN_POINTS = [
   { id: "orders", label: "Streamlining order fulfillment" },
   { id: "analytics", label: "Understanding business analytics" },
   { id: "agreements", label: "Contract/agreement management" },
+  { id: "appointments", label: "Scheduling & appointment booking" },
 ] as const;
 
 export const GOALS = [

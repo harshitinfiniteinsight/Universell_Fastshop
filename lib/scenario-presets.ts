@@ -79,6 +79,7 @@ export const SCENARIO_PRESETS: {
     },
     recommendations: [
       { moduleId: "crm", score: 75, relevance: "essential", reason: "Appointments and client history." },
+      { moduleId: "appointments", score: 70, relevance: "essential", reason: "Self-booking for services." },
       { moduleId: "employees", score: 65, relevance: "essential", reason: "Stylist schedules and commissions." },
       { moduleId: "rewards", score: 55, relevance: "essential", reason: "Loyalty rewards for repeat visits." },
       { moduleId: "marketing", score: 45, relevance: "recommended", reason: "Promote services and offers." },
@@ -129,6 +130,8 @@ export const SCENARIO_PRESETS: {
     recommendations: [
       { moduleId: "crm", score: 75, relevance: "essential", reason: "Leads and client management." },
       { moduleId: "invoices", score: 70, relevance: "essential", reason: "Send invoices and track payments." },
+      { moduleId: "agreements", score: 65, relevance: "essential", reason: "Digital contracts and e-signatures." },
+      { moduleId: "estimates", score: 60, relevance: "essential", reason: "Professional project quotes." },
       { moduleId: "analytics", score: 45, relevance: "recommended", reason: "Revenue and project insights." },
       { moduleId: "marketing", score: 40, relevance: "recommended", reason: "Simple outreach campaigns." },
     ],

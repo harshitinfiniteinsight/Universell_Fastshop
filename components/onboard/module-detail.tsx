@@ -36,6 +36,9 @@ import {
   Target,
   ListChecks,
   Lock,
+  FileSignature,
+  Calendar,
+  FileText,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -47,6 +50,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Megaphone,
   Gift,
   BarChart3,
+  FileSignature,
+  Calendar,
+  FileText,
 };
 
 // Pick step icon from title keywords
@@ -77,6 +83,9 @@ const MODULE_ROUTES: Record<string, string> = {
   marketing: "/marketing",
   rewards: "/marketing",
   analytics: "/dashboard",
+  agreements: "/settings",
+  appointments: "/booking",
+  estimates: "/sales",
 };
 
 interface Props {
@@ -230,7 +239,7 @@ export function ModuleDetail({ module, state, onToggleStep }: Props) {
                 : true;
               const stepRoute = MODULE_ROUTES[module.id] || "/dashboard";
               const canGoToStep = prereqDone;
-              const isLocked = hasPrereq && !prereqDone && !isDone;
+              const isLocked = !!hasPrereq && !prereqDone && !isDone;
               const canSkip = canGoToStep && !isDone && !cannotSkipStep(index);
               const StepIcon = getStepIcon(step.title);
 

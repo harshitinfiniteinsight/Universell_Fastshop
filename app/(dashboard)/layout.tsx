@@ -63,6 +63,11 @@ import {
   Sparkles,
   Briefcase,
   ShoppingBag,
+  FileSignature,
+  Gift,
+  LogOut,
+  MoreHorizontal,
+  Trophy,
 } from "lucide-react";
 
 interface NavItem {
@@ -144,6 +149,9 @@ export default function DashboardLayout({
     { icon: ShoppingCart, label: "Sales", href: "/sales", external: false },
     { icon: ShoppingBag, label: "Fast Shop (E-Commerce)", href: "/fastshop", external: false },
     { icon: Megaphone, label: "Marketing", href: "/marketing", external: false },
+    { icon: FileSignature, label: "Agreements & E-Sign", href: "/settings", external: false },
+    { icon: Calendar, label: "Appointments & Booking", href: "/booking", external: false },
+    { icon: FileText, label: "Invoices & Estimates", href: "/sales", external: false },
     { icon: Settings, label: "Settings", href: "/settings", external: false },
   ];
   // Single expanded accordion - only one section can be open at a time

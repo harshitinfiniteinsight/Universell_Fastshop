@@ -16,6 +16,7 @@ import {
   Truck,
   BarChart3,
   FileSignature,
+  Calendar,
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -117,6 +118,15 @@ const CHALLENGES = [
     color: "text-slate-600 dark:text-slate-400",
     bg: "bg-slate-100 dark:bg-slate-500/10",
     selectedBg: "bg-slate-50 dark:bg-slate-500/5",
+  },
+  {
+    id: "appointments",
+    label: "Appointment Scheduling",
+    description: "Booking services and managing availability",
+    icon: Calendar,
+    color: "text-green-600 dark:text-green-400",
+    bg: "bg-green-100 dark:bg-green-500/10",
+    selectedBg: "bg-green-50 dark:bg-green-500/5",
   },
 ];
 

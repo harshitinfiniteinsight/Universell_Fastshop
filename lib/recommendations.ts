@@ -100,6 +100,30 @@ const RULES: ScoringRule[] = [
     condition: (a) => a.painPoints.includes("analytics"),
     moduleScores: { analytics: 25 },
   },
+  {
+    condition: (a) => a.painPoints.includes("agreements"),
+    moduleScores: { agreements: 25 },
+  },
+  {
+    condition: (a) => a.industry === "professional",
+    moduleScores: { agreements: 25, estimates: 25 },
+  },
+  {
+    condition: (a) => a.industry === "health",
+    moduleScores: { agreements: 15, appointments: 25 },
+  },
+  {
+    condition: (a) => a.industry === "salon",
+    moduleScores: { appointments: 30 },
+  },
+  {
+    condition: (a) => a.offersServices,
+    moduleScores: { appointments: 20 },
+  },
+  {
+    condition: (a) => a.industry === "professional" && a.offersServices,
+    moduleScores: { estimates: 25 },
+  },
 
   // Goal-based rules
   {
