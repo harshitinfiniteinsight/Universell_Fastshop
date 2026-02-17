@@ -138,45 +138,13 @@ export default function DashboardLayout({
   // Define mainNavItems inside component to access setCreatePageModalOpen
   const mainNavItems: NavItem[] = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
-    {
-      icon: Star,
-      label: "Quick Links",
-      isAccordion: true,
-      children: [
-        { icon: Package, label: "Product/Services", href: "/inventory/manage", external: true },
-        { icon: Calendar, label: "Booking Forms", href: "/booking/forms", external: true },
-        { icon: ClipboardList, label: "Orders", href: "/orders", external: true },
-        { icon: Users, label: "Customers", href: "/customers", external: true },
-        { icon: Megaphone, label: "Marketing", href: "/marketing", external: true },
-        { icon: Truck, label: "Delivery Settings", href: "/delivery/settings", external: true },
-      ],
-    },
-    {
-      icon: Layers,
-      label: "Website Pages",
-      isAccordion: true,
-      children: [
-        { icon: FileText, label: "All Pages", href: "/website-pages" },
-        { icon: PlusCircle, label: "Create New Page", onClick: () => setCreatePageModalOpen(true) },
-      ],
-    },
-    {
-      icon: Settings2,
-      label: "Website Settings",
-      isAccordion: true,
-      children: [
-        { icon: Sparkles, label: "Brand Vault", href: "/settings/brand-vault" },
-        { icon: Image, label: "Change Logo", href: "/settings/logo" },
-        { icon: Bookmark, label: "Product Positioning", href: "/settings/positioning" },
-        { icon: FolderTree, label: "Categories", href: "/settings/categories" },
-        { icon: LayoutGrid, label: "Subcategories", href: "/settings/subcategories" },
-        { icon: Store, label: "Store Appearance", href: "/settings/appearance" },
-        { icon: Palette, label: "Change Theme Color", href: "/settings/theme-color" },
-        { icon: List, label: "Fastshop Menu Settings", href: "/settings/menu" },
-        { icon: Globe, label: "Domain Setup", href: "/settings/domain" },
-        { icon: BarChart3, label: "Connect Google Analytics", href: "/settings/analytics" },
-      ],
-    },
+    { icon: Users, label: "CRM & Customers", href: "/crm", external: false },
+    { icon: Package, label: "Inventory", href: "/inventory", external: false },
+    { icon: Users, label: "Employees", href: "/employees", external: false },
+    { icon: ShoppingCart, label: "Sales", href: "/sales", external: false },
+    { icon: ShoppingBag, label: "Fast Shop (E-Commerce)", href: "/fastshop", external: false },
+    { icon: Megaphone, label: "Marketing", href: "/marketing", external: false },
+    { icon: Settings, label: "Settings", href: "/settings", external: false },
   ];
   // Single expanded accordion - only one section can be open at a time
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -372,7 +340,7 @@ export default function DashboardLayout({
             {sidebarOpen && (
               <div>
                 <h1 className="font-semibold text-foreground text-sm">
-                  E-commerce Fast Shop
+                  Universell
                 </h1>
               </div>
             )}
@@ -415,29 +383,30 @@ export default function DashboardLayout({
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
-          {/* Top actions */}
+          {/* Setup Guide link - top action */}
           <div className="space-y-1 mb-4 pb-4 border-b border-border">
-            {bottomNavItems.map((item) => renderNavItem(item))}
+            <Link
+              href="/dashboard/setup"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                pathname === "/dashboard/setup" || pathname.startsWith("/dashboard/setup/")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              <Sparkles className="w-5 h-5" />
+              {sidebarOpen && <span>Setup Guide</span>}
+            </Link>
           </div>
 
           {/* Main nav */}
           {mainNavItems.map((item) => renderNavItem(item))}
         </nav>
 
-        {/* Sample Fast Shop link */}
+        {/* Bottom footer */}
         <div className="p-4 border-t border-border">
-          <Link
-            href="/sample-shop"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            {sidebarOpen && (
-              <>
-                <span className="flex-1">Sample Fast Shop</span>
-                <ExternalLink className="w-4 h-4" />
-              </>
-            )}
-          </Link>
+          <p className="text-xs text-muted-foreground text-center">Universell Platform</p>
         </div>
       </aside>
 
@@ -452,7 +421,7 @@ export default function DashboardLayout({
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <div className="text-sm text-muted-foreground">
-              Marketing | Online Marketing | E-commerce Fast Shop
+              Universell Platform
             </div>
           </div>
 

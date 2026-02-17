@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +15,9 @@ import {
   Eye,
   ArrowRight,
   Plus,
+  Sparkles,
 } from "lucide-react";
+import type { OnboardState } from "@/lib/onboard-types";
 
 const stats = [
   {
@@ -60,8 +64,65 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
+  const [onboardState, setOnboardState] = useState<OnboardState | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("universell-onboard-result");
+      if (saved) {
+        setOnboardState(JSON.parse(saved));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const totalModules = onboardState?.recommendations.filter((r) => r.score > 0).length || 0;
+  const completedModules = Object.values(onboardState?.moduleProgress || {}).filter(
+    (p) => p.stepsCompleted && p.stepsCompleted.length > 0
+  ).length || 0;
+  const setupProgress = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+
   return (
     <div className="space-y-6">
+      {/* Onboarding Banner */}
+      {onboardState && totalModules > 0 && (
+        <Card className="p-6 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 flex-1">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="flex-1">
+                <h2 className="font-semibold text-foreground mb-1">
+                  Welcome, {onboardState.answers.businessName}!
+                </h2>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Complete your setup to unlock all features. You&apos;re {setupProgress}% done!
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 max-w-xs h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      style={{ width: `${setupProgress}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {completedModules}/{totalModules}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <Link href="/dashboard/setup" className="shrink-0">
+              <Button className="gap-2">
+                Continue Setup
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      )}
+
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
