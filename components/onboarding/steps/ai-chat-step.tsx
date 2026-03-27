@@ -65,11 +65,12 @@ interface AiChatStepProps {
   businessName: string;
   onNext: () => void;
   onSkip: () => void;
+  mode?: "website" | "landing-page";
 }
 
 type ScreenState = "intro" | "chat";
 type MessageType = "ai" | "user";
-type ConversationStep = "inspiration" | "color" | "color-shade" | "secondary-color" | "shop-type" | "style" | "pages" | "products" | "complete";
+type ConversationStep = "inspiration" | "color" | "color-shade" | "secondary-color" | "shop-type" | "style" | "landing-page-type" | "pages" | "products" | "complete";
 
 // Shop type definition
 type ShopType = "products" | "services" | "booking" | "hybrid";
@@ -236,6 +237,7 @@ interface ConversationData {
   color: string;
   shopType: ShopType | null;
   style: string;
+  landingPageType: string | null;
   selectedPages: string[];
   customPages: string[];
   pageCustomizations: Record<string, PageCustomization>;
@@ -2526,10 +2528,157 @@ function IntroScreen({
   );
 }
 
+// ─── Landing Page Types ────────────────────────────────────────────────────
+interface LandingPageTypeOption {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  example: string;
+}
+
+const LANDING_PAGE_TYPES: LandingPageTypeOption[] = [
+  {
+    id: "product-launch",
+    title: "Product Launch",
+    description: "Showcase a new product with highlights and a clear buy CTA",
+    icon: Package,
+    example: "New sneaker drop, app release",
+  },
+  {
+    id: "lead-generation",
+    title: "Lead Generation",
+    description: "Capture emails and leads with an irresistible offer",
+    icon: Target,
+    example: "Free guide, newsletter signup",
+  },
+  {
+    id: "event-webinar",
+    title: "Event / Webinar",
+    description: "Promote an upcoming event or online session",
+    icon: CalendarDays,
+    example: "Conference, workshop, live stream",
+  },
+  {
+    id: "portfolio",
+    title: "Portfolio",
+    description: "Showcase your work, projects, or case studies",
+    icon: Briefcase,
+    example: "Design portfolio, agency work",
+  },
+  {
+    id: "service-showcase",
+    title: "Service Showcase",
+    description: "Highlight a specific service and drive bookings",
+    icon: Zap,
+    example: "Coaching, consulting, freelance",
+  },
+  {
+    id: "coming-soon",
+    title: "Coming Soon",
+    description: "Build anticipation and collect early signups",
+    icon: Star,
+    example: "App launch, new collection",
+  },
+  {
+    id: "discount-promo",
+    title: "Discount / Promo",
+    description: "Drive urgency with a limited-time offer or sale",
+    icon: Sparkles,
+    example: "Black Friday, flash sale",
+  },
+  {
+    id: "about-brand",
+    title: "About / Brand Story",
+    description: "Tell your story and connect emotionally with visitors",
+    icon: Heart,
+    example: "Founder story, brand mission",
+  },
+];
+
+// Landing Page Type Picker — single select
+function LandingPageTypePicker({
+  selectedType,
+  onSelect,
+}: {
+  selectedType: string | null;
+  onSelect: (typeId: string) => void;
+}) {
+  return (
+    <div className="animate-fade-in-up space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <FileText className="w-4 h-4 text-primary" />
+        <span className="text-sm font-medium">Which type of landing page do you want?</span>
+        <span className="ml-auto text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+          Select one
+        </span>
+      </div>
+
+      {/* Options grid */}
+      <div className="grid grid-cols-2 gap-2">
+        {LANDING_PAGE_TYPES.map((type) => {
+          const Icon = type.icon;
+          const isSelected = selectedType === type.id;
+          return (
+            <button
+              key={type.id}
+              onClick={() => onSelect(type.id)}
+              className={cn(
+                "relative flex flex-col items-start p-3.5 rounded-xl border-2 text-left transition-all duration-300",
+                "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2",
+                "hover:shadow-md",
+                isSelected
+                  ? "border-primary bg-primary/5 shadow-lg"
+                  : "border-border/60 bg-background hover:border-primary/40 hover:bg-muted/30"
+              )}
+              aria-label={`Select ${type.title}`}
+              aria-pressed={isSelected}
+            >
+              {/* Selected checkmark */}
+              {isSelected && (
+                <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              )}
+
+              {/* Icon */}
+              <div
+                className={cn(
+                  "w-9 h-9 rounded-lg flex items-center justify-center mb-2 transition-colors",
+                  isSelected ? "bg-primary/20" : "bg-muted/50"
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "w-[18px] h-[18px] transition-colors",
+                    isSelected ? "text-primary" : "text-muted-foreground"
+                  )}
+                />
+              </div>
+
+              <h3 className="font-semibold text-sm mb-0.5 text-foreground">{type.title}</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-1">
+                {type.description}
+              </p>
+              <p className="text-[10px] text-muted-foreground/60 italic">e.g. {type.example}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Note */}
+      <p className="text-xs text-muted-foreground text-center">
+        You&apos;re building a single focused landing page — not a full website
+      </p>
+    </div>
+  );
+}
+
 // Key for storing onboarding data
 const ONBOARDING_DATA_KEY = "universell-onboarding-data";
 
-export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
+export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: AiChatStepProps) {
   const router = useRouter();
   
   // Start directly with chat (intro is now handled in welcome-step.tsx Phase 3)
@@ -2545,6 +2694,7 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
     color: "",
     shopType: null,
     style: "",
+    landingPageType: null,
     selectedPages: [],
     customPages: [],
     pageCustomizations: {},
@@ -2945,7 +3095,7 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
 
     // Move to next step after acknowledgment
     setTimeout(() => {
-      const stepOrder: ConversationStep[] = ["inspiration", "color", "color-shade", "secondary-color", "shop-type", "style", "pages", "products", "complete"];
+      const stepOrder: ConversationStep[] = ["inspiration", "color", "color-shade", "secondary-color", "shop-type", "style", "landing-page-type", "pages", "products", "complete"];
       const currentIndex = stepOrder.indexOf(currentStep);
       let nextStep = stepOrder[currentIndex + 1];
       
@@ -2955,8 +3105,15 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
       } else if (currentStep === "color-shade" || currentStep === "secondary-color") {
         nextStep = "shop-type";
       }
+
+      // In landing-page mode: after style go to landing-page-type; skip pages/products
+      if (mode === "landing-page") {
+        if (nextStep === "pages" || nextStep === "products") {
+          nextStep = "complete";
+        }
+      }
       
-      // Initialize pages if moving to pages step
+      // Initialize pages if moving to pages step (website mode only)
       if (nextStep === "pages") {
         const suggestedPages = getSuggestedPagesForShopType(conversationData.shopType);
         setConversationData((prev) => ({
@@ -2966,7 +3123,10 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
       }
 
       if (nextStep === "complete") {
-        addAiMessage(`Great! I have enough information to create an amazing website for ${businessName}. Click 'Generate My Website' when you're ready!`, 1400);
+        const doneMsg = mode === "landing-page"
+          ? `I have everything I need! Click 'Generate My Landing Page' when you're ready.`
+          : `Great! I have enough information to create an amazing website for ${businessName}. Click 'Generate My Website' when you're ready!`;
+        addAiMessage(doneMsg, 1400);
         setCurrentStep("complete");
       } else {
         // Ask the next question
@@ -2977,6 +3137,7 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
           "secondary-color": "Would you like a secondary color?",
           "shop-type": "What type of shop are you creating?",
           style: "Do you have a particular style in mind for the design?",
+          "landing-page-type": "Which type of landing page would you like to create?",
           pages: "I've put together a set of pages that usually work best for a business like yours. You can review, customize, or remove anything.",
           products: "Tell me about your products or services. What do you offer?",
           complete: "",
@@ -3022,6 +3183,36 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
     }, 1500);
   };
 
+  // Handle landing page type selection (single select, landing-page mode only)
+  const handleLandingPageTypeSelect = (typeId: string) => {
+    const type = LANDING_PAGE_TYPES.find((t) => t.id === typeId);
+    if (!type) return;
+
+    setConversationData((prev) => ({ ...prev, landingPageType: typeId }));
+    addUserMessage(type.title);
+
+    const typeResponses: Record<string, string> = {
+      "product-launch": "Great choice! I'll create a high-converting product launch page for you. 🚀",
+      "lead-generation": "Perfect! A lead generation page will grow your audience fast. 📧",
+      "event-webinar": "Awesome! I'll build an event page that drives registrations. 🎤",
+      "portfolio": "Love it! Your work will shine on a beautifully designed portfolio page. 💼",
+      "service-showcase": "Nice! I'll craft a service page that turns visitors into clients. ⚡",
+      "coming-soon": "Smart move! A coming soon page will build buzz before launch. 🌟",
+      "discount-promo": "Excellent! A promo page will create urgency and boost conversions. 🎉",
+      "about-brand": "Wonderful! I'll tell your brand story in a compelling way. 💫",
+    };
+
+    addAiMessage(typeResponses[typeId] || "Great choice! Let's get generating. ✨");
+
+    setTimeout(() => {
+      addAiMessage(
+        `I have everything I need to generate your ${type.title} landing page. Click 'Generate My Landing Page' when you're ready!`,
+        2400
+      );
+      setCurrentStep("complete");
+    }, 100);
+  };
+
   const processStep = (userResponse: string) => {
     switch (currentStep) {
       case "inspiration":
@@ -3056,14 +3247,29 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
         setConversationData((prev) => ({ ...prev, style: userResponse }));
         addAiMessage("Excellent taste! I can already picture it. 🌟");
         setTimeout(() => {
-          // Initialize selected pages based on shop type
-          const suggestedPages = getSuggestedPagesForShopType(conversationData.shopType);
-          setConversationData((prev) => ({
-            ...prev,
-            selectedPages: suggestedPages.map((p) => p.id),
-          }));
-          addAiMessage("I've put together a set of pages that usually work best for a business like yours. You can review, customize, or remove anything.", 2400);
-          setCurrentStep("pages");
+          if (mode === "landing-page") {
+            addAiMessage("Almost there! Which type of landing page do you want to create?", 2400);
+            setCurrentStep("landing-page-type");
+          } else {
+            // Initialize selected pages based on shop type
+            const suggestedPages = getSuggestedPagesForShopType(conversationData.shopType);
+            setConversationData((prev) => ({
+              ...prev,
+              selectedPages: suggestedPages.map((p) => p.id),
+            }));
+            addAiMessage("I've put together a set of pages that usually work best for a business like yours. You can review, customize, or remove anything.", 2400);
+            setCurrentStep("pages");
+          }
+        }, 100);
+        break;
+
+      case "landing-page-type":
+        // Text-input fallback — the component handles direct selection
+        setConversationData((prev) => ({ ...prev, landingPageType: userResponse }));
+        addAiMessage("Great choice! Let's get generating. ✨");
+        setTimeout(() => {
+          addAiMessage("I have everything I need. Click 'Generate My Landing Page' when you're ready!", 2400);
+          setCurrentStep("complete");
         }, 100);
         break;
 
@@ -3245,6 +3451,16 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
                   </div>
                 )}
 
+                {/* Landing Page Type Picker — single select, landing-page mode only */}
+                {currentStep === "landing-page-type" && mode === "landing-page" && (
+                  <div className="mb-4">
+                    <LandingPageTypePicker
+                      selectedType={conversationData.landingPageType}
+                      onSelect={handleLandingPageTypeSelect}
+                    />
+                  </div>
+                )}
+
                 {/* Suggested Pages Picker */}
                 {currentStep === "pages" && (
                   <div className="mb-4">
@@ -3340,6 +3556,8 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
                         ? "Or type a custom secondary color..."
                         : currentStep === "style"
                         ? "Type a style or select from options..."
+                        : currentStep === "landing-page-type"
+                        ? "Or describe the page type you have in mind..."
                         : currentStep === "pages"
                         ? "Add a note about your pages..."
                         : "Tell me about your products or services..."
@@ -3405,7 +3623,7 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
                   size="lg"
                   className="w-full h-14 text-lg font-semibold rounded-2xl shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.02] transition-all duration-300"
                 >
-                  Generate My Website
+                  {mode === "landing-page" ? "Generate My Landing Page" : "Generate My Website"}
                   <Sparkles className="w-5 h-5 ml-2" />
                 </Button>
               </div>
@@ -3427,10 +3645,15 @@ export function AiChatStep({ businessName, onNext, onSkip }: AiChatStepProps) {
 
           {/* Progress Indicator */}
           <div className="flex justify-center gap-2 mt-6">
-            {["inspiration", "color", "shop-type", "style", "pages", "products"].map((step, index) => {
-              // Map the visual step to account for color sub-steps
-              const stepOrder = ["inspiration", "color", "shop-type", "style", "pages", "products"];
-              const currentStepMapped = currentStep === "secondary-color" || currentStep === "color-shade" ? "color" : currentStep;
+            {(mode === "landing-page"
+              ? ["inspiration", "color", "shop-type", "style", "landing-page-type"]
+              : ["inspiration", "color", "shop-type", "style", "pages", "products"]
+            ).map((step, index) => {
+              const stepOrder = mode === "landing-page"
+                ? ["inspiration", "color", "shop-type", "style", "landing-page-type"]
+                : ["inspiration", "color", "shop-type", "style", "pages", "products"];
+              const currentStepMapped =
+                currentStep === "secondary-color" || currentStep === "color-shade" ? "color" : currentStep;
               const currentIndex = stepOrder.indexOf(currentStepMapped);
               const isComplete = index < currentIndex || currentStep === "complete";
               const isCurrent = step === currentStepMapped;
