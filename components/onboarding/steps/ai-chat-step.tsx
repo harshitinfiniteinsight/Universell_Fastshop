@@ -2909,8 +2909,13 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
     }
     
     setTimeout(() => {
-      addAiMessage("Next, let's understand your business model. What type of shop are you creating?", 2400);
-      setCurrentStep("shop-type");
+      if (mode === "landing-page") {
+        addAiMessage("Great. Now, do you have a particular style in mind for the design?", 2400);
+        setCurrentStep("style");
+      } else {
+        addAiMessage("Next, let's understand your business model. What type of shop are you creating?", 2400);
+        setCurrentStep("shop-type");
+      }
     }, 100);
   };
 
@@ -3095,15 +3100,17 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
 
     // Move to next step after acknowledgment
     setTimeout(() => {
-      const stepOrder: ConversationStep[] = ["inspiration", "color", "color-shade", "secondary-color", "shop-type", "style", "landing-page-type", "pages", "products", "complete"];
+      const stepOrder: ConversationStep[] = mode === "landing-page"
+        ? ["inspiration", "color", "color-shade", "secondary-color", "style", "landing-page-type", "complete"]
+        : ["inspiration", "color", "color-shade", "secondary-color", "shop-type", "style", "pages", "products", "complete"];
       const currentIndex = stepOrder.indexOf(currentStep);
       let nextStep = stepOrder[currentIndex + 1];
       
       // Skip shade and secondary if skipping color
       if (currentStep === "color") {
-        nextStep = "shop-type";
+        nextStep = mode === "landing-page" ? "style" : "shop-type";
       } else if (currentStep === "color-shade" || currentStep === "secondary-color") {
-        nextStep = "shop-type";
+        nextStep = mode === "landing-page" ? "style" : "shop-type";
       }
 
       // In landing-page mode: after style go to landing-page-type; skip pages/products
@@ -3520,7 +3527,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
                 )}
 
                 {/* Shop Type Picker */}
-                {currentStep === "shop-type" && (
+                {currentStep === "shop-type" && mode !== "landing-page" && (
                   <div className="mb-4">
                     <ShopTypePicker
                       selectedType={conversationData.shopType}
@@ -3646,11 +3653,11 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
           {/* Progress Indicator */}
           <div className="flex justify-center gap-2 mt-6">
             {(mode === "landing-page"
-              ? ["inspiration", "color", "shop-type", "style", "landing-page-type"]
+              ? ["inspiration", "color", "style", "landing-page-type"]
               : ["inspiration", "color", "shop-type", "style", "pages", "products"]
             ).map((step, index) => {
               const stepOrder = mode === "landing-page"
-                ? ["inspiration", "color", "shop-type", "style", "landing-page-type"]
+                ? ["inspiration", "color", "style", "landing-page-type"]
                 : ["inspiration", "color", "shop-type", "style", "pages", "products"];
               const currentStepMapped =
                 currentStep === "secondary-color" || currentStep === "color-shade" ? "color" : currentStep;

@@ -15,11 +15,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { WizardData } from "@/components/onboarding/wizard-container";
-import { Sparkles, FileText, Zap, ArrowRight, Check, Edit, Upload, Loader2 } from "lucide-react";
+import { Sparkles, FileText, Zap, ArrowRight, Check, Edit, Upload, Loader2, LayoutTemplate, Target, Globe, ExternalLink, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type LandingPageStep = "intro" | "business-info" | "ai-chat" | "generation" | "done";
+type LandingPageStep = "type-select" | "intro" | "business-info" | "ai-chat" | "generation" | "done";
+type LandingPageType = "business" | "lead" | null;
 
 const initialWizardData: WizardData = {
   businessInfo: {
@@ -49,6 +50,7 @@ const initialWizardData: WizardData = {
 export default function LandingPageWizard() {
   const router = useRouter();
   const [step, setStep] = useState<LandingPageStep>("intro");
+  const [landingPageType, setLandingPageType] = useState<LandingPageType>(null);
   const [wizardData, setWizardData] = useState<WizardData>(initialWizardData);
   const [generatedPageName, setGeneratedPageName] = useState("Homepage");
   const [animatedSectionIndex, setAnimatedSectionIndex] = useState(0);
@@ -64,6 +66,7 @@ export default function LandingPageWizard() {
   const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
   const [taglinePrompt, setTaglinePrompt] = useState("");
   const [descriptionPrompt, setDescriptionPrompt] = useState("");
+  const [learnMoreModalOpen, setLearnMoreModalOpen] = useState(false);
 
   const aiLogoStyles = [
     { id: "icon-modern", label: "Icon Modern" },
@@ -299,6 +302,7 @@ export default function LandingPageWizard() {
 
   const reset = () => {
     setStep("intro");
+    setLandingPageType(null);
     setWizardData(initialWizardData);
     setGeneratedPageName("Homepage");
   };
@@ -368,6 +372,157 @@ export default function LandingPageWizard() {
 
       {/* Card wrapper */}
       <div className="bg-card rounded-lg shadow-sm border border-border">
+
+        {/* ── TYPE SELECT ── */}
+        {step === "type-select" && (
+          <div className="relative overflow-hidden p-6 lg:p-10">
+            {/* Ambient background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-background pointer-events-none" />
+            <div className="absolute top-0 right-0 w-72 h-72 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-56 h-56 bg-orange-400/8 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 max-w-4xl mx-auto space-y-8">
+
+              {/* Heading */}
+              <div className="text-center space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-background/80">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-medium text-foreground">AI Page Builder</span>
+                </div>
+                <h2 className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight leading-tight">
+                  What would you like to{" "}
+                  <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                    create?
+                  </span>
+                </h2>
+                <p className="text-muted-foreground text-base max-w-lg mx-auto">
+                  Pick the right starting point — AI will tailor your page structure and content based on your goal.
+                </p>
+              </div>
+
+              {/* Primary cards — Business & Lead Capture */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* Business Landing Page */}
+                <button
+                  onClick={() => { setLandingPageType("business"); setStep("ai-chat"); }}
+                  className="group text-left rounded-2xl border border-border bg-background p-6 space-y-4 hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.01] transition-all duration-200 cursor-pointer"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                      <LayoutTemplate className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                      Most Popular
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                      Business Landing Page
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Introduce your brand, showcase your products or services, and build trust with visitors. Best for establishing your online presence.
+                    </p>
+                  </div>
+
+                  <ul className="space-y-1.5">
+                    {["Custom brand sections", "Product & service showcase", "Story & trust building"].map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="flex items-center gap-1.5 text-sm font-semibold text-primary pt-1">
+                    Get started
+                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </button>
+
+                {/* Lead Capture Page */}
+                <button
+                  onClick={() => { setLandingPageType("lead"); setStep("ai-chat"); }}
+                  className="group text-left rounded-2xl border border-border bg-background p-6 space-y-4 hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.01] transition-all duration-200 cursor-pointer"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-xl bg-orange-400/10 flex items-center justify-center group-hover:bg-orange-400/15 transition-colors">
+                      <Target className="w-5 h-5 text-orange-500" />
+                    </div>
+                    <span className="text-[11px] font-semibold text-orange-600 bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-full">
+                      High Converting
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                      Lead Capture Page
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Collect enquiries, drive sign-ups, and run promotions with a focused single-action page. Built to turn visitors into leads.
+                    </p>
+                  </div>
+
+                  <ul className="space-y-1.5">
+                    {["Contact & sign-up forms", "Promotion & campaign ready", "Single powerful CTA"].map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                      Get started
+                      <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setLearnMoreModalOpen(true); }}
+                      className="text-xs text-muted-foreground underline underline-offset-2 hover:text-primary transition-colors"
+                    >
+                      Learn more
+                    </button>
+                  </div>
+                </button>
+              </div>
+
+              {/* Third card — Multi-Page Website */}
+              <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                      <Globe className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-semibold text-foreground">Multi-Page Website</h3>
+                        <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border">
+                          Via FastShop AI
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                        Get a complete AI-generated website — Home, About, Products & Contact — all set up through the FastShop builder.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push("/onboarding")}
+                    className="flex-shrink-0 gap-1.5 text-xs"
+                  >
+                    Launch FastShop Builder
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
 
         {/* ── INTRO ── */}
         {step === "intro" && (
@@ -532,10 +687,10 @@ export default function LandingPageWizard() {
                 </p>
               </div>
 
-              {/* 1) Core details */}
+              {/* 1) Basic Details */}
               <div className="rounded-2xl border border-border bg-background p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground">Core details</h3>
+                  <h3 className="font-semibold text-foreground">Basic Details</h3>
                   <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">Editable</span>
                 </div>
 
@@ -750,7 +905,7 @@ export default function LandingPageWizard() {
 
               <div className="flex items-center justify-between pt-2">
                 <Button variant="outline" onClick={() => setStep("intro")}>Back</Button>
-                <Button onClick={() => setStep("ai-chat")} className="px-8">
+                <Button onClick={() => setStep("type-select")} className="px-8">
                   Continue
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -903,6 +1058,71 @@ export default function LandingPageWizard() {
               Generate Description
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── LEARN MORE — Lead Catchers ── */}
+      <Dialog open={learnMoreModalOpen} onOpenChange={setLearnMoreModalOpen}>
+        <DialogContent className="sm:max-w-lg rounded-2xl p-0 overflow-hidden">
+                  {/* Header band */}
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100/60 px-6 pt-6 pb-5 border-b border-orange-100">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-orange-400/15 flex items-center justify-center">
+                        <Target className="w-5 h-5 text-orange-500" />
+                      </div>
+                      <span className="text-xs font-semibold text-orange-600 bg-orange-100 border border-orange-200 px-2.5 py-1 rounded-full">
+                        Lead Catchers
+                      </span>
+                    </div>
+                    <DialogHeader className="space-y-1 text-left">
+                      <DialogTitle className="text-xl font-bold text-foreground tracking-tight">
+                        What are Lead Catchers?
+                      </DialogTitle>
+                      <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
+                        Simple forms that collect customer details for you.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </div>
+
+                  {/* Body */}
+                  <div className="px-6 py-5 space-y-4">
+                    <p className="text-sm text-foreground leading-relaxed">
+                      Lead Catchers are <span className="font-semibold text-foreground">ready-made forms</span> that ask visitors for details like name, phone number, and email. Their details are saved automatically into your CRM.
+                    </p>
+
+                    <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-2.5">
+                      <p className="text-xs font-semibold text-foreground uppercase tracking-wide">What they collect</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {["Full name", "Phone number", "Email address", "Custom questions"].map((item) => (
+                          <div key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0" />
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      You can add a Lead Catcher anywhere on your page, such as at the top, in a popup, or at the end of an offer, so people can contact you quickly.
+                    </p>
+
+                    <div className="rounded-xl border border-orange-100 bg-orange-50/60 px-4 py-3 flex items-start gap-2.5">
+                      <Sparkles className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-orange-700 leading-relaxed">
+                        <span className="font-semibold">For now</span>, focus on creating your landing page. You can add and edit Lead Catchers after your page goes live.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-6 pb-5 flex justify-end">
+                    <Button
+                      onClick={() => setLearnMoreModalOpen(false)}
+                      className="rounded-xl px-6"
+                    >
+                      Got it
+                    </Button>
+                  </div>
         </DialogContent>
       </Dialog>
 
