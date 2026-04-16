@@ -1061,7 +1061,7 @@ export default function LandingPageWizard() {
         </DialogContent>
       </Dialog>
 
-      {/* ── LEARN MORE — Lead Catchers ── */}
+      {/* ── LEARN MORE — Lead Forms ── */}
       <Dialog open={learnMoreModalOpen} onOpenChange={setLearnMoreModalOpen}>
         <DialogContent className="sm:max-w-lg rounded-2xl p-0 overflow-hidden">
                   {/* Header band */}
@@ -1071,12 +1071,12 @@ export default function LandingPageWizard() {
                         <Target className="w-5 h-5 text-orange-500" />
                       </div>
                       <span className="text-xs font-semibold text-orange-600 bg-orange-100 border border-orange-200 px-2.5 py-1 rounded-full">
-                        Lead Catchers
+                        Lead Forms
                       </span>
                     </div>
                     <DialogHeader className="space-y-1 text-left">
                       <DialogTitle className="text-xl font-bold text-foreground tracking-tight">
-                        What are Lead Catchers?
+                        What are Lead Forms?
                       </DialogTitle>
                       <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
                         Simple forms that collect customer details for you.
@@ -1087,7 +1087,7 @@ export default function LandingPageWizard() {
                   {/* Body */}
                   <div className="px-6 py-5 space-y-4">
                     <p className="text-sm text-foreground leading-relaxed">
-                      Lead Catchers are <span className="font-semibold text-foreground">ready-made forms</span> that ask visitors for details like name, phone number, and email. Their details are saved automatically into your CRM.
+                      Lead Forms are <span className="font-semibold text-foreground">ready-made forms</span> that ask visitors for details like name, phone number, and email. Their details are saved automatically into your CRM.
                     </p>
 
                     <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-2.5">
@@ -1103,13 +1103,13 @@ export default function LandingPageWizard() {
                     </div>
 
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      You can add a Lead Catcher anywhere on your page, such as at the top, in a popup, or at the end of an offer, so people can contact you quickly.
+                      You can add a Lead Form anywhere on your page, such as at the top, in a popup, or at the end of an offer, so people can contact you quickly.
                     </p>
 
                     <div className="rounded-xl border border-orange-100 bg-orange-50/60 px-4 py-3 flex items-start gap-2.5">
                       <Sparkles className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
                       <p className="text-xs text-orange-700 leading-relaxed">
-                        <span className="font-semibold">For now</span>, focus on creating your landing page. You can add and edit Lead Catchers after your page goes live.
+                        <span className="font-semibold">For now</span>, focus on creating your landing page. You can add and edit Lead Forms after your page goes live.
                       </p>
                     </div>
                   </div>
