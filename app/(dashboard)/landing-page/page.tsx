@@ -311,11 +311,19 @@ export default function LandingPageWizard() {
     <div className="space-y-6">
       {/* Page Header */}
       <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Generate Landing Page</h1>
-          <p className="text-muted-foreground mt-1">
-            Let AI build a beautiful, personalised page for your store
-          </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Generate Landing Page</h1>
+            <p className="text-muted-foreground mt-1">
+              Let AI build a beautiful, personalised page for your store
+            </p>
+          </div>
+
+          {step === "intro" && (
+            <Button asChild className="self-start sm:mt-1 bg-primary text-primary-foreground hover:bg-primary/90">
+              <Link href="/landing-pages/templates">Select Template</Link>
+            </Button>
+          )}
         </div>
 
         {/* Step indicator — visible during the 2 active steps */}

@@ -148,7 +148,7 @@ export default function DashboardLayout({
     { icon: Users, label: "Employees", href: "/employees", external: false },
     { icon: ShoppingCart, label: "Sales", href: "/sales", external: false },
     { icon: ShoppingBag, label: "Fast Shop (E-Commerce)", href: "/fastshop", external: false },
-    { icon: Sparkles, label: "Landing Pages", href: "/landing-pages", external: false },
+    { icon: Sparkles, label: "Landing Pages", href: "/landing-page", external: false },
     { icon: Megaphone, label: "Marketing", href: "/marketing", external: false },
     { icon: FileSignature, label: "Agreements & E-Sign", href: "/settings", external: false },
     { icon: Calendar, label: "Appointments & Booking", href: "/booking", external: false },
