@@ -313,7 +313,7 @@ export default function LandingPageWizard() {
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Landing Page Builder</h1>
+            <h1 className="text-2xl font-bold text-foreground">Website Builder</h1>
             <p className="text-muted-foreground mt-1">
               Generate a high-converting landing page with AI in minutes
             </p>
@@ -980,7 +980,7 @@ export default function LandingPageWizard() {
 
               <div className="flex items-center justify-between pt-2">
                 <Button variant="outline" onClick={() => setStep("intro")}>Back</Button>
-                <Button onClick={() => setStep("type-select")} className="px-8">
+                <Button onClick={() => setStep("ai-chat")} className="px-8">
                   Continue
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>

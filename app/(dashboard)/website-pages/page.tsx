@@ -491,7 +491,7 @@ export default function WebsitePagesPage() {
           <Button variant="outline" asChild>
             <Link href="/settings/menu">
               <Menu className="w-4 h-4 mr-2" />
-              Manage Fastshop Menu
+              Manage Website Menu
             </Link>
           </Button>
           <Button onClick={() => setActiveModal("main")}>

@@ -70,7 +70,7 @@ interface AiChatStepProps {
 
 type ScreenState = "intro" | "chat";
 type MessageType = "ai" | "user";
-type ConversationStep = "inspiration" | "color" | "color-shade" | "secondary-color" | "shop-type" | "style" | "landing-page-type" | "pages" | "products" | "complete";
+type ConversationStep = "inspiration" | "color" | "color-shade" | "secondary-color" | "shop-type" | "style" | "project-type" | "landing-page-type" | "lp-details" | "pages" | "products" | "complete";
 
 // Shop type definition
 type ShopType = "products" | "services" | "booking" | "hybrid";
@@ -238,6 +238,7 @@ interface ConversationData {
   shopType: ShopType | null;
   style: string;
   landingPageType: string | null;
+  lpDetails: Record<string, string>;
   selectedPages: string[];
   customPages: string[];
   pageCustomizations: Record<string, PageCustomization>;
@@ -2597,6 +2598,383 @@ const LANDING_PAGE_TYPES: LandingPageTypeOption[] = [
 ];
 
 // Landing Page Type Picker — single select
+// ─── Landing Page Details Forms ──────────────────────────────────────────────
+
+const MOCK_INVENTORY = [
+  { id: "inv-1", name: "Classic White Tee", sku: "CWT-001", price: "$29", image: "👕" },
+  { id: "inv-2", name: "Running Shoes Pro", sku: "RSP-042", price: "$120", image: "👟" },
+  { id: "inv-3", name: "Leather Wallet", sku: "LW-007", price: "$55", image: "👛" },
+  { id: "inv-4", name: "Wireless Earbuds", sku: "WE-203", price: "$89", image: "🎧" },
+  { id: "inv-5", name: "Coffee Mug XL", sku: "CM-XL", price: "$18", image: "☕" },
+  { id: "inv-6", name: "Yoga Mat Premium", sku: "YM-P1", price: "$65", image: "🧘" },
+];
+
+function LandingPageDetailsForm({
+  landingPageType,
+  onConfirm,
+}: {
+  landingPageType: string;
+  onConfirm: (summary: string, details: Record<string, string>) => void;
+}) {
+  const [fields, setFields] = useState<Record<string, string>>({});
+  const [selectedInventory, setSelectedInventory] = useState<string[]>([]);
+  const [checkedFields, setCheckedFields] = useState<Record<string, boolean>>({});
+
+  const set = (key: string, value: string) =>
+    setFields((prev) => ({ ...prev, [key]: value }));
+
+  const toggleInventory = (id: string) =>
+    setSelectedInventory((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+
+  const toggleCheck = (key: string) =>
+    setCheckedFields((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const handleConfirm = () => {
+    const details: Record<string, string> = { ...fields };
+
+    // Augment with structured data
+    if (selectedInventory.length > 0) {
+      const names = selectedInventory.map(
+        (id) => MOCK_INVENTORY.find((i) => i.id === id)?.name ?? id
+      );
+      details["selectedProducts"] = names.join(", ");
+    }
+    const checkedKeys = Object.entries(checkedFields)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    if (checkedKeys.length > 0) {
+      details["selectedOptions"] = checkedKeys.join(", ");
+    }
+
+    // Build human-readable summary
+    const summaryParts = Object.entries(details)
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k.replace(/([A-Z])/g, " $1").toLowerCase()}: ${v}`);
+    const summary = summaryParts.join(" · ") || "Details provided";
+    onConfirm(summary, details);
+  };
+
+  const inputClass =
+    "w-full px-3 py-2 text-sm rounded-lg border border-border/60 bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50";
+  const labelClass = "block text-xs font-medium text-foreground mb-1";
+  const sectionClass = "space-y-3";
+
+  const renderForm = () => {
+    switch (landingPageType) {
+      case "product-launch":
+        return (
+          <div className={sectionClass}>
+            <p className="text-xs text-muted-foreground">Select from your inventory or describe a new product.</p>
+            <div className="grid grid-cols-2 gap-2">
+              {MOCK_INVENTORY.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => toggleInventory(item.id)}
+                  className={cn(
+                    "flex items-center gap-2 p-2.5 rounded-lg border-2 text-left transition-all",
+                    selectedInventory.includes(item.id)
+                      ? "border-primary bg-primary/5"
+                      : "border-border/50 hover:border-primary/40 hover:bg-muted/30"
+                  )}
+                >
+                  <span className="text-xl">{item.image}</span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium truncate">{item.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{item.price}</p>
+                  </div>
+                  {selectedInventory.includes(item.id) && (
+                    <Check className="w-3.5 h-3.5 text-primary ml-auto shrink-0" />
+                  )}
+                </button>
+              ))}
+            </div>
+            <div>
+              <label className={labelClass}>Or describe a custom product</label>
+              <Input
+                className={inputClass}
+                placeholder="e.g. Limited edition sneaker, new flavour…"
+                value={fields.customProduct ?? ""}
+                onChange={(e) => set("customProduct", e.target.value)}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Key selling point / headline</label>
+              <Input
+                className={inputClass}
+                placeholder="e.g. Sell out faster with one bold CTA"
+                value={fields.headline ?? ""}
+                onChange={(e) => set("headline", e.target.value)}
+              />
+            </div>
+          </div>
+        );
+
+      case "lead-generation":
+        return (
+          <div className={sectionClass}>
+            <div>
+              <label className={labelClass}>What information do you want to collect?</label>
+              <div className="grid grid-cols-2 gap-1.5 mt-1">
+                {["Full Name", "Email Address", "Phone Number", "Company", "Job Title", "Location"].map((f) => (
+                  <label key={f} className="flex items-center gap-2 text-xs cursor-pointer p-2 rounded-lg border border-border/40 hover:bg-muted/30">
+                    <input
+                      type="checkbox"
+                      className="accent-primary"
+                      checked={!!checkedFields[f]}
+                      onChange={() => toggleCheck(f)}
+                    />
+                    {f}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>What offer / incentive are you giving visitors?</label>
+              <Input
+                className={inputClass}
+                placeholder="e.g. Free eBook, 20% discount, webinar access…"
+                value={fields.offer ?? ""}
+                onChange={(e) => set("offer", e.target.value)}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>What information do you want to show on the page?</label>
+              <Textarea
+                className={cn(inputClass, "resize-none")}
+                rows={3}
+                placeholder="e.g. Intro about your brand, benefits list, testimonials…"
+                value={fields.pageInfo ?? ""}
+                onChange={(e) => set("pageInfo", e.target.value)}
+              />
+            </div>
+          </div>
+        );
+
+      case "event-webinar":
+        return (
+          <div className={sectionClass}>
+            <div>
+              <label className={labelClass}>Event / webinar name</label>
+              <Input className={inputClass} placeholder="e.g. Growth Hacking Summit 2026" value={fields.eventName ?? ""} onChange={(e) => set("eventName", e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={labelClass}>Date</label>
+                <Input className={inputClass} type="date" value={fields.date ?? ""} onChange={(e) => set("date", e.target.value)} />
+              </div>
+              <div>
+                <label className={labelClass}>Time</label>
+                <Input className={inputClass} type="time" value={fields.time ?? ""} onChange={(e) => set("time", e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Location (or "Online")</label>
+              <Input className={inputClass} placeholder="e.g. Zoom, New York Convention Center…" value={fields.location ?? ""} onChange={(e) => set("location", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Short description</label>
+              <Textarea className={cn(inputClass, "resize-none")} rows={3} placeholder="What will attendees learn or experience?" value={fields.description ?? ""} onChange={(e) => set("description", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Registration link (optional)</label>
+              <Input className={inputClass} placeholder="https://…" value={fields.registrationLink ?? ""} onChange={(e) => set("registrationLink", e.target.value)} />
+            </div>
+          </div>
+        );
+
+      case "portfolio":
+        return (
+          <div className={sectionClass}>
+            <div>
+              <label className={labelClass}>What type of work do you showcase?</label>
+              <div className="grid grid-cols-2 gap-1.5 mt-1">
+                {["Photography", "Graphic Design", "Web Development", "Video / Film", "Writing / Copy", "Architecture", "Illustration", "Other"].map((f) => (
+                  <label key={f} className="flex items-center gap-2 text-xs cursor-pointer p-2 rounded-lg border border-border/40 hover:bg-muted/30">
+                    <input type="checkbox" className="accent-primary" checked={!!checkedFields[f]} onChange={() => toggleCheck(f)} />
+                    {f}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Describe your best projects or case studies</label>
+              <Textarea className={cn(inputClass, "resize-none")} rows={3} placeholder="e.g. Rebranded 5 startups, built e-commerce site for 10k+ users…" value={fields.projects ?? ""} onChange={(e) => set("projects", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Target audience / clients</label>
+              <Input className={inputClass} placeholder="e.g. Startups, SMEs, creative agencies…" value={fields.audience ?? ""} onChange={(e) => set("audience", e.target.value)} />
+            </div>
+          </div>
+        );
+
+      case "service-showcase":
+        return (
+          <div className={sectionClass}>
+            <div>
+              <label className={labelClass}>Service name</label>
+              <Input className={inputClass} placeholder="e.g. 1-on-1 Business Coaching" value={fields.serviceName ?? ""} onChange={(e) => set("serviceName", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Key benefit / headline</label>
+              <Input className={inputClass} placeholder="e.g. Double your revenue in 90 days" value={fields.keyBenefit ?? ""} onChange={(e) => set("keyBenefit", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Price or pricing model (optional)</label>
+              <Input className={inputClass} placeholder="e.g. $299/month, custom quote, free consultation…" value={fields.price ?? ""} onChange={(e) => set("price", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Who is this for?</label>
+              <Input className={inputClass} placeholder="e.g. Solo founders, fitness professionals…" value={fields.targetAudience ?? ""} onChange={(e) => set("targetAudience", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>What should visitors do? (CTA)</label>
+              <Input className={inputClass} placeholder="e.g. Book a free call, Get a quote…" value={fields.cta ?? ""} onChange={(e) => set("cta", e.target.value)} />
+            </div>
+          </div>
+        );
+
+      case "coming-soon":
+        return (
+          <div className={sectionClass}>
+            <div>
+              <label className={labelClass}>Product / service name</label>
+              <Input className={inputClass} placeholder="e.g. My New App, Summer Collection 2026…" value={fields.productName ?? ""} onChange={(e) => set("productName", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Expected launch date</label>
+              <Input className={inputClass} type="date" value={fields.launchDate ?? ""} onChange={(e) => set("launchDate", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Teaser / headline</label>
+              <Input className={inputClass} placeholder="e.g. Something big is coming. Be the first to know." value={fields.teaser ?? ""} onChange={(e) => set("teaser", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Collect early signups?</label>
+              <div className="flex gap-3 mt-1">
+                {["Yes, collect emails", "No, just announce"].map((opt) => (
+                  <label key={opt} className="flex items-center gap-2 text-xs cursor-pointer">
+                    <input type="radio" name="collectEmails" className="accent-primary" checked={fields.collectEmails === opt} onChange={() => set("collectEmails", opt)} />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case "discount-promo":
+        return (
+          <div className={sectionClass}>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={labelClass}>Discount amount</label>
+                <Input className={inputClass} placeholder="e.g. 30% off, $10 off, BOGO…" value={fields.discount ?? ""} onChange={(e) => set("discount", e.target.value)} />
+              </div>
+              <div>
+                <label className={labelClass}>Promo code (optional)</label>
+                <Input className={inputClass} placeholder="e.g. SAVE30" value={fields.promoCode ?? ""} onChange={(e) => set("promoCode", e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Offer expiry date</label>
+              <Input className={inputClass} type="date" value={fields.expiry ?? ""} onChange={(e) => set("expiry", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Applicable products / services</label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                {MOCK_INVENTORY.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => toggleInventory(item.id)}
+                    className={cn(
+                      "flex items-center gap-2 p-2.5 rounded-lg border-2 text-left transition-all",
+                      selectedInventory.includes(item.id)
+                        ? "border-primary bg-primary/5"
+                        : "border-border/50 hover:border-primary/40 hover:bg-muted/30"
+                    )}
+                  >
+                    <span className="text-xl">{item.image}</span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium truncate">{item.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.price}</p>
+                    </div>
+                    {selectedInventory.includes(item.id) && (
+                      <Check className="w-3.5 h-3.5 text-primary ml-auto shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Urgency message (optional)</label>
+              <Input className={inputClass} placeholder="e.g. Only 48 hours left! Limited stock." value={fields.urgency ?? ""} onChange={(e) => set("urgency", e.target.value)} />
+            </div>
+          </div>
+        );
+
+      case "about-brand":
+        return (
+          <div className={sectionClass}>
+            <div>
+              <label className={labelClass}>Founder / team name</label>
+              <Input className={inputClass} placeholder="e.g. Sarah & Team" value={fields.founderName ?? ""} onChange={(e) => set("founderName", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Brand mission (one sentence)</label>
+              <Input className={inputClass} placeholder="e.g. We help small businesses grow through smart design." value={fields.mission ?? ""} onChange={(e) => set("mission", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Key brand values</label>
+              <Input className={inputClass} placeholder="e.g. Authenticity, Community, Sustainability" value={fields.values ?? ""} onChange={(e) => set("values", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelClass}>Your story (brief)</label>
+              <Textarea className={cn(inputClass, "resize-none")} rows={3} placeholder="How did the brand start? What problem do you solve?" value={fields.story ?? ""} onChange={(e) => set("story", e.target.value)} />
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const typeLabels: Record<string, string> = {
+    "product-launch": "Product Launch",
+    "lead-generation": "Lead Generation",
+    "event-webinar": "Event / Webinar",
+    "portfolio": "Portfolio",
+    "service-showcase": "Service Showcase",
+    "coming-soon": "Coming Soon",
+    "discount-promo": "Discount / Promo",
+    "about-brand": "About / Brand Story",
+  };
+
+  return (
+    <div className="animate-fade-in-up space-y-4">
+      <div className="flex items-center gap-2">
+        <FileText className="w-4 h-4 text-primary" />
+        <span className="text-sm font-medium">Tell us about your {typeLabels[landingPageType] ?? "landing page"}</span>
+      </div>
+      <div className="max-h-[380px] overflow-y-auto pr-1 space-y-3">
+        {renderForm()}
+      </div>
+      <Button
+        onClick={handleConfirm}
+        className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-sm font-medium"
+      >
+        Confirm & Continue →
+      </Button>
+    </div>
+  );
+}
+
+// ─── Landing Page Type Picker ─────────────────────────────────────────────────
+
 function LandingPageTypePicker({
   selectedType,
   onSelect,
@@ -2688,13 +3066,14 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [currentStep, setCurrentStep] = useState<ConversationStep>("inspiration");
+  const [currentStep, setCurrentStep] = useState<ConversationStep>("project-type");
   const [conversationData, setConversationData] = useState<ConversationData>({
     inspiration: "",
     color: "",
     shopType: null,
     style: "",
     landingPageType: null,
+    lpDetails: {},
     selectedPages: [],
     customPages: [],
     pageCustomizations: {},
@@ -2772,12 +3151,15 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
         {
           id: "1",
           type: "ai",
-          content: `Do you already have a website, or is there a website you really like? Share a link or example so we can use it as inspiration for your design.`,
+          content:
+            mode === "landing-page"
+              ? "To begin, what would you like to create: a multi-page website or a single landing page?"
+              : `Do you already have a website, or is there a website you really like? Share a link or example so we can use it as inspiration for your design.`,
         },
       ]);
     }, 500);
     return () => clearTimeout(timer);
-  }, [businessName, screenState]);
+  }, [businessName, screenState, mode]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -3100,24 +3482,23 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
 
     // Move to next step after acknowledgment
     setTimeout(() => {
-      const stepOrder: ConversationStep[] = mode === "landing-page"
-        ? ["inspiration", "color", "color-shade", "secondary-color", "style", "landing-page-type", "complete"]
+      const isMultiPage = mode === "landing-page" && conversationData.landingPageType === "multi-page-website";
+      const isSinglePage = mode === "landing-page" && conversationData.landingPageType === "single-landing-page";
+      const stepOrder: ConversationStep[] = isMultiPage
+        ? ["project-type", "inspiration", "color", "color-shade", "secondary-color", "style", "pages", "complete"]
+        : isSinglePage
+        ? ["project-type", "inspiration", "color", "color-shade", "secondary-color", "style", "landing-page-type", "lp-details", "complete"]
+        : mode === "landing-page"
+        ? ["project-type", "inspiration", "color", "color-shade", "secondary-color", "style", "landing-page-type", "lp-details", "complete"]
         : ["inspiration", "color", "color-shade", "secondary-color", "shop-type", "style", "pages", "products", "complete"];
       const currentIndex = stepOrder.indexOf(currentStep);
-      let nextStep = stepOrder[currentIndex + 1];
-      
+      let nextStep = stepOrder[currentIndex + 1] ?? "complete";
+
       // Skip shade and secondary if skipping color
       if (currentStep === "color") {
-        nextStep = mode === "landing-page" ? "style" : "shop-type";
+        nextStep = mode === "landing-page" ? "secondary-color" : "shop-type";
       } else if (currentStep === "color-shade" || currentStep === "secondary-color") {
         nextStep = mode === "landing-page" ? "style" : "shop-type";
-      }
-
-      // In landing-page mode: after style go to landing-page-type; skip pages/products
-      if (mode === "landing-page") {
-        if (nextStep === "pages" || nextStep === "products") {
-          nextStep = "complete";
-        }
       }
       
       // Initialize pages if moving to pages step (website mode only)
@@ -3138,13 +3519,15 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
       } else {
         // Ask the next question
         const nextQuestions: Record<ConversationStep, string> = {
-          inspiration: "",
+          inspiration: "Do you have a website you admire, or one that inspires the look and feel you want? Share a link or describe it.",
           color: "What primary color would you like for your website?",
           "color-shade": "Fine-tune your shade preference.",
           "secondary-color": "Would you like a secondary color?",
           "shop-type": "What type of shop are you creating?",
           style: "Do you have a particular style in mind for the design?",
+          "project-type": "Would you like to create a multi-page website or a single landing page?",
           "landing-page-type": "Which type of landing page would you like to create?",
+          "lp-details": "Tell us a bit more about your landing page.",
           pages: "I've put together a set of pages that usually work best for a business like yours. You can review, customize, or remove anything.",
           products: "Tell me about your products or services. What do you offer?",
           complete: "",
@@ -3199,23 +3582,27 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
     addUserMessage(type.title);
 
     const typeResponses: Record<string, string> = {
-      "product-launch": "Great choice! I'll create a high-converting product launch page for you. 🚀",
-      "lead-generation": "Perfect! A lead generation page will grow your audience fast. 📧",
-      "event-webinar": "Awesome! I'll build an event page that drives registrations. 🎤",
-      "portfolio": "Love it! Your work will shine on a beautifully designed portfolio page. 💼",
-      "service-showcase": "Nice! I'll craft a service page that turns visitors into clients. ⚡",
-      "coming-soon": "Smart move! A coming soon page will build buzz before launch. 🌟",
-      "discount-promo": "Excellent! A promo page will create urgency and boost conversions. 🎉",
-      "about-brand": "Wonderful! I'll tell your brand story in a compelling way. 💫",
+      "product-launch": "Great choice! Now let me ask a few quick questions about the product. 🚀",
+      "lead-generation": "Perfect! Let's set up your lead form and page content. 📧",
+      "event-webinar": "Awesome! Tell me a bit about your event. 🎤",
+      "portfolio": "Love it! Let's gather some details about your work. 💼",
+      "service-showcase": "Nice! A few quick questions about your service. ⚡",
+      "coming-soon": "Smart move! Let's build the anticipation. 🌟",
+      "discount-promo": "Excellent! Let's set up your promo details. 🎉",
+      "about-brand": "Wonderful! Tell me a little about your brand story. 💫",
     };
 
-    addAiMessage(typeResponses[typeId] || "Great choice! Let's get generating. ✨");
+    addAiMessage(typeResponses[typeId] || "Great choice! Let's gather a few details. ✨");
+    setTimeout(() => setCurrentStep("lp-details"), 900);
+  };
 
+  // Handle landing page details confirmation
+  const handleLandingPageDetailsConfirm = (summary: string, details: Record<string, string>) => {
+    setConversationData((prev) => ({ ...prev, lpDetails: details }));
+    addUserMessage(summary);
+    addAiMessage("Perfect — I have everything I need to generate your landing page! 🚀");
     setTimeout(() => {
-      addAiMessage(
-        `I have everything I need to generate your ${type.title} landing page. Click 'Generate My Landing Page' when you're ready!`,
-        2400
-      );
+      addAiMessage("Click 'Generate My Landing Page' when you're ready!", 2400);
       setCurrentStep("complete");
     }, 100);
   };
@@ -3255,8 +3642,18 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
         addAiMessage("Excellent taste! I can already picture it. 🌟");
         setTimeout(() => {
           if (mode === "landing-page") {
-            addAiMessage("Almost there! Which type of landing page do you want to create?", 2400);
-            setCurrentStep("landing-page-type");
+            if (conversationData.landingPageType === "multi-page-website") {
+              const suggestedPages = getSuggestedPagesForShopType(conversationData.shopType);
+              setConversationData((prev) => ({
+                ...prev,
+                selectedPages: suggestedPages.map((p) => p.id),
+              }));
+              addAiMessage("Here are the recommended pages for your website. Review, customise, or remove anything you like.", 2400);
+              setTimeout(() => setCurrentStep("pages"), 100);
+            } else {
+              addAiMessage("Almost done! Which type of landing page would you like to create?", 2400);
+              setTimeout(() => setCurrentStep("landing-page-type"), 100);
+            }
           } else {
             // Initialize selected pages based on shop type
             const suggestedPages = getSuggestedPagesForShopType(conversationData.shopType);
@@ -3270,14 +3667,29 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
         }, 100);
         break;
 
+      case "project-type": {
+        const response = userResponse.toLowerCase();
+        if (response.includes("multi") || response.includes("website")) {
+          setConversationData((prev) => ({ ...prev, landingPageType: "multi-page-website" }));
+        } else {
+          setConversationData((prev) => ({ ...prev, landingPageType: "single-landing-page" }));
+        }
+        addAiMessage("Great! Do you have a website you admire, or one that inspires the look and feel you want? Share a link or describe it.", 900);
+        setTimeout(() => setCurrentStep("inspiration"), 1000);
+        break;
+      }
+
       case "landing-page-type":
         // Text-input fallback — the component handles direct selection
         setConversationData((prev) => ({ ...prev, landingPageType: userResponse }));
-        addAiMessage("Great choice! Let's get generating. ✨");
-        setTimeout(() => {
-          addAiMessage("I have everything I need. Click 'Generate My Landing Page' when you're ready!", 2400);
-          setCurrentStep("complete");
-        }, 100);
+        addAiMessage("Great choice! Let me ask a few quick questions. ✨");
+        setTimeout(() => setCurrentStep("lp-details"), 900);
+        break;
+
+      case "lp-details":
+        // Text-input fallback — the component handles direct submission
+        addAiMessage("Got it! I have everything I need. Click 'Generate My Landing Page' when you're ready! 🚀");
+        setTimeout(() => setCurrentStep("complete"), 100);
         break;
 
       case "pages":
@@ -3308,6 +3720,11 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
     { label: "Bold & Colorful", value: "bold-colorful", icon: Palette },
     { label: "Elegant & Professional", value: "elegant-professional", icon: Briefcase },
     { label: "Playful & Creative", value: "playful-creative", icon: Wand2 },
+  ];
+
+  const projectTypeOptions = [
+    { label: "Multi-page website", value: "multi-page website", icon: Globe },
+    { label: "Single landing page", value: "single landing page", icon: FileText },
   ];
 
   const colorOptions = [
@@ -3445,6 +3862,19 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
             {/* Quick Options */}
             {!isTyping && messages.length > 0 && (
               <div className="px-6 pb-4">
+                {currentStep === "project-type" && mode === "landing-page" && (
+                  <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up">
+                    {projectTypeOptions.map((option) => (
+                      <QuickOption
+                        key={option.value}
+                        label={option.label}
+                        icon={option.icon}
+                        onClick={() => handleQuickOption(option.value)}
+                      />
+                    ))}
+                  </div>
+                )}
+
                 {currentStep === "style" && (
                   <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up">
                     {styleOptions.map((option) => (
@@ -3464,6 +3894,16 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
                     <LandingPageTypePicker
                       selectedType={conversationData.landingPageType}
                       onSelect={handleLandingPageTypeSelect}
+                    />
+                  </div>
+                )}
+
+                {/* Landing Page Details Form — shown after type selection */}
+                {currentStep === "lp-details" && mode === "landing-page" && conversationData.landingPageType && (
+                  <div className="mb-4">
+                    <LandingPageDetailsForm
+                      landingPageType={conversationData.landingPageType}
+                      onConfirm={handleLandingPageDetailsConfirm}
                     />
                   </div>
                 )}
@@ -3595,7 +4035,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
                 {/* Chat Control Actions */}
                 <div className="flex items-center justify-center gap-4 mt-3">
                   {/* Hide Skip for mandatory landing-page-type step */}
-                  {!(mode === "landing-page" && currentStep === "landing-page-type") && (
+                  {!(mode === "landing-page" && (currentStep === "landing-page-type" || currentStep === "project-type" || currentStep === "lp-details")) && (
                     <>
                       <button
                         onClick={handleSkipQuestion}
@@ -3615,15 +4055,6 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
                   )}
                   <button
                     onClick={() => {
-                      // Block End chat if landing page type has not been selected yet (mandatory)
-                      if (mode === "landing-page" && !conversationData.landingPageType) {
-                        // Force the mandatory step so the selection options are visible immediately
-                        if (currentStep !== "landing-page-type") {
-                          setCurrentStep("landing-page-type");
-                        }
-                        addAiMessage("Please select a landing page type first — it's required to generate your page. 👇", 300);
-                        return;
-                      }
                       handleEndChat();
                     }}
                     disabled={isTyping}
@@ -3675,11 +4106,17 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
           {/* Progress Indicator */}
           <div className="flex justify-center gap-2 mt-6">
             {(mode === "landing-page"
-              ? ["inspiration", "color", "style", "landing-page-type"]
+              ? conversationData.landingPageType === "multi-page-website"
+                ? ["project-type", "inspiration", "color", "style", "pages"]
+                : conversationData.landingPageType === "single-landing-page"
+                ? ["project-type", "inspiration", "color", "style", "landing-page-type", "lp-details"]
+                : ["project-type", "inspiration", "color", "style", "landing-page-type", "lp-details"]
               : ["inspiration", "color", "shop-type", "style", "pages", "products"]
             ).map((step, index) => {
               const stepOrder = mode === "landing-page"
-                ? ["inspiration", "color", "style", "landing-page-type"]
+                ? conversationData.landingPageType === "multi-page-website"
+                  ? ["project-type", "inspiration", "color", "style", "pages"]
+                  : ["project-type", "inspiration", "color", "style", "landing-page-type", "lp-details"]
                 : ["inspiration", "color", "shop-type", "style", "pages", "products"];
               const currentStepMapped =
                 currentStep === "secondary-color" || currentStep === "color-shade" ? "color" : currentStep;
