@@ -130,6 +130,7 @@ export function WizardContainer() {
         return (
           <WelcomeStep
             onNext={nextStep}
+            onGoToAiChat={() => goToStep(3)}
             businessInfo={wizardData.businessInfo}
             onUpdateBusinessInfo={(businessInfo) => updateWizardData({ businessInfo })}
           />

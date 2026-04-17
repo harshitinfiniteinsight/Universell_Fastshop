@@ -88,6 +88,7 @@ import { BrandVaultScreen, BrandVaultData } from "../brand-vault-modal";
 
 interface WelcomeStepProps {
   onNext: () => void;
+  onGoToAiChat?: () => void;
   businessInfo?: BusinessInfo;
   onUpdateBusinessInfo?: (data: BusinessInfo) => void;
 }
@@ -1081,11 +1082,13 @@ function LandingStyleVariant({ onStartGuided }: { onStartGuided: () => void }) {
 // ============================================
 function GuidedOnboardingVariant({
   onNext,
+  onGoToAiChat,
   businessInfo,
   onUpdateBusinessInfo,
   skipIntro = false,
 }: {
   onNext: () => void;
+  onGoToAiChat?: () => void;
   businessInfo?: BusinessInfo;
   onUpdateBusinessInfo?: (data: BusinessInfo) => void;
   skipIntro?: boolean;
@@ -1818,7 +1821,7 @@ function GuidedOnboardingVariant({
 
                 {/* Option B: Guided Questions */}
                 <button
-                  onClick={onNext}
+                  onClick={onGoToAiChat ?? onNext}
                   className="w-full group relative p-5 rounded-2xl border-2 border-border bg-gradient-to-br from-primary/5 to-primary/10 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 text-left"
                 >
                   <div className="flex items-start gap-4">
@@ -3062,7 +3065,7 @@ function FastStartVariant({ onNext }: { onNext: () => void }) {
 // ============================================
 // MAIN COMPONENT
 // ============================================
-export function WelcomeStep({ onNext, businessInfo, onUpdateBusinessInfo }: WelcomeStepProps) {
+export function WelcomeStep({ onNext, onGoToAiChat, businessInfo, onUpdateBusinessInfo }: WelcomeStepProps) {
   const [showGuidedOnboarding, setShowGuidedOnboarding] = useState(false);
 
   // Handler to switch from Landing to Guided onboarding
@@ -3079,6 +3082,7 @@ export function WelcomeStep({ onNext, businessInfo, onUpdateBusinessInfo }: Welc
           ) : (
             <GuidedOnboardingVariant
               onNext={onNext}
+              onGoToAiChat={onGoToAiChat}
               businessInfo={businessInfo}
               onUpdateBusinessInfo={onUpdateBusinessInfo}
               skipIntro={true}

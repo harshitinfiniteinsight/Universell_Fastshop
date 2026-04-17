@@ -161,6 +161,10 @@ export default function WebsitePagesPage() {
   const [showWelcomeToast, setShowWelcomeToast] = useState(false);
   const [selectedPageId, setSelectedPageId] = useState<string>("1"); // Default to Homepage
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [showRegenerateModal, setShowRegenerateModal] = useState(false);
+  const [regeneratePageId, setRegeneratePageId] = useState<string | null>(null);
+  const [regeneratePrompt, setRegeneratePrompt] = useState("");
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [onboardingData, setOnboardingData] = useState<{
     selectedPages?: string[];
     customPages?: string[];
@@ -237,6 +241,24 @@ export default function WebsitePagesPage() {
     setAiPrompt("");
   };
 
+  const handleRegeneratePage = async () => {
+    if (!regeneratePrompt.trim()) return;
+    
+    setIsRegenerating(true);
+    
+    try {
+      // Simulate regeneration delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Reset modal
+      setShowRegenerateModal(false);
+      setRegeneratePrompt("");
+      setRegeneratePageId(null);
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
   const PageRow = ({ page, isSelected, onSelect }: { page: PageData; isSelected?: boolean; onSelect?: () => void }) => (
     <div 
       onClick={onSelect}
@@ -296,6 +318,15 @@ export default function WebsitePagesPage() {
             <DropdownMenuItem>
               <Archive className="w-4 h-4 mr-2" />
               Archive
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setRegeneratePageId(page.id);
+                setShowRegenerateModal(true);
+              }}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Regenerate
             </DropdownMenuItem>
             <DropdownMenuItem className="text-destructive">
               <Trash2 className="w-4 h-4 mr-2" />
@@ -899,6 +930,82 @@ export default function WebsitePagesPage() {
               // Navigate to service listing editor
             }}>
               Create & Edit Page
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+      {/* Regenerate Page Modal */}
+      <Dialog open={showRegenerateModal} onOpenChange={setShowRegenerateModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Regenerate Page</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Tell AI how you'd like to improve or modify this page. Be specific about what you'd like changed.
+            </p>
+            
+            <div className="space-y-2">
+              <Label htmlFor="regenerate-prompt">Regeneration Prompt</Label>
+              <Textarea
+                id="regenerate-prompt"
+                placeholder="e.g., Add more testimonials, change the color scheme to blue and gold, make the layout more compact..."
+                value={regeneratePrompt}
+                onChange={(e) => setRegeneratePrompt(e.target.value)}
+                disabled={isRegenerating}
+                className="min-h-[120px] resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-foreground">Suggestions:</h4>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  "Improve the hero section with a stronger headline",
+                  "Add customer testimonials section",
+                  "Enhance the call-to-action buttons",
+                  "Reorganize content for better flow"
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => setRegeneratePrompt(suggestion)}
+                    className="text-left text-xs px-3 py-2 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowRegenerateModal(false);
+                setRegeneratePrompt("");
+              }}
+              disabled={isRegenerating}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRegeneratePage}
+              disabled={!regeneratePrompt.trim() || isRegenerating}
+            >
+              {isRegenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Regenerating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Regenerate
+                </>
+              )}
             </Button>
           </div>
         </DialogContent>
