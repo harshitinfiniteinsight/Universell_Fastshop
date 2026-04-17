@@ -3617,7 +3617,11 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
                     onClick={() => {
                       // Block End chat if landing page type has not been selected yet (mandatory)
                       if (mode === "landing-page" && !conversationData.landingPageType) {
-                        addAiMessage("Please select a landing page type first — it's required to generate your page. 👆", 300);
+                        // Force the mandatory step so the selection options are visible immediately
+                        if (currentStep !== "landing-page-type") {
+                          setCurrentStep("landing-page-type");
+                        }
+                        addAiMessage("Please select a landing page type first — it's required to generate your page. 👇", 300);
                         return;
                       }
                       handleEndChat();
