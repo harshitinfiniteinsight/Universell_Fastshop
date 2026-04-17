@@ -48,8 +48,10 @@ import {
   PartyPopper,
   Menu,
   Loader2,
+  ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Page {
   id: string;
@@ -154,6 +156,7 @@ const promptExamples = [
 ];
 
 export default function WebsitePagesPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [selectedItem, setSelectedItem] = useState("");
@@ -259,7 +262,17 @@ export default function WebsitePagesPage() {
     }
   };
 
-  const PageRow = ({ page, isSelected, onSelect }: { page: PageData; isSelected?: boolean; onSelect?: () => void }) => (
+  const PageRow = ({
+    page,
+    isSelected,
+    onSelect,
+    isArchived = false,
+  }: {
+    page: PageData;
+    isSelected?: boolean;
+    onSelect?: () => void;
+    isArchived?: boolean;
+  }) => (
     <div 
       onClick={onSelect}
       className={`flex items-center justify-between py-3 px-4 border-b border-border last:border-0 transition-colors cursor-pointer ${
@@ -299,30 +312,47 @@ export default function WebsitePagesPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link href={page.editPath || `/website-pages/edit/${page.id}`}>
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Page
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => window.open(`/${page.slug}`, "_blank")}
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Preview
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Copy className="w-4 h-4 mr-2" />
-              Duplicate
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Archive className="w-4 h-4 mr-2" />
-              Archive
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
+            {isArchived ? (
+              <>
+                <DropdownMenuItem
+                  onClick={() => window.open(`/${page.slug}`, "_blank")}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Restore
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href={page.editPath || `/website-pages/edit/${page.id}`}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Page
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => window.open(`/${page.slug}`, "_blank")}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Archive className="w-4 h-4 mr-2" />
+                  Archive
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -442,6 +472,16 @@ export default function WebsitePagesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mb-3"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
           <h1 className="text-2xl font-bold text-foreground">All Pages</h1>
           <p className="text-muted-foreground">
             Manage your website pages and create new ones with AI
@@ -469,13 +509,19 @@ export default function WebsitePagesPage() {
             <Tabs defaultValue="active" className="w-full">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-4">
                 <TabsList>
-                  <TabsTrigger value="active" className="gap-2 text-sm">
+                  <TabsTrigger
+                    value="active"
+                    className="gap-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
                     Active
                     <Badge variant="secondary" className="ml-1 text-xs">
                       {allActivePages.length}
                     </Badge>
                   </TabsTrigger>
-                  <TabsTrigger value="archived" className="gap-2 text-sm">
+                  <TabsTrigger
+                    value="archived"
+                    className="gap-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
                     Archived
                     <Badge variant="secondary" className="ml-1 text-xs">
                       {archivedPages.length}
@@ -520,6 +566,7 @@ export default function WebsitePagesPage() {
                       page={page}
                       isSelected={selectedPageId === page.id}
                       onSelect={() => handleSelectPage(page.id)}
+                      isArchived
                     />
                   ))}
                   {archivedPages.length === 0 && (
