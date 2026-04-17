@@ -3594,22 +3594,34 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
 
                 {/* Chat Control Actions */}
                 <div className="flex items-center justify-center gap-4 mt-3">
+                  {/* Hide Skip for mandatory landing-page-type step */}
+                  {!(mode === "landing-page" && currentStep === "landing-page-type") && (
+                    <>
+                      <button
+                        onClick={handleSkipQuestion}
+                        disabled={isTyping}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground rounded-lg transition-all duration-200",
+                          "hover:text-foreground hover:bg-muted/50",
+                          "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
+                          isTyping && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        <SkipForward className="w-3.5 h-3.5" />
+                        Skip question
+                      </button>
+                      <div className="w-px h-4 bg-border" />
+                    </>
+                  )}
                   <button
-                    onClick={handleSkipQuestion}
-                    disabled={isTyping}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground rounded-lg transition-all duration-200",
-                      "hover:text-foreground hover:bg-muted/50",
-                      "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
-                      isTyping && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    <SkipForward className="w-3.5 h-3.5" />
-                    Skip question
-                  </button>
-                  <div className="w-px h-4 bg-border" />
-                  <button
-                    onClick={handleEndChat}
+                    onClick={() => {
+                      // Block End chat if landing page type has not been selected yet (mandatory)
+                      if (mode === "landing-page" && !conversationData.landingPageType) {
+                        addAiMessage("Please select a landing page type first — it's required to generate your page. 👆", 300);
+                        return;
+                      }
+                      handleEndChat();
+                    }}
                     disabled={isTyping}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground rounded-lg transition-all duration-200",
@@ -3640,10 +3652,16 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
             {currentStep !== "complete" && (
               <div className="px-6 pb-4 text-center">
                 <button
-                  onClick={onSkip}
+                  onClick={() => {
+                    if (mode === "landing-page") {
+                      router.push("/landing-pages/templates");
+                    } else {
+                      onSkip();
+                    }
+                  }}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
                 >
-                  Set up without AI chat
+                  Set up without AI
                   <ArrowRight className="w-3 h-3 inline ml-1" />
                 </button>
               </div>

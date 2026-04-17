@@ -248,6 +248,10 @@ export default function GeneratedLandingPageEditor() {
   const [isGrapesReady, setIsGrapesReady] = useState(false);
 
   const grapesContainerRef = useRef<HTMLDivElement>(null);
+  const grapesBlocksRef = useRef<HTMLDivElement>(null);
+  const grapesLayersRef = useRef<HTMLDivElement>(null);
+  const grapesStylesRef = useRef<HTMLDivElement>(null);
+  const grapesTraitsRef = useRef<HTMLDivElement>(null);
   const grapesEditorRef = useRef<any>(null);
 
   useEffect(() => {
@@ -272,10 +276,27 @@ export default function GeneratedLandingPageEditor() {
     let editorInstance: any;
 
     const init = async () => {
-      if (!grapesContainerRef.current) return;
+      if (
+        !grapesContainerRef.current ||
+        !grapesBlocksRef.current ||
+        !grapesLayersRef.current ||
+        !grapesStylesRef.current ||
+        !grapesTraitsRef.current
+      ) {
+        return;
+      }
 
       const grapesModule = await import("grapesjs");
-      if (!isMounted || !grapesContainerRef.current) return;
+      if (
+        !isMounted ||
+        !grapesContainerRef.current ||
+        !grapesBlocksRef.current ||
+        !grapesLayersRef.current ||
+        !grapesStylesRef.current ||
+        !grapesTraitsRef.current
+      ) {
+        return;
+      }
 
       const grapesjs = (grapesModule as any).default || grapesModule;
 
@@ -287,6 +308,19 @@ export default function GeneratedLandingPageEditor() {
         fromElement: false,
         components: html,
         style: css,
+        panels: { defaults: [] },
+        blockManager: {
+          appendTo: grapesBlocksRef.current,
+        },
+        layerManager: {
+          appendTo: grapesLayersRef.current,
+        },
+        styleManager: {
+          appendTo: grapesStylesRef.current,
+        },
+        traitManager: {
+          appendTo: grapesTraitsRef.current,
+        },
       });
 
       editorInstance.on("update", () => {
@@ -506,27 +540,81 @@ export default function GeneratedLandingPageEditor() {
             </span>
           </div>
 
-          <div className="flex-1 min-h-0">
-            <div ref={grapesContainerRef} className="h-full w-full" />
+          <div className="flex-1 min-h-0 overflow-hidden">
+            {/* Hidden GrapesJS engine mount (canvas kept off-screen to avoid duplicate preview) */}
+            <div className="absolute -left-[9999px] top-0 w-px h-px overflow-hidden pointer-events-none">
+              <div ref={grapesContainerRef} className="h-full w-full" />
+            </div>
+
+            {/* Visible GrapesJS panels */}
+            <div className="h-full grid grid-rows-[150px_170px_1fr_220px]">
+              <section className="border-b border-border min-h-0">
+                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">Blocks</div>
+                <div ref={grapesBlocksRef} className="h-[calc(100%-33px)] overflow-auto px-2 pb-2 grapes-panel-host" />
+              </section>
+
+              <section className="border-b border-border min-h-0">
+                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">Layers</div>
+                <div ref={grapesLayersRef} className="h-[calc(100%-33px)] overflow-auto px-2 pb-2 grapes-panel-host" />
+              </section>
+
+              <section className="border-b border-border min-h-0">
+                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">Style Manager</div>
+                <div ref={grapesStylesRef} className="h-[calc(100%-33px)] overflow-auto px-2 pb-2 grapes-panel-host" />
+              </section>
+
+              <section className="min-h-0">
+                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">Traits</div>
+                <div ref={grapesTraitsRef} className="h-[calc(100%-33px)] overflow-auto px-2 pb-2 grapes-panel-host" />
+              </section>
+            </div>
           </div>
         </div>
       </div>
 
       <style jsx global>{`
+        .grapes-panel-host .gjs-blocks-c,
+        .grapes-panel-host .gjs-sm-sectors,
+        .grapes-panel-host .gjs-trt-traits,
+        .grapes-panel-host .gjs-layers {
+          padding: 0 !important;
+        }
+
+        .grapes-panel-host .gjs-block {
+          width: calc(50% - 8px);
+          min-height: 56px;
+          border-radius: 10px;
+          border: 1px solid #e5e7eb;
+          box-shadow: none;
+          margin: 4px;
+          background: #fff;
+        }
+
+        .grapes-panel-host .gjs-sm-sector {
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          margin-bottom: 8px;
+          overflow: hidden;
+          background: #fff;
+        }
+
+        .grapes-panel-host .gjs-sm-title,
+        .grapes-panel-host .gjs-layer-title,
+        .grapes-panel-host .gjs-trt-trait {
+          color: #111827;
+        }
+
+        .grapes-panel-host .gjs-layer-item,
+        .grapes-panel-host .gjs-sm-property {
+          border-color: #f3f4f6;
+        }
+
         .gjs-one-bg,
         .gjs-two-color,
         .gjs-four-color,
         .gjs-three-bg {
           background: #ffffff !important;
           color: #374151 !important;
-        }
-
-        .gjs-block {
-          width: calc(50% - 8px);
-          min-height: 60px;
-          border-radius: 10px;
-          border: 1px solid #e5e7eb;
-          box-shadow: none;
         }
 
         .gjs-pn-panel {
