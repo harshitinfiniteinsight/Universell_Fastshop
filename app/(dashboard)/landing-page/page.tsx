@@ -313,9 +313,9 @@ export default function LandingPageWizard() {
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Generate Landing Page</h1>
+            <h1 className="text-2xl font-bold text-foreground">Landing Page Builder</h1>
             <p className="text-muted-foreground mt-1">
-              Let AI build a beautiful, personalised page for your store
+              Generate a high-converting landing page with AI in minutes
             </p>
           </div>
 
@@ -534,147 +534,214 @@ export default function LandingPageWizard() {
 
         {/* ── INTRO ── */}
         {step === "intro" && (
-          <div className="relative overflow-hidden min-h-[560px] p-6 lg:p-10">
-            {/* Ambient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-background" />
-            <div className="absolute top-10 right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-10 left-10 w-48 h-48 bg-orange-400/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10 w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 lg:gap-12 items-center">
-              {/* Left side: text + CTA */}
-              <div className="space-y-6 text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-background/80">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-medium text-foreground">AI Landing Page Builder</span>
-                </div>
+          <div className="relative overflow-hidden">
 
-                <div className="space-y-3">
-                  <h2 className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight leading-tight">
-                    Generate through{" "}
-                    <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                      AI
-                    </span>
-                  </h2>
-                  <p className="text-lg text-muted-foreground max-w-xl">
-                    Create a high-converting landing page in minutes. AI helps with
-                    structure, content direction and visual polish based on your brand.
-                  </p>
-                </div>
+            {/* ── Two-column layout ── */}
+            <div className="relative min-h-[580px] px-6 lg:px-12 py-12 lg:py-16 overflow-hidden">
+              {/* Ambient blobs */}
+              <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/4 to-orange-50/30 pointer-events-none" />
+              <div className="absolute -top-20 left-1/4 w-[480px] h-[480px] bg-primary/7 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-72 h-72 bg-orange-400/8 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="rounded-2xl border border-primary/15 bg-primary/[0.03] px-5 py-4">
-                  <p className="text-sm font-semibold text-foreground mb-2">Why this helps:</p>
-                  <ul className="space-y-1.5 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
-                      Create landing page in 2 minutes
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
-                      No code required
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
-                      Professional and modern feel
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
-                      Attract more customers
-                    </li>
-                  </ul>
-                </div>
+              <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-                <div>
-                  <Button
-                    onClick={() => setStep("business-info")}
-                    size="lg"
-                    className="group px-10 py-6 text-lg font-semibold rounded-2xl shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.02] transition-all duration-300"
-                  >
-                    Start Generating
-                    <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Right side: animated preview card + floating chips */}
-              <div className="relative min-h-[430px] flex items-center justify-center">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent blur-2xl" />
-
-                <div className="absolute z-30 -top-2 left-0 hidden xl:flex items-center gap-2 px-3 py-2 rounded-full border border-primary/20 bg-background/85 backdrop-blur-sm shadow-sm">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-medium text-foreground">Smart content suggestions</span>
-                </div>
-                <div className="absolute z-30 top-8 right-0 hidden xl:flex items-center gap-2 px-3 py-2 rounded-full border border-primary/20 bg-background/85 backdrop-blur-sm shadow-sm">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-medium text-foreground">Create in 2 minutes</span>
-                </div>
-                <div className="absolute z-30 bottom-24 -left-2 hidden xl:flex items-center gap-2 px-3 py-2 rounded-full border border-primary/20 bg-background/85 backdrop-blur-sm shadow-sm">
-                  <FileText className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-medium text-foreground">No code required</span>
-                </div>
-                <div className="absolute z-30 bottom-10 right-2 hidden xl:flex items-center gap-2 px-3 py-2 rounded-full border border-primary/20 bg-background/85 backdrop-blur-sm shadow-sm">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-medium text-foreground">Professional look</span>
-                </div>
-
-                <div className="relative z-10 w-full max-w-md rounded-3xl border border-primary/20 bg-background/90 backdrop-blur shadow-2xl shadow-primary/15 overflow-hidden">
-                  <div className="h-12 border-b border-border/80 bg-muted/40 px-4 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-                    </div>
-                    <div className="text-xs text-muted-foreground">Generating: {activeAnimatedSection.label}</div>
+                {/* ── LEFT: Text + CTAs ── */}
+                <div className="space-y-7">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/25 bg-background/80 backdrop-blur-sm shadow-sm">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-semibold text-foreground tracking-widest uppercase">AI-Powered Page Builder</span>
                   </div>
 
-                  <div className="p-5 space-y-4">
-                    <div className="rounded-2xl bg-gradient-to-r from-primary/20 to-primary/10 p-4 border border-primary/20">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-primary font-semibold">{activeAnimatedSection.label}</p>
-                          <p className="text-base font-semibold text-foreground mt-1">{activeAnimatedSection.title}</p>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center animate-pulse">
-                          <Sparkles className="w-4 h-4 text-primary" />
-                        </div>
+                  <div className="space-y-4">
+                    <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-[1.1]">
+                      Build Your<br />
+                      Landing Page<br />
+                      <span className="bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">
+                        That Converts
+                      </span>
+                    </h2>
+                    <p className="text-base lg:text-lg text-muted-foreground leading-relaxed max-w-lg">
+                      Create a stunning, high-converting landing page in minutes. AI handles structure, copy and visual polish — you just describe your business.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Button
+                      onClick={() => setStep("business-info")}
+                      size="lg"
+                      className="group px-8 py-5 text-base font-semibold rounded-2xl shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 hover:scale-[1.02] transition-all duration-300"
+                    >
+                      Get Started Now
+                      <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </div>
+
+                  {/* Trust pills */}
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
+                        <Zap className="w-3.5 h-3.5 text-green-600" />
                       </div>
+                      <span>Ready in <strong className="text-foreground">2 minutes</strong></span>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="h-12 rounded-lg bg-muted animate-pulse" />
-                      <div className="h-12 rounded-lg bg-muted animate-pulse" />
-                      <div className="h-12 rounded-lg bg-muted animate-pulse" />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      {animatedSections.map((section, idx) => (
-                        <div
-                          key={section.label}
-                          className={`rounded-md border px-2.5 py-1.5 transition-colors ${
-                            idx <= animatedSectionIndex
-                              ? "border-primary/30 bg-primary/10 text-primary"
-                              : "border-border bg-muted/40 text-muted-foreground"
-                          }`}
-                        >
-                          {section.label}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="h-3 rounded bg-muted animate-pulse" />
-                      <div className="h-3 rounded bg-muted animate-pulse w-10/12" />
-                      <div className="h-3 rounded bg-muted animate-pulse w-8/12" />
-                    </div>
-
-                    <div className="pt-2 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Composing sections</span>
-                        <span className="text-primary font-medium">{activeAnimatedSection.progress}%</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
+                        <FileText className="w-3.5 h-3.5 text-blue-600" />
                       </div>
-                      <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-700"
-                          style={{ width: `${activeAnimatedSection.progress}%` }}
-                        />
+                      <span><strong className="text-foreground">No code</strong> required</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <span><strong className="text-foreground">100%</strong> AI-powered</span>
+                    </div>
+                  </div>
+
+                  {/* Feature list */}
+                  <div className="space-y-3 pt-1">
+                    {[
+                      { icon: Sparkles, color: "text-primary", bg: "bg-primary/10", text: "AI writes your headlines, copy & CTAs" },
+                      { icon: LayoutTemplate, color: "text-orange-500", bg: "bg-orange-100", text: "Smart section layout chosen for your goal" },
+                      { icon: Edit, color: "text-blue-500", bg: "bg-blue-100", text: "Edit any section inline after generation" },
+                    ].map(({ icon: Icon, color, bg, text }) => (
+                      <div key={text} className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${bg}`}>
+                          <Icon className={`w-4 h-4 ${color}`} />
+                        </div>
+                        <span className="text-sm text-muted-foreground">{text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── RIGHT: Animated landing page creation ── */}
+                <div className="relative flex items-center justify-center">
+                  {/* Glow behind card */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-primary/5 to-orange-400/10 rounded-3xl blur-2xl" />
+
+                  {/* Floating chips */}
+                  <div className="absolute z-20 -top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-background/90 backdrop-blur-sm shadow-md text-xs font-medium text-foreground">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    Smart suggestions
+                  </div>
+                  <div className="absolute z-20 -top-2 right-2 flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-200 bg-background/90 backdrop-blur-sm shadow-md text-xs font-medium text-foreground">
+                    <Zap className="w-3.5 h-3.5 text-green-500" />
+                    Live preview
+                  </div>
+                  <div className="absolute z-20 -bottom-3 left-6 flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-200 bg-background/90 backdrop-blur-sm shadow-md text-xs font-medium text-foreground">
+                    <Check className="w-3.5 h-3.5 text-orange-500" />
+                    No code needed
+                  </div>
+
+                  {/* Browser mockup */}
+                  <div className="relative z-10 w-full max-w-[420px] rounded-2xl border border-border bg-background shadow-2xl shadow-primary/20 overflow-hidden">
+                    {/* Browser bar */}
+                    <div className="h-10 bg-muted/60 border-b border-border flex items-center px-4 gap-2">
+                      <div className="flex gap-1.5">
+                        <div className="w-3 h-3 rounded-full bg-red-400" />
+                        <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                        <div className="w-3 h-3 rounded-full bg-green-400" />
+                      </div>
+                      <div className="flex-1 mx-3 h-5 rounded-md bg-background/80 border border-border/60 flex items-center px-2">
+                        <span className="text-[10px] text-muted-foreground truncate">yourstore.fastshop.io</span>
+                      </div>
+                      <div className="w-4 h-4 rounded bg-primary/20" />
+                    </div>
+
+                    {/* Page being built */}
+                    <div className="relative overflow-hidden">
+                      {/* Status bar */}
+                      <div className="flex items-center justify-between px-4 py-2 bg-primary/5 border-b border-primary/10">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          <span className="text-[11px] font-medium text-primary">Generating: {activeAnimatedSection.label}</span>
+                        </div>
+                        <span className="text-[11px] font-bold text-primary">{activeAnimatedSection.progress}%</span>
+                      </div>
+
+                      {/* Simulated page sections */}
+                      <div className="p-3 space-y-2.5 bg-white">
+
+                        {/* Hero section (always shown) */}
+                        <div className={`rounded-xl overflow-hidden transition-all duration-700 ${
+                          animatedSectionIndex >= 0 ? "opacity-100" : "opacity-0"
+                        }`}>
+                          <div className="bg-gradient-to-r from-primary to-orange-500 p-5 text-white">
+                            <div className="h-3 w-24 bg-white/40 rounded-full mb-2 animate-pulse" />
+                            <div className="h-5 w-40 bg-white/60 rounded-full mb-1" />
+                            <div className="h-3 w-32 bg-white/40 rounded-full mb-4" />
+                            <div className="inline-flex h-7 w-24 bg-white/90 rounded-lg" />
+                          </div>
+                        </div>
+
+                        {/* Features section */}
+                        <div className={`rounded-xl border border-border p-3 transition-all duration-700 ${
+                          animatedSectionIndex >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                        }`}>
+                          <div className="h-2.5 w-20 bg-muted rounded-full mb-2" />
+                          <div className="grid grid-cols-3 gap-2">
+                            {[0,1,2].map(i => (
+                              <div key={i} className="rounded-lg bg-muted/60 p-2 space-y-1">
+                                <div className="w-5 h-5 rounded-md bg-primary/20" />
+                                <div className="h-1.5 bg-muted rounded-full" />
+                                <div className="h-1.5 bg-muted rounded-full w-3/4" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Testimonials section */}
+                        <div className={`rounded-xl border border-border p-3 transition-all duration-700 ${
+                          animatedSectionIndex >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                        }`}>
+                          <div className="h-2.5 w-24 bg-muted rounded-full mb-2" />
+                          <div className="flex gap-2">
+                            {[0,1].map(i => (
+                              <div key={i} className="flex-1 rounded-lg bg-muted/40 p-2 space-y-1.5">
+                                <div className="flex gap-0.5">{[0,1,2,3,4].map(s => <div key={s} className="w-2 h-2 rounded-sm bg-yellow-400" />)}</div>
+                                <div className="h-1.5 bg-muted rounded-full" />
+                                <div className="h-1.5 bg-muted rounded-full w-3/4" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* CTA section */}
+                        <div className={`rounded-xl bg-gradient-to-r from-primary/10 to-orange-500/10 border border-primary/15 p-3 transition-all duration-700 ${
+                          animatedSectionIndex >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                        }`}>
+                          <div className="h-2.5 w-28 bg-primary/30 rounded-full mb-1.5" />
+                          <div className="h-1.5 bg-muted rounded-full w-3/4 mb-2.5" />
+                          <div className="inline-flex h-6 w-20 bg-primary/80 rounded-lg" />
+                        </div>
+
+                        {/* Contact section */}
+                        <div className={`rounded-xl border border-border p-3 transition-all duration-700 ${
+                          animatedSectionIndex >= 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                        }`}>
+                          <div className="h-2.5 w-16 bg-muted rounded-full mb-2" />
+                          <div className="space-y-1.5">
+                            <div className="h-5 rounded-md border border-border bg-muted/30" />
+                            <div className="h-5 rounded-md border border-border bg-muted/30" />
+                            <div className="h-6 w-full bg-primary/80 rounded-md" />
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Progress bar at bottom */}
+                      <div className="px-3 pb-3 bg-white">
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                          <span>Building sections...</span>
+                          <span className="text-primary font-semibold">{animatedSections.filter((_, i) => i <= animatedSectionIndex).length}/{animatedSections.length} done</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-primary to-orange-500 transition-all duration-700"
+                            style={{ width: `${activeAnimatedSection.progress}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

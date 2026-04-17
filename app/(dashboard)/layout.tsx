@@ -137,7 +137,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const isEditPage = pathname.includes("/edit/") || pathname.endsWith("/edit");
+  const [sidebarOpen, setSidebarOpen] = useState(!isEditPage);
+
+  useEffect(() => {
+    if (pathname.includes("/edit/") || pathname.endsWith("/edit")) {
+      setSidebarOpen(false);
+    } else {
+      setSidebarOpen(true);
+    }
+  }, [pathname]);
   const [createPageModalOpen, setCreatePageModalOpen] = useState(false);
 
   // Define mainNavItems inside component to access setCreatePageModalOpen

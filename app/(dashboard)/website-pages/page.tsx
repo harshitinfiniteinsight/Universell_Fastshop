@@ -319,15 +319,6 @@ export default function WebsitePagesPage() {
               <Archive className="w-4 h-4 mr-2" />
               Archive
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                setRegeneratePageId(page.id);
-                setShowRegenerateModal(true);
-              }}
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Regenerate
-            </DropdownMenuItem>
             <DropdownMenuItem className="text-destructive">
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
@@ -934,7 +925,7 @@ export default function WebsitePagesPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+
       {/* Regenerate Page Modal */}
       <Dialog open={showRegenerateModal} onOpenChange={setShowRegenerateModal}>
         <DialogContent className="max-w-lg">
