@@ -22,6 +22,19 @@ import { useRouter } from "next/navigation";
 type LandingPageStep = "type-select" | "intro" | "business-info" | "ai-chat" | "generation" | "done";
 type LandingPageType = "business" | "lead" | null;
 
+type SavedLandingPageDraft = {
+  id: string;
+  businessName: string;
+  tagline: string;
+  description: string;
+  html: string;
+  css: string;
+  updatedAt: string;
+  status: "draft" | "published";
+};
+
+const SAVED_LANDING_PAGES_KEY = "universell-saved-landing-pages";
+
 const initialWizardData: WizardData = {
   businessInfo: {
     name: "Sunrise Cafe & Bakery",
@@ -52,6 +65,7 @@ export default function LandingPageWizard() {
   const [step, setStep] = useState<LandingPageStep>("intro");
   const [landingPageType, setLandingPageType] = useState<LandingPageType>(null);
   const [wizardData, setWizardData] = useState<WizardData>(initialWizardData);
+  const [savedLandingPages, setSavedLandingPages] = useState<SavedLandingPageDraft[]>([]);
   const [generatedPageName, setGeneratedPageName] = useState("Homepage");
   const [animatedSectionIndex, setAnimatedSectionIndex] = useState(0);
   const [generatingTagline, setGeneratingTagline] = useState(false);
@@ -105,6 +119,37 @@ export default function LandingPageWizard() {
 
     return () => clearInterval(interval);
   }, [step, animatedSections.length]);
+
+  useEffect(() => {
+    const loadSavedLandingPages = () => {
+      try {
+        const raw = localStorage.getItem(SAVED_LANDING_PAGES_KEY);
+        if (!raw) {
+          setSavedLandingPages([]);
+          return;
+        }
+
+        const parsed = JSON.parse(raw) as Array<Omit<SavedLandingPageDraft, "status"> & { status?: "draft" | "published" }>;
+        const normalized = parsed
+          .map((item) => ({
+            ...item,
+            status: item.status ?? "draft",
+          }))
+          .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+        setSavedLandingPages(normalized as SavedLandingPageDraft[]);
+      } catch {
+        setSavedLandingPages([]);
+      }
+    };
+
+    loadSavedLandingPages();
+    window.addEventListener("focus", loadSavedLandingPages);
+
+    return () => {
+      window.removeEventListener("focus", loadSavedLandingPages);
+    };
+  }, []);
 
   const activeAnimatedSection = animatedSections[animatedSectionIndex];
 
@@ -320,9 +365,17 @@ export default function LandingPageWizard() {
           </div>
 
           {step === "intro" && (
-            <Button asChild className="self-start sm:mt-1 bg-primary text-primary-foreground hover:bg-primary/90">
-              <Link href="/landing-pages/templates">Select Template</Link>
-            </Button>
+            <div className="flex items-center gap-2 self-start sm:mt-1">
+              <Button
+                onClick={() => setStep("business-info")}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Generate New Landing Page
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/landing-pages/templates">Select Template</Link>
+              </Button>
+            </div>
           )}
         </div>
 
@@ -534,219 +587,91 @@ export default function LandingPageWizard() {
 
         {/* ── INTRO ── */}
         {step === "intro" && (
-          <div className="relative overflow-hidden">
-
-            {/* ── Two-column layout ── */}
-            <div className="relative min-h-[580px] px-6 lg:px-12 py-12 lg:py-16 overflow-hidden">
-              {/* Ambient blobs */}
-              <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/4 to-orange-50/30 pointer-events-none" />
-              <div className="absolute -top-20 left-1/4 w-[480px] h-[480px] bg-primary/7 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 right-0 w-72 h-72 bg-orange-400/8 rounded-full blur-3xl pointer-events-none" />
-
-              <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-
-                {/* ── LEFT: Text + CTAs ── */}
-                <div className="space-y-7">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/25 bg-background/80 backdrop-blur-sm shadow-sm">
-                    <Sparkles className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs font-semibold text-foreground tracking-widest uppercase">AI-Powered Page Builder</span>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-[1.1]">
-                      Build Your<br />
-                      Landing Page<br />
-                      <span className="bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">
-                        That Converts
-                      </span>
-                    </h2>
-                    <p className="text-base lg:text-lg text-muted-foreground leading-relaxed max-w-lg">
-                      Create a stunning, high-converting landing page in minutes. AI handles structure, copy and visual polish — you just describe your business.
-                    </p>
-                  </div>
-
-                  <div>
-                    <Button
-                      onClick={() => setStep("business-info")}
-                      size="lg"
-                      className="group px-8 py-5 text-base font-semibold rounded-2xl shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 hover:scale-[1.02] transition-all duration-300"
-                    >
-                      Get Started Now
-                      <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
-                    </Button>
-                  </div>
-
-                  {/* Trust pills */}
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
-                        <Zap className="w-3.5 h-3.5 text-green-600" />
-                      </div>
-                      <span>Ready in <strong className="text-foreground">2 minutes</strong></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
-                        <FileText className="w-3.5 h-3.5 text-blue-600" />
-                      </div>
-                      <span><strong className="text-foreground">No code</strong> required</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Sparkles className="w-3.5 h-3.5 text-primary" />
-                      </div>
-                      <span><strong className="text-foreground">100%</strong> AI-powered</span>
-                    </div>
-                  </div>
-
-                  {/* Feature list */}
-                  <div className="space-y-3 pt-1">
-                    {[
-                      { icon: Sparkles, color: "text-primary", bg: "bg-primary/10", text: "AI writes your headlines, copy & CTAs" },
-                      { icon: LayoutTemplate, color: "text-orange-500", bg: "bg-orange-100", text: "Smart section layout chosen for your goal" },
-                      { icon: Edit, color: "text-blue-500", bg: "bg-blue-100", text: "Edit any section inline after generation" },
-                    ].map(({ icon: Icon, color, bg, text }) => (
-                      <div key={text} className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${bg}`}>
-                          <Icon className={`w-4 h-4 ${color}`} />
-                        </div>
-                        <span className="text-sm text-muted-foreground">{text}</span>
-                      </div>
-                    ))}
-                  </div>
+          <div className="p-6 lg:p-8">
+            <div className="max-w-6xl mx-auto space-y-6">
+              <div className="rounded-2xl border border-border bg-muted/20 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-foreground">Landing Pages</h2>
+                  <p className="text-sm text-muted-foreground">View your existing drafts and published pages.</p>
                 </div>
-
-                {/* ── RIGHT: Animated landing page creation ── */}
-                <div className="relative flex items-center justify-center">
-                  {/* Glow behind card */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-primary/5 to-orange-400/10 rounded-3xl blur-2xl" />
-
-                  {/* Floating chips */}
-                  <div className="absolute z-20 -top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-background/90 backdrop-blur-sm shadow-md text-xs font-medium text-foreground">
-                    <Sparkles className="w-3.5 h-3.5 text-primary" />
-                    Smart suggestions
-                  </div>
-                  <div className="absolute z-20 -top-2 right-2 flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-200 bg-background/90 backdrop-blur-sm shadow-md text-xs font-medium text-foreground">
-                    <Zap className="w-3.5 h-3.5 text-green-500" />
-                    Live preview
-                  </div>
-                  <div className="absolute z-20 -bottom-3 left-6 flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-200 bg-background/90 backdrop-blur-sm shadow-md text-xs font-medium text-foreground">
-                    <Check className="w-3.5 h-3.5 text-orange-500" />
-                    No code needed
-                  </div>
-
-                  {/* Browser mockup */}
-                  <div className="relative z-10 w-full max-w-[420px] rounded-2xl border border-border bg-background shadow-2xl shadow-primary/20 overflow-hidden">
-                    {/* Browser bar */}
-                    <div className="h-10 bg-muted/60 border-b border-border flex items-center px-4 gap-2">
-                      <div className="flex gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-red-400" />
-                        <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                        <div className="w-3 h-3 rounded-full bg-green-400" />
-                      </div>
-                      <div className="flex-1 mx-3 h-5 rounded-md bg-background/80 border border-border/60 flex items-center px-2">
-                        <span className="text-[10px] text-muted-foreground truncate">yourstore.fastshop.io</span>
-                      </div>
-                      <div className="w-4 h-4 rounded bg-primary/20" />
-                    </div>
-
-                    {/* Page being built */}
-                    <div className="relative overflow-hidden">
-                      {/* Status bar */}
-                      <div className="flex items-center justify-between px-4 py-2 bg-primary/5 border-b border-primary/10">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                          <span className="text-[11px] font-medium text-primary">Generating: {activeAnimatedSection.label}</span>
-                        </div>
-                        <span className="text-[11px] font-bold text-primary">{activeAnimatedSection.progress}%</span>
-                      </div>
-
-                      {/* Simulated page sections */}
-                      <div className="p-3 space-y-2.5 bg-white">
-
-                        {/* Hero section (always shown) */}
-                        <div className={`rounded-xl overflow-hidden transition-all duration-700 ${
-                          animatedSectionIndex >= 0 ? "opacity-100" : "opacity-0"
-                        }`}>
-                          <div className="bg-gradient-to-r from-primary to-orange-500 p-5 text-white">
-                            <div className="h-3 w-24 bg-white/40 rounded-full mb-2 animate-pulse" />
-                            <div className="h-5 w-40 bg-white/60 rounded-full mb-1" />
-                            <div className="h-3 w-32 bg-white/40 rounded-full mb-4" />
-                            <div className="inline-flex h-7 w-24 bg-white/90 rounded-lg" />
-                          </div>
-                        </div>
-
-                        {/* Features section */}
-                        <div className={`rounded-xl border border-border p-3 transition-all duration-700 ${
-                          animatedSectionIndex >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-                        }`}>
-                          <div className="h-2.5 w-20 bg-muted rounded-full mb-2" />
-                          <div className="grid grid-cols-3 gap-2">
-                            {[0,1,2].map(i => (
-                              <div key={i} className="rounded-lg bg-muted/60 p-2 space-y-1">
-                                <div className="w-5 h-5 rounded-md bg-primary/20" />
-                                <div className="h-1.5 bg-muted rounded-full" />
-                                <div className="h-1.5 bg-muted rounded-full w-3/4" />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Testimonials section */}
-                        <div className={`rounded-xl border border-border p-3 transition-all duration-700 ${
-                          animatedSectionIndex >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-                        }`}>
-                          <div className="h-2.5 w-24 bg-muted rounded-full mb-2" />
-                          <div className="flex gap-2">
-                            {[0,1].map(i => (
-                              <div key={i} className="flex-1 rounded-lg bg-muted/40 p-2 space-y-1.5">
-                                <div className="flex gap-0.5">{[0,1,2,3,4].map(s => <div key={s} className="w-2 h-2 rounded-sm bg-yellow-400" />)}</div>
-                                <div className="h-1.5 bg-muted rounded-full" />
-                                <div className="h-1.5 bg-muted rounded-full w-3/4" />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* CTA section */}
-                        <div className={`rounded-xl bg-gradient-to-r from-primary/10 to-orange-500/10 border border-primary/15 p-3 transition-all duration-700 ${
-                          animatedSectionIndex >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-                        }`}>
-                          <div className="h-2.5 w-28 bg-primary/30 rounded-full mb-1.5" />
-                          <div className="h-1.5 bg-muted rounded-full w-3/4 mb-2.5" />
-                          <div className="inline-flex h-6 w-20 bg-primary/80 rounded-lg" />
-                        </div>
-
-                        {/* Contact section */}
-                        <div className={`rounded-xl border border-border p-3 transition-all duration-700 ${
-                          animatedSectionIndex >= 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-                        }`}>
-                          <div className="h-2.5 w-16 bg-muted rounded-full mb-2" />
-                          <div className="space-y-1.5">
-                            <div className="h-5 rounded-md border border-border bg-muted/30" />
-                            <div className="h-5 rounded-md border border-border bg-muted/30" />
-                            <div className="h-6 w-full bg-primary/80 rounded-md" />
-                          </div>
-                        </div>
-
-                      </div>
-
-                      {/* Progress bar at bottom */}
-                      <div className="px-3 pb-3 bg-white">
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
-                          <span>Building sections...</span>
-                          <span className="text-primary font-semibold">{animatedSections.filter((_, i) => i <= animatedSectionIndex).length}/{animatedSections.length} done</span>
-                        </div>
-                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-primary to-orange-500 transition-all duration-700"
-                            style={{ width: `${activeAnimatedSection.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <Button onClick={() => setStep("business-info")} className="self-start sm:self-auto">
+                  Generate New Landing Page
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
+
+              {savedLandingPages.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border bg-background p-10 text-center">
+                  <h3 className="text-lg font-semibold text-foreground">No landing pages yet</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Generate your first landing page to get started.</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  <section className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-base font-semibold text-foreground">Drafts</h3>
+                      <span className="text-xs font-medium text-muted-foreground bg-muted border border-border rounded-full px-3 py-1">
+                        {savedLandingPages.filter((page) => (page.status ?? "draft") === "draft").length}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {savedLandingPages.filter((page) => (page.status ?? "draft") === "draft").map((page) => (
+                        <div key={page.id} className="rounded-2xl border border-border bg-background shadow-sm overflow-hidden">
+                          <div className="h-24 bg-gradient-to-br from-primary/10 via-orange-50 to-background border-b border-border p-4 flex items-center justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-foreground truncate">{page.businessName}</p>
+                              <p className="text-xs text-muted-foreground truncate mt-1">{page.tagline}</p>
+                            </div>
+                            <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-1 rounded-full">Draft</span>
+                          </div>
+                          <div className="p-4 space-y-3">
+                            <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">{page.description}</p>
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-xs text-muted-foreground">{new Date(page.updatedAt).toLocaleString()}</span>
+                              <Button size="sm" asChild>
+                                <Link href={`/landing-pages/edit/${page.id}`}>Edit</Link>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-base font-semibold text-foreground">Published</h3>
+                      <span className="text-xs font-medium text-muted-foreground bg-muted border border-border rounded-full px-3 py-1">
+                        {savedLandingPages.filter((page) => page.status === "published").length}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {savedLandingPages.filter((page) => page.status === "published").map((page) => (
+                        <div key={page.id} className="rounded-2xl border border-border bg-background shadow-sm overflow-hidden">
+                          <div className="h-24 bg-gradient-to-br from-emerald-100/70 via-emerald-50 to-background border-b border-border p-4 flex items-center justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-foreground truncate">{page.businessName}</p>
+                              <p className="text-xs text-muted-foreground truncate mt-1">{page.tagline}</p>
+                            </div>
+                            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">Published</span>
+                          </div>
+                          <div className="p-4 space-y-3">
+                            <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">{page.description}</p>
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-xs text-muted-foreground">{new Date(page.updatedAt).toLocaleString()}</span>
+                              <Button size="sm" variant="outline" asChild>
+                                <Link href={`/landing-pages/edit/${page.id}`}>View</Link>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -1,0 +1,15 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="700" rx="28" fill="#EFF6FF"/>
+  <rect x="28" y="28" width="1144" height="644" rx="24" fill="white"/>
+  <rect x="70" y="82" width="260" height="16" rx="8" fill="#93C5FD"/>
+  <rect x="70" y="112" width="390" height="24" rx="12" fill="#2563EB"/>
+  <rect x="70" y="152" width="350" height="14" rx="7" fill="#BFDBFE"/>
+  <rect x="70" y="196" width="640" height="436" rx="22" fill="#EFF6FF"/>
+  <rect x="110" y="242" width="300" height="46" rx="12" fill="white"/>
+  <rect x="110" y="306" width="300" height="46" rx="12" fill="white"/>
+  <rect x="110" y="370" width="560" height="150" rx="12" fill="white"/>
+  <rect x="110" y="542" width="180" height="44" rx="22" fill="#1D4ED8"/>
+  <rect x="740" y="196" width="390" height="436" rx="22" fill="url(#contactMap)"/>
+  <circle cx="935" cy="406" r="42" fill="white" fill-opacity="0.92"/>
+  <defs><linearGradient id="contactMap" x1="740" y1="196" x2="1130" y2="632" gradientUnits="userSpaceOnUse"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#0EA5E9"/></linearGradient></defs>
+</svg>

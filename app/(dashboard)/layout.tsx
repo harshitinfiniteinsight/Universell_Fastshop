@@ -68,6 +68,7 @@ import {
   LogOut,
   MoreHorizontal,
   Trophy,
+  Code,
 } from "lucide-react";
 
 interface NavItem {
@@ -158,6 +159,7 @@ export default function DashboardLayout({
     { icon: ShoppingCart, label: "Sales", href: "/sales", external: false },
     { icon: ShoppingBag, label: "Fast Shop (E-Commerce)", href: "/fastshop", external: false },
     { icon: Sparkles, label: "Landing Pages", href: "/landing-page", external: false },
+    { icon: Code, label: "AI Web Builder", href: "/ai-web-builder", external: false },
     { icon: Megaphone, label: "Marketing", href: "/marketing", external: false },
     { icon: FileSignature, label: "Agreements & E-Sign", href: "/settings", external: false },
     { icon: Calendar, label: "Appointments & Booking", href: "/booking", external: false },

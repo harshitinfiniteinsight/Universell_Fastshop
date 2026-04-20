@@ -1,0 +1,17 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="700" rx="28" fill="#FFF7ED"/>
+  <rect x="28" y="28" width="1144" height="644" rx="24" fill="white"/>
+  <rect x="70" y="82" width="320" height="16" rx="8" fill="#FDBA74"/>
+  <rect x="70" y="112" width="460" height="24" rx="12" fill="#EA580C"/>
+  <rect x="70" y="152" width="390" height="14" rx="7" fill="#FED7AA"/>
+  <rect x="70" y="198" width="340" height="200" rx="20" fill="#FFF7ED"/>
+  <rect x="430" y="198" width="340" height="200" rx="20" fill="#FFF7ED"/>
+  <rect x="790" y="198" width="340" height="200" rx="20" fill="#FFF7ED"/>
+  <circle cx="130" cy="248" r="26" fill="#FDBA74"/>
+  <circle cx="490" cy="248" r="26" fill="#FDBA74"/>
+  <circle cx="850" cy="248" r="26" fill="#FDBA74"/>
+  <rect x="110" y="440" width="980" height="174" rx="18" fill="url(#testi)"/>
+  <rect x="150" y="478" width="520" height="14" rx="7" fill="white" fill-opacity="0.9"/>
+  <rect x="150" y="504" width="680" height="12" rx="6" fill="white" fill-opacity="0.8"/>
+  <defs><linearGradient id="testi" x1="110" y1="440" x2="1090" y2="614" gradientUnits="userSpaceOnUse"><stop stop-color="#F97316"/><stop offset="1" stop-color="#FB7185"/></linearGradient></defs>
+</svg>

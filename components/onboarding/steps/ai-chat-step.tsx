@@ -66,6 +66,7 @@ interface AiChatStepProps {
   onNext: () => void;
   onSkip: () => void;
   mode?: "website" | "landing-page";
+  showBusinessModelStep?: boolean;
 }
 
 type ScreenState = "intro" | "chat";
@@ -3056,8 +3057,9 @@ function LandingPageTypePicker({
 // Key for storing onboarding data
 const ONBOARDING_DATA_KEY = "universell-onboarding-data";
 
-export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: AiChatStepProps) {
+export function AiChatStep({ businessName, onNext, onSkip, mode = "website", showBusinessModelStep = false }: AiChatStepProps) {
   const router = useRouter();
+  const shouldAskBusinessModel = mode !== "landing-page" && showBusinessModelStep;
   
   // Start directly with chat (intro is now handled in welcome-step.tsx Phase 3)
   const [screenState, setScreenState] = useState<ScreenState>("chat");
@@ -3066,7 +3068,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [currentStep, setCurrentStep] = useState<ConversationStep>("project-type");
+  const [currentStep, setCurrentStep] = useState<ConversationStep>("inspiration");
   const [conversationData, setConversationData] = useState<ConversationData>({
     inspiration: "",
     color: "",
@@ -3092,6 +3094,10 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
   const [isFocused, setIsFocused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // End-chat landing page type picker modal state
+  const [showEndChatTypePicker, setShowEndChatTypePicker] = useState(false);
+  const [endChatSelectedType, setEndChatSelectedType] = useState<string | null>(null);
 
   // Brand Vault state
   const [showBrandVaultModal, setShowBrandVaultModal] = useState(false);
@@ -3153,7 +3159,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
           type: "ai",
           content:
             mode === "landing-page"
-              ? "To begin, what would you like to create: a multi-page website or a single landing page?"
+              ? "Do you already have a landing page you like, or a design reference we can use as inspiration? Share a link or describe the style."
               : `Do you already have a website, or is there a website you really like? Share a link or example so we can use it as inspiration for your design.`,
         },
       ]);
@@ -3291,13 +3297,8 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
     }
     
     setTimeout(() => {
-      if (mode === "landing-page") {
-        addAiMessage("Great. Now, do you have a particular style in mind for the design?", 2400);
-        setCurrentStep("style");
-      } else {
-        addAiMessage("Next, let's understand your business model. What type of shop are you creating?", 2400);
-        setCurrentStep("shop-type");
-      }
+      addAiMessage("Great. Now, do you have a particular style in mind for the design?", 2400);
+      setCurrentStep("style");
     }, 100);
   };
 
@@ -3321,8 +3322,14 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
       addAiMessage(typeResponses[type]);
       
       setTimeout(() => {
-        addAiMessage("Now, do you have a particular style in mind for the design?", 2400);
-        setCurrentStep("style");
+        if (shouldAskBusinessModel) {
+          triggerWebsitePagesReviewFlow(
+            "Review your site pages below. Click the edit icon to rename a page or tweak its description so it looks exactly the way you want."
+          );
+        } else {
+          addAiMessage("Now, do you have a particular style in mind for the design?", 2400);
+          setCurrentStep("style");
+        }
       }, 100);
     }
   };
@@ -3482,23 +3489,21 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
 
     // Move to next step after acknowledgment
     setTimeout(() => {
-      const isMultiPage = mode === "landing-page" && conversationData.landingPageType === "multi-page-website";
-      const isSinglePage = mode === "landing-page" && conversationData.landingPageType === "single-landing-page";
-      const stepOrder: ConversationStep[] = isMultiPage
-        ? ["project-type", "inspiration", "color", "color-shade", "secondary-color", "style", "pages", "complete"]
-        : isSinglePage
-        ? ["project-type", "inspiration", "color", "color-shade", "secondary-color", "style", "landing-page-type", "lp-details", "complete"]
-        : mode === "landing-page"
-        ? ["project-type", "inspiration", "color", "color-shade", "secondary-color", "style", "landing-page-type", "lp-details", "complete"]
-        : ["inspiration", "color", "color-shade", "secondary-color", "shop-type", "style", "pages", "products", "complete"];
+      const stepOrder: ConversationStep[] = mode === "landing-page"
+        ? ["inspiration", "color", "color-shade", "secondary-color", "style", "landing-page-type", "lp-details", "complete"]
+        : shouldAskBusinessModel
+        ? ["inspiration", "color", "color-shade", "secondary-color", "style", "shop-type", "pages", "products", "complete"]
+        : ["inspiration", "color", "color-shade", "secondary-color", "style", "pages", "products", "complete"];
       const currentIndex = stepOrder.indexOf(currentStep);
       let nextStep = stepOrder[currentIndex + 1] ?? "complete";
 
       // Skip shade and secondary if skipping color
       if (currentStep === "color") {
-        nextStep = mode === "landing-page" ? "secondary-color" : "shop-type";
+        nextStep = "secondary-color";
       } else if (currentStep === "color-shade" || currentStep === "secondary-color") {
-        nextStep = mode === "landing-page" ? "style" : "shop-type";
+        nextStep = "style";
+      } else if (currentStep === "style" && shouldAskBusinessModel) {
+        nextStep = "shop-type";
       }
       
       // Initialize pages if moving to pages step (website mode only)
@@ -3525,7 +3530,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
           "secondary-color": "Would you like a secondary color?",
           "shop-type": "What type of shop are you creating?",
           style: "Do you have a particular style in mind for the design?",
-          "project-type": "Would you like to create a multi-page website or a single landing page?",
+          "project-type": "",
           "landing-page-type": "Which type of landing page would you like to create?",
           "lp-details": "Tell us a bit more about your landing page.",
           pages: "I've put together a set of pages that usually work best for a business like yours. You can review, customize, or remove anything.",
@@ -3538,9 +3543,64 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
     }, 1000);
   };
 
+  const triggerWebsitePagesReviewFlow = (message?: string) => {
+    const suggestedPages = getSuggestedPagesForShopType(conversationData.shopType);
+    setConversationData((prev) => ({
+      ...prev,
+      selectedPages: suggestedPages.map((p) => p.id),
+    }));
+
+    addAiMessage(
+      message ||
+        "Review your site pages below. Click the edit icon to rename a page or tweak its description so it looks exactly the way you want.",
+      2400
+    );
+    setCurrentStep("pages");
+  };
+
   // Handle ending the chat early - redirects to dashboard for Option 2
   const handleEndChat = () => {
     if (isTyping) return;
+
+    if (mode === "landing-page") {
+      if (!conversationData.landingPageType) {
+        setShowEndChatTypePicker(true);
+        return;
+      }
+
+      if (currentStep !== "lp-details" && currentStep !== "complete") {
+        triggerLandingPageFollowUpFlow(conversationData.landingPageType, false);
+      }
+      return;
+    }
+
+    if (currentStep !== "pages" && currentStep !== "products" && currentStep !== "complete") {
+      triggerWebsitePagesReviewFlow(
+        "Review your site pages below. Click the edit icon to rename a page or tweak its description so it looks exactly the way you want."
+      );
+    }
+  };
+
+  // Save data and redirect after end-chat flow completes
+  const redirectAfterEndChat = (landingPageType?: string) => {
+    if (mode === "landing-page") {
+      // Save collected data for editor to use
+      const landingPageData = {
+        businessName,
+        inspiration: conversationData.inspiration,
+        primaryColor: colorSelection.primaryColor,
+        primaryShade: colorSelection.primaryShade,
+        secondaryColor: colorSelection.secondaryColor,
+        secondaryShade: colorSelection.secondaryShade,
+        style: conversationData.style,
+        landingPageType: landingPageType ?? conversationData.landingPageType,
+        lpDetails: conversationData.lpDetails,
+        completedAt: new Date().toISOString(),
+      };
+      localStorage.setItem("universell-landing-page-draft", JSON.stringify(landingPageData));
+      router.push("/landing-pages/edit/new");
+      return;
+    }
 
     // Brief acknowledgment then redirect to dashboard
     addAiMessage("Perfect! I'll use what we've discussed to create your website. Redirecting you to your dashboard... ✨", 800);
@@ -3573,13 +3633,14 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
     }, 1500);
   };
 
-  // Handle landing page type selection (single select, landing-page mode only)
-  const handleLandingPageTypeSelect = (typeId: string) => {
+  const triggerLandingPageFollowUpFlow = (typeId: string, shouldAddUserMessage = true) => {
     const type = LANDING_PAGE_TYPES.find((t) => t.id === typeId);
     if (!type) return;
 
     setConversationData((prev) => ({ ...prev, landingPageType: typeId }));
-    addUserMessage(type.title);
+    if (shouldAddUserMessage) {
+      addUserMessage(type.title);
+    }
 
     const typeResponses: Record<string, string> = {
       "product-launch": "Great choice! Now let me ask a few quick questions about the product. 🚀",
@@ -3594,6 +3655,11 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
 
     addAiMessage(typeResponses[typeId] || "Great choice! Let's gather a few details. ✨");
     setTimeout(() => setCurrentStep("lp-details"), 900);
+  };
+
+  // Handle landing page type selection (single select, landing-page mode only)
+  const handleLandingPageTypeSelect = (typeId: string) => {
+    triggerLandingPageFollowUpFlow(typeId);
   };
 
   // Handle landing page details confirmation
@@ -3655,29 +3721,17 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
               setTimeout(() => setCurrentStep("landing-page-type"), 100);
             }
           } else {
-            // Initialize selected pages based on shop type
-            const suggestedPages = getSuggestedPagesForShopType(conversationData.shopType);
-            setConversationData((prev) => ({
-              ...prev,
-              selectedPages: suggestedPages.map((p) => p.id),
-            }));
-            addAiMessage("I've put together a set of pages that usually work best for a business like yours. You can review, customize, or remove anything.", 2400);
-            setCurrentStep("pages");
+            if (shouldAskBusinessModel) {
+              addAiMessage("Next, let's understand your business model. What type of shop are you creating?", 2400);
+              setCurrentStep("shop-type");
+            } else {
+              triggerWebsitePagesReviewFlow(
+                "I've put together a set of pages that usually work best for a business like yours. You can review, customize, or remove anything."
+              );
+            }
           }
         }, 100);
         break;
-
-      case "project-type": {
-        const response = userResponse.toLowerCase();
-        if (response.includes("multi") || response.includes("website")) {
-          setConversationData((prev) => ({ ...prev, landingPageType: "multi-page-website" }));
-        } else {
-          setConversationData((prev) => ({ ...prev, landingPageType: "single-landing-page" }));
-        }
-        addAiMessage("Great! Do you have a website you admire, or one that inspires the look and feel you want? Share a link or describe it.", 900);
-        setTimeout(() => setCurrentStep("inspiration"), 1000);
-        break;
-      }
 
       case "landing-page-type":
         // Text-input fallback — the component handles direct selection
@@ -3862,19 +3916,6 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
             {/* Quick Options */}
             {!isTyping && messages.length > 0 && (
               <div className="px-6 pb-4">
-                {currentStep === "project-type" && mode === "landing-page" && (
-                  <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up">
-                    {projectTypeOptions.map((option) => (
-                      <QuickOption
-                        key={option.value}
-                        label={option.label}
-                        icon={option.icon}
-                        onClick={() => handleQuickOption(option.value)}
-                      />
-                    ))}
-                  </div>
-                )}
-
                 {currentStep === "style" && (
                   <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up">
                     {styleOptions.map((option) => (
@@ -4035,7 +4076,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
                 {/* Chat Control Actions */}
                 <div className="flex items-center justify-center gap-4 mt-3">
                   {/* Hide Skip for mandatory landing-page-type step */}
-                  {!(mode === "landing-page" && (currentStep === "landing-page-type" || currentStep === "project-type" || currentStep === "lp-details")) && (
+                  {!(mode === "landing-page" && (currentStep === "landing-page-type" || currentStep === "lp-details")) && (
                     <>
                       <button
                         onClick={handleSkipQuestion}
@@ -4073,7 +4114,26 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
             ) : (
               <div className="px-6 pb-6 space-y-3 animate-fade-in-up">
                 <Button
-                  onClick={onNext}
+                  onClick={() => {
+                    if (mode === "landing-page") {
+                      const landingPageData = {
+                        businessName,
+                        inspiration: conversationData.inspiration,
+                        primaryColor: colorSelection.primaryColor,
+                        primaryShade: colorSelection.primaryShade,
+                        secondaryColor: colorSelection.secondaryColor,
+                        secondaryShade: colorSelection.secondaryShade,
+                        style: conversationData.style,
+                        landingPageType: conversationData.landingPageType,
+                        lpDetails: conversationData.lpDetails,
+                        completedAt: new Date().toISOString(),
+                      };
+                      localStorage.setItem("universell-landing-page-draft", JSON.stringify(landingPageData));
+                      router.push("/landing-pages/edit/new");
+                    } else {
+                      onNext();
+                    }
+                  }}
                   size="lg"
                   className="w-full h-14 text-lg font-semibold rounded-2xl shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.02] transition-all duration-300"
                 >
@@ -4106,18 +4166,16 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
           {/* Progress Indicator */}
           <div className="flex justify-center gap-2 mt-6">
             {(mode === "landing-page"
-              ? conversationData.landingPageType === "multi-page-website"
-                ? ["project-type", "inspiration", "color", "style", "pages"]
-                : conversationData.landingPageType === "single-landing-page"
-                ? ["project-type", "inspiration", "color", "style", "landing-page-type", "lp-details"]
-                : ["project-type", "inspiration", "color", "style", "landing-page-type", "lp-details"]
-              : ["inspiration", "color", "shop-type", "style", "pages", "products"]
+              ? ["inspiration", "color", "style", "landing-page-type", "lp-details"]
+              : shouldAskBusinessModel
+              ? ["inspiration", "color", "style", "shop-type", "pages", "products"]
+              : ["inspiration", "color", "style", "pages", "products"]
             ).map((step, index) => {
               const stepOrder = mode === "landing-page"
-                ? conversationData.landingPageType === "multi-page-website"
-                  ? ["project-type", "inspiration", "color", "style", "pages"]
-                  : ["project-type", "inspiration", "color", "style", "landing-page-type", "lp-details"]
-                : ["inspiration", "color", "shop-type", "style", "pages", "products"];
+                ? ["inspiration", "color", "style", "landing-page-type", "lp-details"]
+                : shouldAskBusinessModel
+                ? ["inspiration", "color", "style", "shop-type", "pages", "products"]
+                : ["inspiration", "color", "style", "pages", "products"];
               const currentStepMapped =
                 currentStep === "secondary-color" || currentStep === "color-shade" ? "color" : currentStep;
               const currentIndex = stepOrder.indexOf(currentStepMapped);
@@ -4149,6 +4207,82 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website" }: A
           </div>
         </div>
       </div>
+
+      {/* End Chat — Landing Page Type Picker Modal */}
+      {showEndChatTypePicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-background rounded-2xl shadow-2xl border border-border w-full max-w-2xl max-h-[90vh] overflow-auto">
+            <div className="p-6 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">What type of landing page?</h2>
+                  <p className="text-sm text-muted-foreground">Choose the type of landing page you want to create</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 grid grid-cols-2 gap-3">
+              {LANDING_PAGE_TYPES.map((type) => {
+                const Icon = type.icon;
+                const isSelected = endChatSelectedType === type.id;
+                return (
+                  <button
+                    key={type.id}
+                    onClick={() => setEndChatSelectedType(type.id)}
+                    className={cn(
+                      "flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all duration-200",
+                      isSelected
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-muted/20 hover:border-primary/40 hover:bg-muted/40"
+                    )}
+                  >
+                    <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5", isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>
+                      <Icon className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-sm text-foreground">{type.title}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{type.description}</div>
+                    </div>
+                    {isSelected && (
+                      <Check className="w-4 h-4 text-primary shrink-0 mt-1 ml-auto" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="p-6 pt-2 flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setShowEndChatTypePicker(false);
+                  setEndChatSelectedType(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={!endChatSelectedType}
+                onClick={() => {
+                  setShowEndChatTypePicker(false);
+                  if (endChatSelectedType) {
+                    triggerLandingPageFollowUpFlow(endChatSelectedType);
+                  }
+                  setEndChatSelectedType(null);
+                }}
+              >
+                Continue
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

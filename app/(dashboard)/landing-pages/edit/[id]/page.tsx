@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -25,10 +25,28 @@ type EditorMessage = {
 };
 
 type LandingDraft = {
+  id?: string;
   businessName?: string;
   tagline?: string;
   description?: string;
+  html?: string;
+  css?: string;
+  updatedAt?: string;
 };
+
+type SavedLandingPageDraft = {
+  id: string;
+  businessName: string;
+  tagline: string;
+  description: string;
+  html: string;
+  css: string;
+  updatedAt: string;
+  status: "draft" | "published";
+};
+
+const LANDING_PAGE_DRAFT_KEY = "universell-landing-page-draft";
+const SAVED_LANDING_PAGES_KEY = "universell-saved-landing-pages";
 
 const FALLBACK_DRAFT: LandingDraft = {
   businessName: "Sunrise Cafe & Bakery",
@@ -239,6 +257,7 @@ const baseCss = `
 
 export default function GeneratedLandingPageEditor() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const [messages, setMessages] = useState<EditorMessage[]>(initialMessages);
   const [inputMessage, setInputMessage] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -255,7 +274,31 @@ export default function GeneratedLandingPageEditor() {
   const grapesEditorRef = useRef<any>(null);
 
   useEffect(() => {
-    const rawDraft = localStorage.getItem("universell-landing-page-draft");
+    const currentId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+
+    if (currentId && currentId !== "new") {
+      const rawSavedDrafts = localStorage.getItem(SAVED_LANDING_PAGES_KEY);
+      if (!rawSavedDrafts) return;
+
+      try {
+        const savedDrafts = JSON.parse(rawSavedDrafts) as SavedLandingPageDraft[];
+        const existingDraft = savedDrafts.find((item) => item.id === currentId);
+        if (!existingDraft) return;
+
+        const merged = {
+          ...FALLBACK_DRAFT,
+          ...existingDraft,
+        };
+        setDraft(merged);
+        setHtml(existingDraft.html || buildLandingHtml(merged));
+        setCss(existingDraft.css || baseCss);
+        return;
+      } catch {
+        // no-op fallback
+      }
+    }
+
+    const rawDraft = localStorage.getItem(LANDING_PAGE_DRAFT_KEY);
     if (!rawDraft) return;
 
     try {
@@ -265,11 +308,12 @@ export default function GeneratedLandingPageEditor() {
         ...parsed,
       };
       setDraft(merged);
-      setHtml(buildLandingHtml(merged));
+      setHtml(parsed.html || buildLandingHtml(merged));
+      setCss(parsed.css || baseCss);
     } catch {
       // no-op fallback
     }
-  }, []);
+  }, [params?.id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -399,6 +443,49 @@ export default function GeneratedLandingPageEditor() {
     }, 1200);
   };
 
+  const persistLandingPage = (status: "draft" | "published") => {
+    const currentId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+    const draftId = currentId && currentId !== "new" ? currentId : `lp-${Date.now()}`;
+    const savedAt = new Date().toISOString();
+    const payload: SavedLandingPageDraft = {
+      id: draftId,
+      businessName: draft.businessName || FALLBACK_DRAFT.businessName,
+      tagline: draft.tagline || FALLBACK_DRAFT.tagline,
+      description: draft.description || FALLBACK_DRAFT.description,
+      html,
+      css,
+      updatedAt: savedAt,
+      status,
+    };
+
+    const rawSavedDrafts = localStorage.getItem(SAVED_LANDING_PAGES_KEY);
+    const savedDrafts = rawSavedDrafts ? (JSON.parse(rawSavedDrafts) as SavedLandingPageDraft[]) : [];
+    const nextDrafts = [payload, ...savedDrafts.filter((item) => item.id !== draftId)];
+
+    localStorage.setItem(SAVED_LANDING_PAGES_KEY, JSON.stringify(nextDrafts));
+    localStorage.setItem(
+      LANDING_PAGE_DRAFT_KEY,
+      JSON.stringify({
+        ...draft,
+        id: draftId,
+        html,
+        css,
+        status,
+        updatedAt: savedAt,
+      })
+    );
+
+    router.push("/landing-page");
+  };
+
+  const handleSaveDraft = () => {
+    persistLandingPage("draft");
+  };
+
+  const handlePublish = () => {
+    persistLandingPage("published");
+  };
+
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col -m-6">
       {/* Top header */}
@@ -421,10 +508,10 @@ export default function GeneratedLandingPageEditor() {
             <Eye className="w-4 h-4 mr-2" />
             Preview
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleSaveDraft}>
             Save Draft
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={handlePublish}>
             <Save className="w-4 h-4 mr-2" />
             Publish
           </Button>
@@ -432,7 +519,7 @@ export default function GeneratedLandingPageEditor() {
       </div>
 
       {/* 3-column editor */}
-      <div className="flex-1 min-h-0 grid grid-cols-[320px_1fr_420px]">
+      <div className="flex-1 min-h-0 grid grid-cols-[340px_1fr_380px]">
         {/* Left: AI Chat editor */}
         <div className="bg-card border-r border-border flex flex-col min-h-0">
           <div className="p-4 border-b border-border">
@@ -534,7 +621,7 @@ export default function GeneratedLandingPageEditor() {
         <div className="bg-card border-l border-border min-h-0 flex flex-col">
           <div className="h-14 px-4 border-b border-border flex items-center gap-2 shrink-0">
             <PanelsTopLeft className="w-4 h-4 text-primary" />
-            <h2 className="font-semibold text-foreground">Manual Editor (GrapesJS)</h2>
+            <h2 className="font-semibold text-foreground">Page Editor</h2>
             <span className="ml-auto text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
               {isGrapesReady ? "Ready" : "Loading..."}
             </span>

@@ -1,0 +1,13 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="700" rx="28" fill="#F0FDF4"/>
+  <rect x="28" y="28" width="1144" height="644" rx="24" fill="white"/>
+  <rect x="70" y="82" width="250" height="16" rx="8" fill="#86EFAC"/>
+  <rect x="70" y="112" width="430" height="24" rx="12" fill="#16A34A"/>
+  <rect x="70" y="152" width="370" height="14" rx="7" fill="#BBF7D0"/>
+  <rect x="70" y="196" width="1060" height="116" rx="20" fill="url(#service)"/>
+  <rect x="70" y="336" width="520" height="136" rx="18" fill="#F0FDF4"/>
+  <rect x="610" y="336" width="520" height="136" rx="18" fill="#F0FDF4"/>
+  <rect x="70" y="492" width="520" height="136" rx="18" fill="#F0FDF4"/>
+  <rect x="610" y="492" width="520" height="136" rx="18" fill="#F0FDF4"/>
+  <defs><linearGradient id="service" x1="70" y1="196" x2="1130" y2="312" gradientUnits="userSpaceOnUse"><stop stop-color="#22C55E"/><stop offset="1" stop-color="#14B8A6"/></linearGradient></defs>
+</svg>

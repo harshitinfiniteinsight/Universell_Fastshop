@@ -148,6 +148,7 @@ export function WizardContainer() {
         return (
           <AiChatStep
             businessName={wizardData.businessInfo.name || "Your Business"}
+            showBusinessModelStep
             onNext={nextStep}
             onSkip={nextStep}
           />
