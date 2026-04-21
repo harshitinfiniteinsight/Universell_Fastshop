@@ -616,9 +616,9 @@ function AIWebBuilderInner() {
                 <div className="absolute top-0 right-0 w-72 h-72 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-56 h-56 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="relative z-10 max-w-6xl mx-auto">
+                <div className="relative z-10 mx-auto w-full max-w-[82rem] px-1 lg:px-2">
                   {isWebsiteBuilder ? (
-                    <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
+                    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.08fr_0.92fr] xl:items-start 2xl:gap-8">
                       <div className="space-y-8">
                         <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/80 px-4 py-2 shadow-sm backdrop-blur-sm">
                           <Sparkles className="h-4 w-4 text-primary" />
@@ -641,8 +641,9 @@ function AIWebBuilderInner() {
                             ))}
                           </div>
 
-                          <h2 className="max-w-3xl text-4xl font-bold tracking-tight text-foreground lg:text-5xl xl:text-6xl">
-                            Launch a polished multi-page website with AI-guided strategy, copy, and design.
+                          <h2 className="max-w-4xl text-4xl font-bold leading-tight tracking-tight text-foreground lg:text-5xl xl:text-[3.25rem]">
+                            <span className="block">Launch a polished multi-page website</span>
+                            <span className="block">with AI-guided strategy, copy, and design.</span>
                           </h2>
 
                           <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:text-lg">
@@ -834,7 +835,7 @@ function AIWebBuilderInner() {
                       </div>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] gap-10 items-start">
+                    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.08fr_0.92fr] xl:items-start 2xl:gap-8">
                       <div className="space-y-8">
                         <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/80 px-4 py-2 shadow-sm backdrop-blur-sm">
                           <Sparkles className="h-4 w-4 text-primary" />
@@ -857,8 +858,9 @@ function AIWebBuilderInner() {
                             ))}
                           </div>
 
-                          <h2 className="max-w-3xl text-4xl font-bold tracking-tight text-foreground lg:text-5xl xl:text-6xl">
-                            Create a landing page that turns attention into action with AI.
+                          <h2 className="max-w-4xl text-4xl font-bold leading-tight tracking-tight text-foreground lg:text-5xl xl:text-[3.25rem]">
+                            <span className="block">Create a landing page that turns attention</span>
+                            <span className="block">into action with AI.</span>
                           </h2>
 
                           <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:text-lg">
