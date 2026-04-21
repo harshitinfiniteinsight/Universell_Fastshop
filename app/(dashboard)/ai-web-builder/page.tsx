@@ -642,8 +642,8 @@ function AIWebBuilderInner() {
                           </div>
 
                           <h2 className="max-w-4xl text-3xl font-bold leading-tight tracking-tight text-foreground lg:text-4xl xl:text-[2.6rem]">
-                            <span className="block">From idea to impact — your</span>
-                            <span className="block bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">AI-crafted website starts here.</span>
+                            <span className="block">Design pages to capture attention</span>
+                            <span className="block bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">and drive action.</span>
                           </h2>
 
                           <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:text-lg">
@@ -859,8 +859,8 @@ function AIWebBuilderInner() {
                           </div>
 
                           <h2 className="max-w-4xl text-3xl font-bold leading-tight tracking-tight text-foreground lg:text-4xl xl:text-[2.6rem]">
-                            <span className="block">Turn attention into action with</span>
-                            <span className="block bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">AI that builds for results.</span>
+                            <span className="block">Capture attention &amp; convert it</span>
+                            <span className="block bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">into results.</span>
                           </h2>
 
                           <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:text-lg">
