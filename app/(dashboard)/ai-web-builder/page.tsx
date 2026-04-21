@@ -641,9 +641,14 @@ function AIWebBuilderInner() {
                             ))}
                           </div>
 
-                          <h2 className="max-w-4xl text-3xl font-bold leading-tight tracking-tight text-foreground lg:text-4xl xl:text-[2.6rem]">
-                            <span className="block">Design pages to capture attention</span>
-                            <span className="block bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">and drive action.</span>
+                          <h2 className="text-4xl font-bold text-foreground leading-[1.15] tracking-tight lg:text-5xl">
+                            Design pages to capture attention{" "}
+                            <span className="relative inline-block">
+                              <span className="relative z-10 bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">
+                                and drive action.
+                              </span>
+                              <span className="absolute bottom-1 left-0 w-full h-3 bg-primary/15 -rotate-1 rounded" />
+                            </span>
                           </h2>
 
                           <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:text-lg">
@@ -858,9 +863,14 @@ function AIWebBuilderInner() {
                             ))}
                           </div>
 
-                          <h2 className="max-w-4xl text-3xl font-bold leading-tight tracking-tight text-foreground lg:text-4xl xl:text-[2.6rem]">
-                            <span className="block">Capture attention &amp; convert it</span>
-                            <span className="block bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">into results.</span>
+                          <h2 className="text-4xl font-bold text-foreground leading-[1.15] tracking-tight lg:text-5xl">
+                            Capture attention &amp; convert it into{" "}
+                            <span className="relative inline-block">
+                              <span className="relative z-10 bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">
+                                real results.
+                              </span>
+                              <span className="absolute bottom-1 left-0 w-full h-3 bg-primary/15 -rotate-1 rounded" />
+                            </span>
                           </h2>
 
                           <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:text-lg">
