@@ -449,9 +449,9 @@ export default function GeneratedLandingPageEditor() {
     const savedAt = new Date().toISOString();
     const payload: SavedLandingPageDraft = {
       id: draftId,
-      businessName: draft.businessName || FALLBACK_DRAFT.businessName,
-      tagline: draft.tagline || FALLBACK_DRAFT.tagline,
-      description: draft.description || FALLBACK_DRAFT.description,
+      businessName: (draft.businessName || FALLBACK_DRAFT.businessName) as string,
+      tagline: (draft.tagline || FALLBACK_DRAFT.tagline) as string,
+      description: (draft.description || FALLBACK_DRAFT.description) as string,
       html,
       css,
       updatedAt: savedAt,
