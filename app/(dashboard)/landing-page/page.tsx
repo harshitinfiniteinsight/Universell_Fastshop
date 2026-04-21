@@ -358,9 +358,9 @@ export default function LandingPageWizard() {
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Website Builder</h1>
+            <h1 className="text-2xl font-bold text-foreground">Landing Pages</h1>
             <p className="text-muted-foreground mt-1">
-              Generate a high-converting landing page with AI in minutes
+              Create and manage professional landing pages
             </p>
           </div>
 
@@ -368,11 +368,12 @@ export default function LandingPageWizard() {
             <div className="flex items-center gap-2 self-start sm:mt-1">
               <Button
                 onClick={() => setStep("business-info")}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg"
               >
+                <Sparkles className="w-4 h-4 mr-2" />
                 Generate New Landing Page
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" className="rounded-lg">
                 <Link href="/landing-pages/templates">Select Template</Link>
               </Button>
             </div>
@@ -446,10 +447,6 @@ export default function LandingPageWizard() {
 
               {/* Heading */}
               <div className="text-center space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-background/80">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-xs font-medium text-foreground">AI Page Builder</span>
-                </div>
                 <h2 className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight leading-tight">
                   What would you like to{" "}
                   <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
@@ -589,87 +586,127 @@ export default function LandingPageWizard() {
         {step === "intro" && (
           <div className="p-6 lg:p-8">
             <div className="max-w-6xl mx-auto space-y-6">
-              <div className="rounded-2xl border border-border bg-muted/20 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-foreground">Landing Pages</h2>
-                  <p className="text-sm text-muted-foreground">View your existing drafts and published pages.</p>
-                </div>
-                <Button onClick={() => setStep("business-info")} className="self-start sm:self-auto">
-                  Generate New Landing Page
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-
               {savedLandingPages.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border bg-background p-10 text-center">
-                  <h3 className="text-lg font-semibold text-foreground">No landing pages yet</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Generate your first landing page to get started.</p>
+                <div className="rounded-3xl border border-dashed border-border bg-gradient-to-br from-primary/5 to-primary/2 p-12 text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <FileText className="w-8 h-8 text-primary" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">No landing pages yet</h3>
+                  <p className="text-muted-foreground mt-2">Generate your first landing page to get started.</p>
                 </div>
               ) : (
-                <div className="space-y-8">
-                  <section className="space-y-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-base font-semibold text-foreground">Drafts</h3>
-                      <span className="text-xs font-medium text-muted-foreground bg-muted border border-border rounded-full px-3 py-1">
-                        {savedLandingPages.filter((page) => (page.status ?? "draft") === "draft").length}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {savedLandingPages.filter((page) => (page.status ?? "draft") === "draft").map((page) => (
-                        <div key={page.id} className="rounded-2xl border border-border bg-background shadow-sm overflow-hidden">
-                          <div className="h-24 bg-gradient-to-br from-primary/10 via-orange-50 to-background border-b border-border p-4 flex items-center justify-between gap-3">
-                            <div>
-                              <p className="font-semibold text-foreground truncate">{page.businessName}</p>
-                              <p className="text-xs text-muted-foreground truncate mt-1">{page.tagline}</p>
-                            </div>
-                            <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-1 rounded-full">Draft</span>
-                          </div>
-                          <div className="p-4 space-y-3">
-                            <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">{page.description}</p>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-xs text-muted-foreground">{new Date(page.updatedAt).toLocaleString()}</span>
-                              <Button size="sm" asChild>
-                                <Link href={`/landing-pages/edit/${page.id}`}>Edit</Link>
-                              </Button>
-                            </div>
-                          </div>
+                <div className="space-y-10">
+                  {savedLandingPages.filter((page) => (page.status ?? "draft") === "draft").length > 0 && (
+                    <section className="space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                            Drafts
+                          </h2>
                         </div>
-                      ))}
-                    </div>
-                  </section>
+                        <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                          {savedLandingPages.filter((page) => (page.status ?? "draft") === "draft").length}
+                        </span>
+                      </div>
 
-                  <section className="space-y-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-base font-semibold text-foreground">Published</h3>
-                      <span className="text-xs font-medium text-muted-foreground bg-muted border border-border rounded-full px-3 py-1">
-                        {savedLandingPages.filter((page) => page.status === "published").length}
-                      </span>
-                    </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                        {savedLandingPages.filter((page) => (page.status ?? "draft") === "draft").map((page) => (
+                          <div key={page.id} className="group rounded-2xl border border-border bg-background hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 overflow-hidden flex flex-col">
+                            {/* Preview area */}
+                            <div className="relative h-40 bg-gradient-to-br from-primary/20 via-primary/5 to-background border-b border-border/50 flex items-center justify-center overflow-hidden">
+                              <div className="absolute inset-0 opacity-10">
+                                <div className="absolute top-4 left-4 w-12 h-12 rounded-full bg-white/20" />
+                                <div className="absolute bottom-6 right-6 w-16 h-8 rounded bg-white/20" />
+                                <div className="absolute top-1/3 right-4 w-20 h-1 rounded-full bg-white/10" />
+                                <div className="absolute bottom-1/3 left-4 w-24 h-1 rounded-full bg-white/10" />
+                              </div>
+                              <div className="relative text-center space-y-2">
+                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/60 mx-auto flex items-center justify-center">
+                                  <span className="text-white font-bold text-xl">{page.businessName.split(" ").slice(0, 2).map(w => w[0]).join("")}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground font-medium">{page.businessName}</p>
+                              </div>
+                              <span className="absolute top-3 right-3 text-[10px] font-semibold text-primary bg-primary/20 px-2 py-1 rounded-full">Draft</span>
+                            </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {savedLandingPages.filter((page) => page.status === "published").map((page) => (
-                        <div key={page.id} className="rounded-2xl border border-border bg-background shadow-sm overflow-hidden">
-                          <div className="h-24 bg-gradient-to-br from-emerald-100/70 via-emerald-50 to-background border-b border-border p-4 flex items-center justify-between gap-3">
-                            <div>
-                              <p className="font-semibold text-foreground truncate">{page.businessName}</p>
-                              <p className="text-xs text-muted-foreground truncate mt-1">{page.tagline}</p>
-                            </div>
-                            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">Published</span>
-                          </div>
-                          <div className="p-4 space-y-3">
-                            <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">{page.description}</p>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-xs text-muted-foreground">{new Date(page.updatedAt).toLocaleString()}</span>
-                              <Button size="sm" variant="outline" asChild>
-                                <Link href={`/landing-pages/edit/${page.id}`}>View</Link>
-                              </Button>
+                            {/* Content area */}
+                            <div className="flex-1 p-4 flex flex-col gap-3">
+                              <div className="min-h-0">
+                                <p className="text-sm font-semibold text-foreground line-clamp-1">{page.tagline}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{new Date(page.updatedAt).toLocaleDateString()}</p>
+                              </div>
+                              <div className="flex gap-2 mt-auto">
+                                <Button size="sm" asChild className="flex-1 rounded-lg text-xs">
+                                  <Link href={`/landing-pages/edit/${page.id}`}>
+                                    <Edit className="w-3 h-3 mr-1" />
+                                    Edit
+                                  </Link>
+                                </Button>
+                              </div>
                             </div>
                           </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {savedLandingPages.filter((page) => page.status === "published").length > 0 && (
+                    <section className="space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Published
+                          </h2>
                         </div>
-                      ))}
-                    </div>
-                  </section>
+                        <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
+                          {savedLandingPages.filter((page) => page.status === "published").length}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                        {savedLandingPages.filter((page) => page.status === "published").map((page) => (
+                          <div key={page.id} className="group rounded-2xl border border-emerald-200/50 bg-background hover:border-emerald-400/60 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-200 overflow-hidden flex flex-col">
+                            {/* Preview area */}
+                            <div className="relative h-40 bg-gradient-to-br from-emerald-100/40 via-emerald-50/20 to-background border-b border-emerald-200/30 flex items-center justify-center overflow-hidden">
+                              <div className="absolute inset-0 opacity-10">
+                                <div className="absolute top-4 left-4 w-12 h-12 rounded-full bg-white/20" />
+                                <div className="absolute bottom-6 right-6 w-16 h-8 rounded bg-white/20" />
+                                <div className="absolute top-1/3 right-4 w-20 h-1 rounded-full bg-white/10" />
+                                <div className="absolute bottom-1/3 left-4 w-24 h-1 rounded-full bg-white/10" />
+                              </div>
+                              <div className="relative text-center space-y-2">
+                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 mx-auto flex items-center justify-center">
+                                  <span className="text-white font-bold text-xl">{page.businessName.split(" ").slice(0, 2).map(w => w[0]).join("")}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground font-medium">{page.businessName}</p>
+                              </div>
+                              <span className="absolute top-3 right-3 text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">Live</span>
+                            </div>
+
+                            {/* Content area */}
+                            <div className="flex-1 p-4 flex flex-col gap-3">
+                              <div className="min-h-0">
+                                <p className="text-sm font-semibold text-foreground line-clamp-1">{page.tagline}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{new Date(page.updatedAt).toLocaleDateString()}</p>
+                              </div>
+                              <div className="flex gap-2 mt-auto">
+                                <Button size="sm" variant="outline" asChild className="flex-1 rounded-lg text-xs">
+                                  <Link href={`/landing-pages/edit/${page.id}`}>
+                                    <Eye className="w-3 h-3 mr-1" />
+                                    View
+                                  </Link>
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
                 </div>
               )}
             </div>

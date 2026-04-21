@@ -16,9 +16,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { WizardData } from "@/components/onboarding/wizard-container";
-import { Sparkles, FileText, Zap, ArrowRight, Check, Edit, Upload, Loader2, LayoutTemplate, Target, Globe, ExternalLink, ChevronRight, Code, Layers, Palette, ShoppingCart } from "lucide-react";
+import { Sparkles, FileText, Zap, ArrowRight, Check, Edit, Upload, Loader2, LayoutTemplate, Target, Globe, ExternalLink, ChevronRight, Code, Layers, Palette, ShoppingCart, LayoutDashboard, Package, Truck, Users, Megaphone, FileText as FileText2, Image as ImageIcon, AlignLeft, Grid, LayoutList, Monitor, Smartphone, Share2, Eye } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 
 type AIWebBuilderStep = "intro" | "business-info" | "ai-chat" | "generation" | "done";
 type BuilderType = "landing-page" | "website" | "ecommerce";
@@ -51,6 +52,7 @@ const initialWizardData: WizardData = {
 export default function AIWebBuilder() {
   const [step, setStep] = useState<AIWebBuilderStep>("intro");
   const [builderType, setBuilderType] = useState<BuilderType>("website");
+  const searchParams = useSearchParams();
   const [wizardData, setWizardData] = useState<WizardData>(initialWizardData);
   const [generatedPageName, setGeneratedPageName] = useState("Homepage");
   const [animatedSectionIndex, setAnimatedSectionIndex] = useState(0);
@@ -286,6 +288,14 @@ export default function AIWebBuilder() {
 
     return () => clearInterval(interval);
   }, [step, previewRotationCount]);
+
+  useEffect(() => {
+    const builder = searchParams.get("builder");
+    if (builder === "landing-page" || builder === "website" || builder === "ecommerce") {
+      setBuilderType(builder);
+      setStep("intro");
+    }
+  }, [searchParams]);
 
   const activeWebsitePagePreview =
     websitePagePreviewTemplates[animatedSectionIndex % websitePagePreviewTemplates.length];

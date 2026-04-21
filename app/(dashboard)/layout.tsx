@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -138,11 +138,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const isEditPage = pathname.includes("/edit/") || pathname.endsWith("/edit");
-  const [sidebarOpen, setSidebarOpen] = useState(!isEditPage);
+  const shouldCollapseSidebar = isEditPage || pathname === "/ecommerce-fastshop";
+  const [sidebarOpen, setSidebarOpen] = useState(!shouldCollapseSidebar);
 
   useEffect(() => {
-    if (pathname.includes("/edit/") || pathname.endsWith("/edit")) {
+    if (pathname.includes("/edit/") || pathname.endsWith("/edit") || pathname === "/ecommerce-fastshop") {
       setSidebarOpen(false);
     } else {
       setSidebarOpen(true);
@@ -157,9 +159,10 @@ export default function DashboardLayout({
     { icon: Package, label: "Inventory", href: "/inventory", external: false },
     { icon: Users, label: "Employees", href: "/employees", external: false },
     { icon: ShoppingCart, label: "Sales", href: "/sales", external: false },
-    { icon: ShoppingBag, label: "Fast Shop (E-Commerce)", href: "/fastshop", external: false },
+    { icon: Sparkles, label: "AI Web Builder", href: "/ai-web-builder", external: false },
     { icon: Sparkles, label: "Landing Pages", href: "/landing-page", external: false },
-    { icon: Code, label: "AI Web Builder", href: "/ai-web-builder", external: false },
+    { icon: Globe, label: "Websites", href: "/website-pages", external: false },
+    { icon: ShoppingBag, label: "E-Commerce Fastshop", href: "/ecommerce-fastshop", external: false },
     { icon: Megaphone, label: "Marketing", href: "/marketing", external: false },
     { icon: FileSignature, label: "Agreements & E-Sign", href: "/settings", external: false },
     { icon: Calendar, label: "Appointments & Booking", href: "/booking", external: false },
@@ -208,7 +211,21 @@ export default function DashboardLayout({
 
   const isActive = (href?: string) => {
     if (!href) return false;
-    return pathname === href || pathname.startsWith(href + "/");
+    const [hrefPath, hrefQuery] = href.split("?");
+    
+    // Check if pathname matches
+    if (pathname !== hrefPath && !pathname.startsWith(hrefPath + "/")) {
+      return false;
+    }
+    
+    // If href has query params, check if they match current URL
+    if (hrefQuery) {
+      const currentSearch = searchParams.toString();
+      return hrefQuery === currentSearch;
+    }
+    
+    // If href has no query params, it's active only if current search is also empty
+    return searchParams.toString() === "";
   };
 
   const renderNavItem = (item: NavItem, depth = 0) => {

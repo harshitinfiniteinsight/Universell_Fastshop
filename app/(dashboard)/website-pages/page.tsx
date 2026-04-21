@@ -51,7 +51,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface Page {
   id: string;
@@ -155,8 +155,54 @@ const promptExamples = [
   "Revamp the existing e-commerce checkout process to improve conversion rates.",
 ];
 
+const websiteTemplates = [
+  {
+    id: "homepage",
+    title: "Homepage Template",
+    description: "Hero-first layout with feature highlights and strong conversion blocks.",
+    image: "/website-previews/homepage.svg",
+    pagesCount: 6,
+  },
+  {
+    id: "about-us",
+    title: "About Us Template",
+    description: "Story-led business positioning with brand mission and trust sections.",
+    image: "/website-previews/about-us.svg",
+    pagesCount: 5,
+  },
+  {
+    id: "services",
+    title: "Services Template",
+    description: "Service-focused structure for lead capture and consultation requests.",
+    image: "/website-previews/services.svg",
+    pagesCount: 5,
+  },
+  {
+    id: "products",
+    title: "Products Template",
+    description: "Catalog-style product website with spotlight sections and CTA bands.",
+    image: "/website-previews/products.svg",
+    pagesCount: 7,
+  },
+  {
+    id: "testimonials",
+    title: "Testimonials Template",
+    description: "Social-proof heavy layout with customer stories and trust highlights.",
+    image: "/website-previews/testimonials.svg",
+    pagesCount: 6,
+  },
+  {
+    id: "contact",
+    title: "Contact Template",
+    description: "Contact-first website with map, form modules, and direct action flows.",
+    image: "/website-previews/contact.svg",
+    pagesCount: 4,
+  },
+];
+
 export default function WebsitePagesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [selectedItem, setSelectedItem] = useState("");
@@ -175,6 +221,21 @@ export default function WebsitePagesPage() {
     secondaryColor?: { name: string; hex: string };
   } | null>(null);
   const [generatedPages, setGeneratedPages] = useState<PageData[]>([]);
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
+  const [templatePage, setTemplatePage] = useState(1);
+
+  const templatesPerPage = 3;
+  const totalTemplates = websiteTemplates.length;
+  const totalTemplatePages = Math.max(1, Math.ceil(totalTemplates / templatesPerPage));
+  const paginatedWebsiteTemplates = websiteTemplates.slice(
+    (templatePage - 1) * templatesPerPage,
+    templatePage * templatesPerPage
+  );
+  const templateRangeStart = totalTemplates === 0 ? 0 : (templatePage - 1) * templatesPerPage + 1;
+  const templateRangeEnd = Math.min(templatePage * templatesPerPage, totalTemplates);
+
+  const isPagesView = searchParams.get("view") === "pages";
+  const selectedTemplate = websiteTemplates.find((template) => template.id === previewTemplateId) || null;
 
   // Check for welcome toast and generated pages on mount
   useEffect(() => {
@@ -404,6 +465,109 @@ export default function WebsitePagesPage() {
       action: () => setActiveModal("service"),
     },
   ];
+
+  if (!isPagesView) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Website Templates</h1>
+            <p className="text-muted-foreground">Choose a template and continue with pages suited to your business.</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Showing {templateRangeStart}-{templateRangeEnd} of {totalTemplates} templates
+            </p>
+          </div>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90" asChild>
+            <Link href="/website-pages?view=pages">Generate Website Page</Link>
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {paginatedWebsiteTemplates.map((template) => (
+            <Card key={template.id} className="overflow-hidden border border-border shadow-sm">
+              <div className="aspect-[16/10] bg-muted/30 border-b border-border p-3">
+                <img
+                  src={template.image}
+                  alt={`${template.title} preview`}
+                  className="w-full h-full object-cover rounded-lg border border-border"
+                />
+              </div>
+              <div className="p-4 space-y-3">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">{template.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{template.description}</p>
+                </div>
+                <div className="text-xs text-muted-foreground">Includes approx. {template.pagesCount} pages</div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button size="sm" className="flex-1" asChild>
+                    <Link href={`/website-pages?view=pages&template=${template.id}`}>View Pages</Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setPreviewTemplateId(template.id)}
+                  >
+                    Preview
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-muted-foreground">
+            Total templates: {totalTemplates}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTemplatePage((prev) => Math.max(1, prev - 1))}
+              disabled={templatePage === 1}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground min-w-[88px] text-center">
+              Page {templatePage} of {totalTemplatePages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTemplatePage((prev) => Math.min(totalTemplatePages, prev + 1))}
+              disabled={templatePage === totalTemplatePages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+
+        <Dialog open={!!selectedTemplate} onOpenChange={(open) => !open && setPreviewTemplateId(null)}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>{selectedTemplate?.title} Preview</DialogTitle>
+            </DialogHeader>
+            {selectedTemplate && (
+              <div className="space-y-4">
+                <img
+                  src={selectedTemplate.image}
+                  alt={`${selectedTemplate.title} full preview`}
+                  className="w-full rounded-lg border border-border"
+                />
+                <p className="text-sm text-muted-foreground">{selectedTemplate.description}</p>
+                <div className="flex justify-end">
+                  <Button asChild>
+                    <Link href={`/website-pages?view=pages&template=${selectedTemplate.id}`}>View Pages</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
