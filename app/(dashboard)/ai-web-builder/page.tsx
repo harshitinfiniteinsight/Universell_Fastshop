@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { AiChatStep } from "@/components/onboarding/steps/ai-chat-step";
 import { AiGenerationStep } from "@/components/onboarding/steps/ai-generation-step";
 import { WizardContainer } from "@/components/onboarding/wizard-container";
@@ -49,7 +49,7 @@ const initialWizardData: WizardData = {
   themeColor: "#3b82f6",
 };
 
-export default function AIWebBuilder() {
+function AIWebBuilderInner() {
   const [step, setStep] = useState<AIWebBuilderStep>("intro");
   const [builderType, setBuilderType] = useState<BuilderType>("website");
   const searchParams = useSearchParams();
@@ -1368,5 +1368,13 @@ export default function AIWebBuilder() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function AIWebBuilder() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+      <AIWebBuilderInner />
+    </Suspense>
   );
 }
