@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { WizardData } from "@/components/onboarding/wizard-container";
-import { Sparkles, FileText, Zap, ArrowRight, Check, Edit, Upload, Loader2, LayoutTemplate, Target, Globe, ExternalLink, ChevronRight } from "lucide-react";
+import { Sparkles, FileText, Zap, ArrowRight, Check, Edit, Upload, Loader2, LayoutTemplate, Target, Globe, ExternalLink, ChevronRight, Eye } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
