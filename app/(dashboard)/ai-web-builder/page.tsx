@@ -611,12 +611,12 @@ function AIWebBuilderInner() {
             </div>
 
             {step === "intro" && (
-              <div className="relative overflow-hidden p-6 lg:p-10">
+              <div className="relative overflow-hidden px-4 py-6 lg:px-6 lg:py-8">
                 <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-background pointer-events-none" />
                 <div className="absolute top-0 right-0 w-72 h-72 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-56 h-56 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="relative z-10 mx-auto w-full max-w-[82rem] px-1 lg:px-2">
+                <div className="relative z-10 w-full max-w-[86rem] pr-1 lg:pr-2">
                   {isWebsiteBuilder ? (
                     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.08fr_0.92fr] xl:items-start 2xl:gap-8">
                       <div className="space-y-8">
@@ -643,7 +643,7 @@ function AIWebBuilderInner() {
 
                           <h2 className="max-w-4xl text-4xl font-bold leading-tight tracking-tight text-foreground lg:text-5xl xl:text-[3.25rem]">
                             <span className="block">Launch a polished multi-page website</span>
-                            <span className="block">with AI-guided strategy, copy, and design.</span>
+                            <span className="block bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">with AI-guided strategy, copy, and design.</span>
                           </h2>
 
                           <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:text-lg">
@@ -860,7 +860,7 @@ function AIWebBuilderInner() {
 
                           <h2 className="max-w-4xl text-4xl font-bold leading-tight tracking-tight text-foreground lg:text-5xl xl:text-[3.25rem]">
                             <span className="block">Create a landing page that turns attention</span>
-                            <span className="block">into action with AI.</span>
+                            <span className="block bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">into action with AI.</span>
                           </h2>
 
                           <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:text-lg">
