@@ -641,7 +641,7 @@ function AIWebBuilderInner() {
                             ))}
                           </div>
 
-                          <h2 className="max-w-4xl text-4xl font-bold leading-tight tracking-tight text-foreground lg:text-5xl xl:text-[3.25rem]">
+                          <h2 className="max-w-4xl text-3xl font-bold leading-tight tracking-tight text-foreground lg:text-4xl xl:text-[2.6rem]">
                             <span className="block">Launch a polished website with</span>
                             <span className="block bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">AI-guided strategy, and design.</span>
                           </h2>
@@ -858,7 +858,7 @@ function AIWebBuilderInner() {
                             ))}
                           </div>
 
-                          <h2 className="max-w-4xl text-4xl font-bold leading-tight tracking-tight text-foreground lg:text-5xl xl:text-[3.25rem]">
+                          <h2 className="max-w-4xl text-3xl font-bold leading-tight tracking-tight text-foreground lg:text-4xl xl:text-[2.6rem]">
                             <span className="block">Create a landing page that turns</span>
                             <span className="block bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">attention into action with AI.</span>
                           </h2>
