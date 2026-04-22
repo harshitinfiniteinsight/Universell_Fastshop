@@ -730,14 +730,32 @@ function AIWebBuilderInner() {
                           </div>
                           <div className="grid grid-cols-2 gap-2.5">
                             {[
-                              { name: "Sunrise Cafe", pages: "6 pages", color: "from-amber-500 to-orange-400", icon: "☕", status: "Live" },
-                              { name: "Tech Studio", pages: "8 pages", color: "from-violet-500 to-purple-400", icon: "💻", status: "Draft" },
-                              { name: "Green Market", pages: "5 pages", color: "from-emerald-500 to-teal-400", icon: "🌿", status: "Live" },
-                              { name: "Luxe Salon", pages: "7 pages", color: "from-pink-500 to-rose-400", icon: "✨", status: "Draft" },
+                              { name: "Sunrise Cafe", pages: "6 pages", accent: "#f97316", status: "Live" },
+                              { name: "Tech Studio", pages: "8 pages", accent: "#8b5cf6", status: "Draft" },
+                              { name: "Green Market", pages: "5 pages", accent: "#10b981", status: "Live" },
+                              { name: "Luxe Salon", pages: "7 pages", accent: "#ec4899", status: "Draft" },
                             ].map((site) => (
                               <div key={site.name} className="group relative overflow-hidden rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer">
-                                <div className={`h-14 bg-gradient-to-br ${site.color} flex items-center justify-center text-2xl`}>
-                                  {site.icon}
+                                {/* Mini page wireframe preview */}
+                                <div className="h-20 bg-muted/30 overflow-hidden relative px-2 pt-1.5 pb-1">
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: site.accent }} />
+                                    <div className="flex gap-1">
+                                      <div className="h-1 w-4 rounded-full bg-muted-foreground/20" />
+                                      <div className="h-1 w-4 rounded-full bg-muted-foreground/20" />
+                                      <div className="h-1 w-4 rounded-full bg-muted-foreground/20" />
+                                    </div>
+                                  </div>
+                                  <div className="rounded mb-1.5 px-1.5 py-1" style={{ backgroundColor: `${site.accent}22` }}>
+                                    <div className="h-1.5 w-14 rounded-full mb-1" style={{ backgroundColor: `${site.accent}99` }} />
+                                    <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
+                                  </div>
+                                  <div className="flex gap-1">
+                                    {[1,2,3].map(i => (
+                                      <div key={i} className="flex-1 h-4 rounded" style={{ backgroundColor: `${site.accent}18` }} />
+                                    ))}
+                                  </div>
+                                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${site.accent}15, transparent)` }} />
                                 </div>
                                 <div className="px-3 py-2">
                                   <div className="flex items-center justify-between gap-1 mb-0.5">
@@ -991,14 +1009,26 @@ function AIWebBuilderInner() {
                           </div>
                           <div className="grid grid-cols-2 gap-2.5">
                             {[
-                              { name: "Summer Sale", type: "Promo", color: "from-orange-500 to-amber-400", icon: "🎉", status: "Published" },
-                              { name: "Product Launch", type: "Launch", color: "from-violet-500 to-indigo-400", icon: "🚀", status: "Draft" },
-                              { name: "Event Signup", type: "Event", color: "from-sky-500 to-blue-400", icon: "📅", status: "Published" },
-                              { name: "Lead Gen", type: "Capture", color: "from-emerald-500 to-green-400", icon: "🎯", status: "Draft" },
+                              { name: "Summer Sale", type: "Promo", accent: "#f97316", status: "Published" },
+                              { name: "Product Launch", type: "Launch", accent: "#8b5cf6", status: "Draft" },
+                              { name: "Event Signup", type: "Event", accent: "#0ea5e9", status: "Published" },
+                              { name: "Lead Gen", type: "Capture", accent: "#10b981", status: "Draft" },
                             ].map((page) => (
                               <div key={page.name} className="group relative overflow-hidden rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer">
-                                <div className={`h-14 bg-gradient-to-br ${page.color} flex items-center justify-center text-2xl`}>
-                                  {page.icon}
+                                {/* Mini landing page wireframe */}
+                                <div className="h-20 bg-muted/30 overflow-hidden relative px-2 pt-1.5 pb-1">
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: page.accent }} />
+                                    <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: `${page.accent}cc` }} />
+                                  </div>
+                                  <div className="rounded mb-1.5 py-1.5 px-1 text-center" style={{ backgroundColor: `${page.accent}22` }}>
+                                    <div className="h-1.5 w-16 rounded-full mx-auto mb-1" style={{ backgroundColor: `${page.accent}aa` }} />
+                                    <div className="h-1 w-10 rounded-full mx-auto bg-muted-foreground/20" />
+                                  </div>
+                                  <div className="flex justify-center">
+                                    <div className="h-2.5 w-12 rounded-full" style={{ backgroundColor: page.accent }} />
+                                  </div>
+                                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${page.accent}15, transparent)` }} />
                                 </div>
                                 <div className="px-3 py-2">
                                   <div className="flex items-center justify-between gap-1 mb-0.5">
