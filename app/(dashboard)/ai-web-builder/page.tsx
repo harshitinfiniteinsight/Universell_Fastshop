@@ -715,7 +715,45 @@ function AIWebBuilderInner() {
                         </div>
                       </div>
 
-                      <div className="relative">
+                      <div className="flex flex-col gap-5">
+                        {/* Website templates mini cards */}
+                        <div className="rounded-2xl border border-border/70 bg-background/90 p-4 shadow-sm">
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
+                                <Globe className="h-3.5 w-3.5 text-primary" />
+                              </div>
+                              <span className="text-sm font-semibold text-foreground">Your Websites</span>
+                              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">4</span>
+                            </div>
+                            <Link href="/website-pages" className="text-xs font-medium text-primary hover:underline">View all →</Link>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2.5">
+                            {[
+                              { name: "Sunrise Cafe", pages: "6 pages", color: "from-amber-500 to-orange-400", icon: "☕", status: "Live" },
+                              { name: "Tech Studio", pages: "8 pages", color: "from-violet-500 to-purple-400", icon: "💻", status: "Draft" },
+                              { name: "Green Market", pages: "5 pages", color: "from-emerald-500 to-teal-400", icon: "🌿", status: "Live" },
+                              { name: "Luxe Salon", pages: "7 pages", color: "from-pink-500 to-rose-400", icon: "✨", status: "Draft" },
+                            ].map((site) => (
+                              <div key={site.name} className="group relative overflow-hidden rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                <div className={`h-14 bg-gradient-to-br ${site.color} flex items-center justify-center text-2xl`}>
+                                  {site.icon}
+                                </div>
+                                <div className="px-3 py-2">
+                                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                                    <p className="text-xs font-semibold text-foreground truncate">{site.name}</p>
+                                    <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                                      site.status === "Live" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                                    }`}>{site.status}</span>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground">{site.pages}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="relative">
                         <div className="absolute -left-6 top-10 hidden w-44 rounded-2xl border border-border/60 bg-card/95 p-4 shadow-xl backdrop-blur-sm lg:block">
                           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                             <Target className="h-4 w-4" style={{ color: activeWebsitePagePreview.accent }} />
@@ -837,6 +875,7 @@ function AIWebBuilderInner() {
                             </div>
                           </div>
                         </div>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -937,7 +976,45 @@ function AIWebBuilderInner() {
                         </div>
                       </div>
 
-                      <div className="relative xl:min-h-[920px]">
+                      <div className="flex flex-col gap-5">
+                        {/* Landing page template mini cards */}
+                        <div className="rounded-2xl border border-border/70 bg-background/90 p-4 shadow-sm">
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
+                                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                              </div>
+                              <span className="text-sm font-semibold text-foreground">Your Landing Pages</span>
+                              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">4</span>
+                            </div>
+                            <Link href="/landing-page" className="text-xs font-medium text-primary hover:underline">View all →</Link>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2.5">
+                            {[
+                              { name: "Summer Sale", type: "Promo", color: "from-orange-500 to-amber-400", icon: "🎉", status: "Published" },
+                              { name: "Product Launch", type: "Launch", color: "from-violet-500 to-indigo-400", icon: "🚀", status: "Draft" },
+                              { name: "Event Signup", type: "Event", color: "from-sky-500 to-blue-400", icon: "📅", status: "Published" },
+                              { name: "Lead Gen", type: "Capture", color: "from-emerald-500 to-green-400", icon: "🎯", status: "Draft" },
+                            ].map((page) => (
+                              <div key={page.name} className="group relative overflow-hidden rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                <div className={`h-14 bg-gradient-to-br ${page.color} flex items-center justify-center text-2xl`}>
+                                  {page.icon}
+                                </div>
+                                <div className="px-3 py-2">
+                                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                                    <p className="text-xs font-semibold text-foreground truncate">{page.name}</p>
+                                    <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                                      page.status === "Published" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                                    }`}>{page.status}</span>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground">{page.type}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="relative xl:min-h-[920px]">
                         <div className="absolute -left-6 top-10 hidden w-44 rounded-2xl border border-border/60 bg-card/95 p-4 shadow-xl backdrop-blur-sm lg:block">
                           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                             <Target className="h-4 w-4" style={{ color: activeLandingAccent }} />
@@ -1064,6 +1141,7 @@ function AIWebBuilderInner() {
                               </div>
                             </div>
                           </div>
+                        </div>
                         </div>
                       </div>
                     </div>
