@@ -897,54 +897,6 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                   </div>
 
                   <div className="flex flex-col gap-5">
-                    {/* Landing page template mini cards */}
-                    <div className="rounded-2xl border border-border/70 bg-background/90 p-4 shadow-sm">
-                      <div className="mb-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
-                            <Sparkles className="h-3.5 w-3.5 text-primary" />
-                          </div>
-                          <span className="text-sm font-semibold text-foreground">Your Landing Pages</span>
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">4</span>
-                        </div>
-                        <Link href="/landing-page" className="text-xs font-medium text-primary hover:underline">View all →</Link>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5">
-                        {[
-                          { name: "Summer Sale", type: "Promo", accent: "#f97316", status: "Published" },
-                          { name: "Product Launch", type: "Launch", accent: "#8b5cf6", status: "Draft" },
-                          { name: "Event Signup", type: "Event", accent: "#0ea5e9", status: "Published" },
-                          { name: "Lead Gen", type: "Capture", accent: "#10b981", status: "Draft" },
-                        ].map((page) => (
-                          <div key={page.name} className="group relative overflow-hidden rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer">
-                            <div className="h-20 bg-muted/30 overflow-hidden relative px-2 pt-1.5 pb-1">
-                              <div className="flex items-center justify-between mb-1.5">
-                                <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: page.accent }} />
-                                <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: `${page.accent}cc` }} />
-                              </div>
-                              <div className="rounded mb-1.5 py-1.5 px-1 text-center" style={{ backgroundColor: `${page.accent}22` }}>
-                                <div className="h-1.5 w-16 rounded-full mx-auto mb-1" style={{ backgroundColor: `${page.accent}aa` }} />
-                                <div className="h-1 w-10 rounded-full mx-auto bg-muted-foreground/20" />
-                              </div>
-                              <div className="flex justify-center">
-                                <div className="h-2.5 w-12 rounded-full" style={{ backgroundColor: page.accent }} />
-                              </div>
-                              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${page.accent}15, transparent)` }} />
-                            </div>
-                            <div className="px-3 py-2">
-                              <div className="flex items-center justify-between gap-1 mb-0.5">
-                                <p className="text-xs font-semibold text-foreground truncate">{page.name}</p>
-                                <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                                  page.status === "Published" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-                                }`}>{page.status}</span>
-                              </div>
-                              <p className="text-[10px] text-muted-foreground">{page.type}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
                     <div className="relative xl:min-h-[920px]">
                       <div className="absolute -left-6 top-10 hidden w-44 rounded-2xl border border-border/60 bg-card/95 p-4 shadow-xl backdrop-blur-sm lg:block">
                         <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
