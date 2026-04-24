@@ -47,6 +47,7 @@ type DummyLandingPage = {
   accentColor: string;
   updatedAt: string;
   html: string;
+  previewImage: string;
 };
 
 const DUMMY_LANDING_PAGES: DummyLandingPage[] = [
@@ -62,6 +63,7 @@ const DUMMY_LANDING_PAGES: DummyLandingPage[] = [
     accentColor: "#fb7a45",
     updatedAt: "2025-04-20T10:30:00Z",
     html: `<html><body><h1>Sunrise Cafe & Bakery</h1><p>Where every morning starts with warmth</p></body></html>`,
+    previewImage: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80",
   },
   {
     id: "dummy-2",
@@ -75,6 +77,7 @@ const DUMMY_LANDING_PAGES: DummyLandingPage[] = [
     accentColor: "#818cf8",
     updatedAt: "2025-04-18T14:15:00Z",
     html: `<html><body><h1>Apex Digital Studio</h1><p>Design that drives results</p></body></html>`,
+    previewImage: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&q=80",
   },
   {
     id: "dummy-3",
@@ -88,6 +91,7 @@ const DUMMY_LANDING_PAGES: DummyLandingPage[] = [
     accentColor: "#34d399",
     updatedAt: "2025-04-15T09:00:00Z",
     html: `<html><body><h1>GreenLeaf Wellness</h1><p>Nourish your body, calm your mind</p></body></html>`,
+    previewImage: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&q=80",
   },
 ];
 
@@ -690,49 +694,36 @@ export default function LandingPageWizard() {
                         </div>
 
                         {/* Simulated page content blocks */}
-                        <div className="absolute inset-x-0 top-6 bottom-0 p-3 flex flex-col gap-2 overflow-hidden">
-                          {/* Nav bar mock */}
-                          <div className="flex items-center justify-between">
-                            <div
-                              className="w-14 h-3 rounded-full opacity-70"
-                              style={{ backgroundColor: page.primaryColor }}
-                            />
-                            <div className="flex gap-1.5">
-                              {[1, 2, 3].map((i) => (
-                                <div key={i} className="w-6 h-2 rounded-full bg-muted-foreground/20" />
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Hero block */}
+                        <div className="absolute inset-x-0 top-6 bottom-0 overflow-hidden">
+                          {/* Real preview image */}
+                          <img
+                            src={page.previewImage}
+                            alt={`${page.pageName} preview`}
+                            className="w-full h-full object-cover object-top"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = "none";
+                              const fallback = target.nextElementSibling as HTMLElement | null;
+                              if (fallback) fallback.style.display = "flex";
+                            }}
+                          />
+                          {/* Fallback when image fails to load */}
                           <div
-                            className="flex-1 rounded-xl flex flex-col items-center justify-center gap-1.5 px-3 text-center"
-                            style={{ background: `${page.primaryColor}18` }}
+                            className="absolute inset-0 hidden flex-col items-center justify-center gap-1.5"
+                            style={{ background: `linear-gradient(135deg, ${page.primaryColor}22, ${page.accentColor}14)` }}
                           >
                             <div
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[10px] font-bold"
+                              className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold"
                               style={{ background: `linear-gradient(135deg, ${page.primaryColor}, ${page.accentColor})` }}
                             >
-                              {page.businessName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("")}
+                              {page.businessName.split(" ").filter(Boolean).slice(0, 2).map((w: string) => w[0]).join("")}
                             </div>
-                            <div className="w-24 h-2 rounded-full bg-foreground/20" />
-                            <div className="w-16 h-1.5 rounded-full bg-foreground/10" />
-                            <div
-                              className="w-14 h-4 rounded-full mt-0.5"
-                              style={{ backgroundColor: page.primaryColor, opacity: 0.85 }}
-                            />
                           </div>
-
-                          {/* Feature blocks row */}
-                          <div className="grid grid-cols-3 gap-1.5">
-                            {[1, 2, 3].map((i) => (
-                              <div key={i} className="rounded-lg bg-background/60 border border-border/40 p-1.5 space-y-1">
-                                <div className="w-3 h-3 rounded" style={{ backgroundColor: `${page.accentColor}60` }} />
-                                <div className="w-full h-1.5 rounded-full bg-foreground/10" />
-                                <div className="w-2/3 h-1 rounded-full bg-foreground/8" />
-                              </div>
-                            ))}
-                          </div>
+                          {/* Subtle brand-color gradient overlay at the bottom */}
+                          <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{ background: `linear-gradient(to bottom, transparent 55%, ${page.primaryColor}44)` }}
+                          />
                         </div>
 
                         {/* Hover overlay with Preview button */}
@@ -856,7 +847,7 @@ export default function LandingPageWizard() {
                         {savedLandingPages.filter((page) => (page.status ?? "draft") === "draft").map((page) => (
                           <div key={page.id} className="group rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-xl hover:shadow-primary/8 transition-all duration-200 overflow-hidden flex flex-col">
                             {/* Mini preview */}
-                            <div className="relative h-44 bg-gradient-to-br from-primary/15 via-primary/5 to-background border-b border-border/60 overflow-hidden flex-shrink-0">
+                            <div className="relative h-44 border-b border-border/60 overflow-hidden flex-shrink-0">
                               {/* Browser chrome */}
                               <div className="absolute top-0 left-0 right-0 h-6 bg-background/80 backdrop-blur-sm border-b border-border/40 flex items-center gap-1.5 px-2.5">
                                 <span className="w-2 h-2 rounded-full bg-red-400/80" />
@@ -867,32 +858,22 @@ export default function LandingPageWizard() {
                                 </div>
                               </div>
                               {/* Content blocks */}
-                              <div className="absolute inset-x-0 top-6 bottom-0 p-3 flex flex-col gap-2 overflow-hidden">
-                                <div className="flex items-center justify-between">
-                                  <div className="w-14 h-3 rounded-full bg-primary/50" />
-                                  <div className="flex gap-1.5">
-                                    {[1, 2, 3].map((i) => (
-                                      <div key={i} className="w-6 h-2 rounded-full bg-muted-foreground/20" />
-                                    ))}
-                                  </div>
-                                </div>
-                                <div className="flex-1 rounded-xl bg-primary/10 flex flex-col items-center justify-center gap-1.5 px-3 text-center">
-                                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-[10px] font-bold">
-                                    {page.businessName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("")}
-                                  </div>
-                                  <div className="w-24 h-2 rounded-full bg-foreground/20" />
-                                  <div className="w-16 h-1.5 rounded-full bg-foreground/10" />
-                                  <div className="w-14 h-4 rounded-full bg-primary/80 mt-0.5" />
-                                </div>
-                                <div className="grid grid-cols-3 gap-1.5">
-                                  {[1, 2, 3].map((i) => (
-                                    <div key={i} className="rounded-lg bg-background/60 border border-border/40 p-1.5 space-y-1">
-                                      <div className="w-3 h-3 rounded bg-primary/30" />
-                                      <div className="w-full h-1.5 rounded-full bg-foreground/10" />
-                                      <div className="w-2/3 h-1 rounded-full bg-foreground/8" />
-                                    </div>
-                                  ))}
-                                </div>
+                              <div className="absolute inset-x-0 top-6 bottom-0 overflow-hidden bg-background">
+                                <iframe
+                                  srcDoc={`<!DOCTYPE html><html><head><style>${page.css}</style></head><body style="margin:0;padding:0;overflow:hidden;">${page.html}</body></html>`}
+                                  className="absolute top-0 left-0"
+                                  style={{
+                                    width: "1280px",
+                                    height: "900px",
+                                    transform: "scale(0.265)",
+                                    transformOrigin: "top left",
+                                    border: "none",
+                                    pointerEvents: "none",
+                                  }}
+                                  scrolling="no"
+                                  sandbox=""
+                                  title={`Preview of ${page.businessName}`}
+                                />
                               </div>
                               {/* Hover overlay */}
                               <div className="absolute inset-0 bg-background/0 group-hover:bg-background/50 group-hover:backdrop-blur-[2px] transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -959,7 +940,7 @@ export default function LandingPageWizard() {
                         {savedLandingPages.filter((page) => page.status === "published").map((page) => (
                           <div key={page.id} className="group rounded-2xl border border-emerald-200/50 bg-card hover:border-emerald-400/60 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-200 overflow-hidden flex flex-col">
                             {/* Mini preview */}
-                            <div className="relative h-44 bg-gradient-to-br from-emerald-100/40 via-emerald-50/20 to-background border-b border-emerald-200/30 overflow-hidden flex-shrink-0">
+                            <div className="relative h-44 border-b border-border/60 overflow-hidden flex-shrink-0">
                               {/* Browser chrome */}
                               <div className="absolute top-0 left-0 right-0 h-6 bg-background/80 backdrop-blur-sm border-b border-border/40 flex items-center gap-1.5 px-2.5">
                                 <span className="w-2 h-2 rounded-full bg-red-400/80" />
@@ -970,32 +951,22 @@ export default function LandingPageWizard() {
                                 </div>
                               </div>
                               {/* Content blocks */}
-                              <div className="absolute inset-x-0 top-6 bottom-0 p-3 flex flex-col gap-2 overflow-hidden">
-                                <div className="flex items-center justify-between">
-                                  <div className="w-14 h-3 rounded-full bg-emerald-500/50" />
-                                  <div className="flex gap-1.5">
-                                    {[1, 2, 3].map((i) => (
-                                      <div key={i} className="w-6 h-2 rounded-full bg-muted-foreground/20" />
-                                    ))}
-                                  </div>
-                                </div>
-                                <div className="flex-1 rounded-xl bg-emerald-100/30 flex flex-col items-center justify-center gap-1.5 px-3 text-center">
-                                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white text-[10px] font-bold">
-                                    {page.businessName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("")}
-                                  </div>
-                                  <div className="w-24 h-2 rounded-full bg-foreground/20" />
-                                  <div className="w-16 h-1.5 rounded-full bg-foreground/10" />
-                                  <div className="w-14 h-4 rounded-full bg-emerald-500/80 mt-0.5" />
-                                </div>
-                                <div className="grid grid-cols-3 gap-1.5">
-                                  {[1, 2, 3].map((i) => (
-                                    <div key={i} className="rounded-lg bg-background/60 border border-border/40 p-1.5 space-y-1">
-                                      <div className="w-3 h-3 rounded bg-emerald-400/30" />
-                                      <div className="w-full h-1.5 rounded-full bg-foreground/10" />
-                                      <div className="w-2/3 h-1 rounded-full bg-foreground/8" />
-                                    </div>
-                                  ))}
-                                </div>
+                              <div className="absolute inset-x-0 top-6 bottom-0 overflow-hidden bg-background">
+                                <iframe
+                                  srcDoc={`<!DOCTYPE html><html><head><style>${page.css}</style></head><body style="margin:0;padding:0;overflow:hidden;">${page.html}</body></html>`}
+                                  className="absolute top-0 left-0"
+                                  style={{
+                                    width: "1280px",
+                                    height: "900px",
+                                    transform: "scale(0.265)",
+                                    transformOrigin: "top left",
+                                    border: "none",
+                                    pointerEvents: "none",
+                                  }}
+                                  scrolling="no"
+                                  sandbox=""
+                                  title={`Preview of ${page.businessName}`}
+                                />
                               </div>
                               {/* Hover overlay */}
                               <div className="absolute inset-0 bg-background/0 group-hover:bg-background/50 group-hover:backdrop-blur-[2px] transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
