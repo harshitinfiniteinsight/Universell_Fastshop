@@ -16,7 +16,14 @@ import {
   Wand2,
   Bot,
   PanelsTopLeft,
+  ClipboardList,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type EditorMessage = {
   id: string;
@@ -265,6 +272,7 @@ export default function GeneratedLandingPageEditor() {
   const [html, setHtml] = useState<string>(buildLandingHtml(FALLBACK_DRAFT));
   const [css, setCss] = useState<string>(baseCss);
   const [isGrapesReady, setIsGrapesReady] = useState(false);
+  const [showFormModal, setShowFormModal] = useState(false);
 
   const grapesContainerRef = useRef<HTMLDivElement>(null);
   const grapesBlocksRef = useRef<HTMLDivElement>(null);
@@ -587,7 +595,43 @@ export default function GeneratedLandingPageEditor() {
                   {preset}
                 </button>
               ))}
+              <button
+                onClick={() => setShowFormModal(true)}
+                className="text-[11px] px-2 py-1 rounded-full bg-orange-500 text-white hover:bg-orange-600 flex items-center gap-1"
+              >
+                <ClipboardList className="w-3 h-3" />
+                Add Form
+              </button>
             </div>
+
+            <Dialog open={showFormModal} onOpenChange={setShowFormModal}>
+              <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Insert a Form</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  {[
+                    { label: "Custom Form", value: "Add a custom form" },
+                    { label: "Payment Form", value: "Add a payment form" },
+                    { label: "Lead Form", value: "Add a lead form" },
+                    { label: "Ticket Form", value: "Add a ticket form" },
+                    { label: "Product QR Code", value: "Add a product QR code" },
+                    { label: "Schedule Me", value: "Add a schedule me booking form" },
+                  ].map(({ label, value }) => (
+                    <button
+                      key={label}
+                      onClick={() => {
+                        setInputMessage(value);
+                        setShowFormModal(false);
+                      }}
+                      className="text-sm px-3 py-2.5 rounded-lg border border-border bg-muted hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600 text-left transition-colors"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
