@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { WizardData } from "@/components/onboarding/wizard-container";
-import { Sparkles, FileText, Zap, ArrowRight, Check, Edit, Upload, Loader2, LayoutTemplate, Target, Globe, ExternalLink, ChevronRight, Eye } from "lucide-react";
+import { Sparkles, FileText, Zap, ArrowRight, Check, Edit, Upload, Loader2, LayoutTemplate, Target, Globe, ExternalLink, ChevronRight, Eye, Copy, CheckCheck, Monitor, Wifi, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -34,6 +34,62 @@ type SavedLandingPageDraft = {
 };
 
 const SAVED_LANDING_PAGES_KEY = "universell-saved-landing-pages";
+
+type DummyLandingPage = {
+  id: string;
+  pageName: string;
+  businessName: string;
+  tagline: string;
+  domain: string | null;
+  domainConnected: boolean;
+  status: "draft" | "published";
+  primaryColor: string;
+  accentColor: string;
+  updatedAt: string;
+  html: string;
+};
+
+const DUMMY_LANDING_PAGES: DummyLandingPage[] = [
+  {
+    id: "dummy-1",
+    pageName: "Homepage",
+    businessName: "Sunrise Cafe & Bakery",
+    tagline: "Where every morning starts with warmth",
+    domain: "sunrisecafe.com",
+    domainConnected: true,
+    status: "published",
+    primaryColor: "#f04f29",
+    accentColor: "#fb7a45",
+    updatedAt: "2025-04-20T10:30:00Z",
+    html: `<html><body><h1>Sunrise Cafe & Bakery</h1><p>Where every morning starts with warmth</p></body></html>`,
+  },
+  {
+    id: "dummy-2",
+    pageName: "Services",
+    businessName: "Apex Digital Studio",
+    tagline: "Design that drives results",
+    domain: null,
+    domainConnected: false,
+    status: "draft",
+    primaryColor: "#6366f1",
+    accentColor: "#818cf8",
+    updatedAt: "2025-04-18T14:15:00Z",
+    html: `<html><body><h1>Apex Digital Studio</h1><p>Design that drives results</p></body></html>`,
+  },
+  {
+    id: "dummy-3",
+    pageName: "Lead Capture",
+    businessName: "GreenLeaf Wellness",
+    tagline: "Nourish your body, calm your mind",
+    domain: "greenleaf.io",
+    domainConnected: false,
+    status: "draft",
+    primaryColor: "#059669",
+    accentColor: "#34d399",
+    updatedAt: "2025-04-15T09:00:00Z",
+    html: `<html><body><h1>GreenLeaf Wellness</h1><p>Nourish your body, calm your mind</p></body></html>`,
+  },
+];
 
 const initialWizardData: WizardData = {
   businessInfo: {
@@ -81,6 +137,7 @@ export default function LandingPageWizard() {
   const [taglinePrompt, setTaglinePrompt] = useState("");
   const [descriptionPrompt, setDescriptionPrompt] = useState("");
   const [learnMoreModalOpen, setLearnMoreModalOpen] = useState(false);
+  const [copiedPageId, setCopiedPageId] = useState<string | null>(null);
 
   const aiLogoStyles = [
     { id: "icon-modern", label: "Icon Modern" },
@@ -352,6 +409,13 @@ export default function LandingPageWizard() {
     setGeneratedPageName("Homepage");
   };
 
+  const copyPageCode = (html: string, pageId: string) => {
+    navigator.clipboard.writeText(html).then(() => {
+      setCopiedPageId(pageId);
+      setTimeout(() => setCopiedPageId(null), 2000);
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -585,18 +649,194 @@ export default function LandingPageWizard() {
         {/* ── INTRO ── */}
         {step === "intro" && (
           <div className="p-6 lg:p-8">
-            <div className="max-w-6xl mx-auto space-y-6">
-              {savedLandingPages.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border bg-gradient-to-br from-primary/5 to-primary/2 p-12 text-center">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <FileText className="w-8 h-8 text-primary" />
-                    </div>
+            <div className="max-w-6xl mx-auto space-y-8">
+
+              {/* ── DUMMY / EXAMPLE PAGES SECTION ── */}
+              <section className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                      <Monitor className="w-4 h-4 text-primary" />
+                      Your Pages
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Example landing pages — generate your own to get started</p>
                   </div>
-                  <h3 className="text-xl font-bold text-foreground">No landing pages yet</h3>
-                  <p className="text-muted-foreground mt-2">Generate your first landing page to get started.</p>
+                  <span className="text-xs font-semibold text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
+                    {DUMMY_LANDING_PAGES.length} pages
+                  </span>
                 </div>
-              ) : (
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {DUMMY_LANDING_PAGES.map((page) => (
+                    <div
+                      key={page.id}
+                      className="group rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-xl hover:shadow-primary/8 transition-all duration-200 overflow-hidden flex flex-col"
+                    >
+                      {/* ── Mini landing page preview ── */}
+                      <div
+                        className="relative h-44 border-b border-border/60 overflow-hidden flex-shrink-0"
+                        style={{ background: `linear-gradient(135deg, ${page.primaryColor}22 0%, ${page.accentColor}14 50%, transparent 100%)` }}
+                      >
+                        {/* Simulated browser chrome */}
+                        <div className="absolute top-0 left-0 right-0 h-6 bg-background/80 backdrop-blur-sm border-b border-border/40 flex items-center gap-1.5 px-2.5">
+                          <span className="w-2 h-2 rounded-full bg-red-400/80" />
+                          <span className="w-2 h-2 rounded-full bg-yellow-400/80" />
+                          <span className="w-2 h-2 rounded-full bg-green-400/80" />
+                          <div className="flex-1 mx-2 h-3 rounded-full bg-muted/70 flex items-center px-2">
+                            <span className="text-[8px] text-muted-foreground truncate">
+                              {page.domainConnected && page.domain ? page.domain : "preview.universell.co"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Simulated page content blocks */}
+                        <div className="absolute inset-x-0 top-6 bottom-0 p-3 flex flex-col gap-2 overflow-hidden">
+                          {/* Nav bar mock */}
+                          <div className="flex items-center justify-between">
+                            <div
+                              className="w-14 h-3 rounded-full opacity-70"
+                              style={{ backgroundColor: page.primaryColor }}
+                            />
+                            <div className="flex gap-1.5">
+                              {[1, 2, 3].map((i) => (
+                                <div key={i} className="w-6 h-2 rounded-full bg-muted-foreground/20" />
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Hero block */}
+                          <div
+                            className="flex-1 rounded-xl flex flex-col items-center justify-center gap-1.5 px-3 text-center"
+                            style={{ background: `${page.primaryColor}18` }}
+                          >
+                            <div
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[10px] font-bold"
+                              style={{ background: `linear-gradient(135deg, ${page.primaryColor}, ${page.accentColor})` }}
+                            >
+                              {page.businessName.split(" ").slice(0, 2).map(w => w[0]).join("")}
+                            </div>
+                            <div className="w-24 h-2 rounded-full bg-foreground/20" />
+                            <div className="w-16 h-1.5 rounded-full bg-foreground/10" />
+                            <div
+                              className="w-14 h-4 rounded-full mt-0.5"
+                              style={{ backgroundColor: page.primaryColor, opacity: 0.85 }}
+                            />
+                          </div>
+
+                          {/* Feature blocks row */}
+                          <div className="grid grid-cols-3 gap-1.5">
+                            {[1, 2, 3].map((i) => (
+                              <div key={i} className="rounded-lg bg-background/60 border border-border/40 p-1.5 space-y-1">
+                                <div className="w-3 h-3 rounded" style={{ backgroundColor: `${page.accentColor}60` }} />
+                                <div className="w-full h-1.5 rounded-full bg-foreground/10" />
+                                <div className="w-2/3 h-1 rounded-full bg-foreground/8" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Hover overlay with Preview button */}
+                        <div className="absolute inset-0 bg-background/0 group-hover:bg-background/50 backdrop-blur-0 group-hover:backdrop-blur-[2px] transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <Button
+                            size="sm"
+                            className="gap-1.5 shadow-lg text-xs"
+                            style={{ backgroundColor: page.primaryColor, borderColor: page.primaryColor }}
+                            onClick={() => router.push(`/landing-pages/edit/${page.id}`)}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            Preview
+                          </Button>
+                        </div>
+
+                        {/* Status badge */}
+                        {page.status === "published" ? (
+                          <span className="absolute top-8 right-2.5 text-[10px] font-semibold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full">
+                            Live
+                          </span>
+                        ) : (
+                          <span className="absolute top-8 right-2.5 text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full">
+                            Draft
+                          </span>
+                        )}
+                      </div>
+
+                      {/* ── Card content ── */}
+                      <div className="flex-1 p-4 flex flex-col gap-3">
+                        {/* Page name + domain status */}
+                        <div className="space-y-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-foreground leading-tight truncate">{page.pageName}</p>
+                              <p className="text-xs text-muted-foreground truncate mt-0.5">{page.businessName}</p>
+                            </div>
+                          </div>
+
+                          {/* Domain connected / not connected indicator */}
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            {page.domainConnected ? (
+                              <>
+                                <Wifi className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                                <span className="text-[11px] font-medium text-emerald-600 truncate">{page.domain}</span>
+                                <span className="text-[10px] text-emerald-500 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full flex-shrink-0">Connected</span>
+                              </>
+                            ) : (
+                              <>
+                                <WifiOff className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                <span className="text-[11px] text-muted-foreground truncate">
+                                  {page.domain ? page.domain : "No domain linked"}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded-full flex-shrink-0">Not connected</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Updated date */}
+                        <p className="text-[11px] text-muted-foreground">
+                          Updated {new Date(page.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+
+                        {/* Action buttons */}
+                        <div className="flex gap-2 mt-auto pt-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 rounded-lg text-xs gap-1.5 hover:border-primary/50 hover:text-primary"
+                            onClick={() => router.push(`/landing-pages/edit/${page.id}`)}
+                          >
+                            <Eye className="w-3 h-3" />
+                            Preview
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 rounded-lg text-xs gap-1.5"
+                            onClick={() => router.push(`/landing-pages/edit/${page.id}`)}
+                          >
+                            <Edit className="w-3 h-3" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className={`rounded-lg text-xs gap-1 px-2.5 transition-colors ${copiedPageId === page.id ? "border-emerald-400 text-emerald-600 bg-emerald-50" : "hover:border-primary/50 hover:text-primary"}`}
+                            onClick={() => copyPageCode(page.html, page.id)}
+                            title="Copy HTML code"
+                          >
+                            {copiedPageId === page.id ? (
+                              <CheckCheck className="w-3.5 h-3.5" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* ── REAL SAVED PAGES (if any) ── */}
+              {savedLandingPages.length > 0 && (
                 <div className="space-y-10">
                   {savedLandingPages.filter((page) => (page.status ?? "draft") === "draft").length > 0 && (
                     <section className="space-y-4">
@@ -614,36 +854,84 @@ export default function LandingPageWizard() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                         {savedLandingPages.filter((page) => (page.status ?? "draft") === "draft").map((page) => (
-                          <div key={page.id} className="group rounded-2xl border border-border bg-background hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 overflow-hidden flex flex-col">
-                            {/* Preview area */}
-                            <div className="relative h-40 bg-gradient-to-br from-primary/20 via-primary/5 to-background border-b border-border/50 flex items-center justify-center overflow-hidden">
-                              <div className="absolute inset-0 opacity-10">
-                                <div className="absolute top-4 left-4 w-12 h-12 rounded-full bg-white/20" />
-                                <div className="absolute bottom-6 right-6 w-16 h-8 rounded bg-white/20" />
-                                <div className="absolute top-1/3 right-4 w-20 h-1 rounded-full bg-white/10" />
-                                <div className="absolute bottom-1/3 left-4 w-24 h-1 rounded-full bg-white/10" />
-                              </div>
-                              <div className="relative text-center space-y-2">
-                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/60 mx-auto flex items-center justify-center">
-                                  <span className="text-white font-bold text-xl">{page.businessName.split(" ").slice(0, 2).map(w => w[0]).join("")}</span>
+                          <div key={page.id} className="group rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-xl hover:shadow-primary/8 transition-all duration-200 overflow-hidden flex flex-col">
+                            {/* Mini preview */}
+                            <div className="relative h-44 bg-gradient-to-br from-primary/15 via-primary/5 to-background border-b border-border/60 overflow-hidden flex-shrink-0">
+                              {/* Browser chrome */}
+                              <div className="absolute top-0 left-0 right-0 h-6 bg-background/80 backdrop-blur-sm border-b border-border/40 flex items-center gap-1.5 px-2.5">
+                                <span className="w-2 h-2 rounded-full bg-red-400/80" />
+                                <span className="w-2 h-2 rounded-full bg-yellow-400/80" />
+                                <span className="w-2 h-2 rounded-full bg-green-400/80" />
+                                <div className="flex-1 mx-2 h-3 rounded-full bg-muted/70 flex items-center px-2">
+                                  <span className="text-[8px] text-muted-foreground truncate">preview.universell.co</span>
                                 </div>
-                                <p className="text-xs text-muted-foreground font-medium">{page.businessName}</p>
                               </div>
-                              <span className="absolute top-3 right-3 text-[10px] font-semibold text-primary bg-primary/20 px-2 py-1 rounded-full">Draft</span>
+                              {/* Content blocks */}
+                              <div className="absolute inset-x-0 top-6 bottom-0 p-3 flex flex-col gap-2 overflow-hidden">
+                                <div className="flex items-center justify-between">
+                                  <div className="w-14 h-3 rounded-full bg-primary/50" />
+                                  <div className="flex gap-1.5">
+                                    {[1, 2, 3].map((i) => (
+                                      <div key={i} className="w-6 h-2 rounded-full bg-muted-foreground/20" />
+                                    ))}
+                                  </div>
+                                </div>
+                                <div className="flex-1 rounded-xl bg-primary/10 flex flex-col items-center justify-center gap-1.5 px-3 text-center">
+                                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-[10px] font-bold">
+                                    {page.businessName.split(" ").slice(0, 2).map(w => w[0]).join("")}
+                                  </div>
+                                  <div className="w-24 h-2 rounded-full bg-foreground/20" />
+                                  <div className="w-16 h-1.5 rounded-full bg-foreground/10" />
+                                  <div className="w-14 h-4 rounded-full bg-primary/80 mt-0.5" />
+                                </div>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                  {[1, 2, 3].map((i) => (
+                                    <div key={i} className="rounded-lg bg-background/60 border border-border/40 p-1.5 space-y-1">
+                                      <div className="w-3 h-3 rounded bg-primary/30" />
+                                      <div className="w-full h-1.5 rounded-full bg-foreground/10" />
+                                      <div className="w-2/3 h-1 rounded-full bg-foreground/8" />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              {/* Hover overlay */}
+                              <div className="absolute inset-0 bg-background/0 group-hover:bg-background/50 group-hover:backdrop-blur-[2px] transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                <Button size="sm" className="gap-1.5 shadow-lg text-xs" asChild>
+                                  <Link href={`/landing-pages/edit/${page.id}`}><Eye className="w-3.5 h-3.5" />Preview</Link>
+                                </Button>
+                              </div>
+                              <span className="absolute top-8 right-2.5 text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full">Draft</span>
                             </div>
 
-                            {/* Content area */}
+                            {/* Content */}
                             <div className="flex-1 p-4 flex flex-col gap-3">
-                              <div className="min-h-0">
-                                <p className="text-sm font-semibold text-foreground line-clamp-1">{page.tagline}</p>
-                                <p className="text-xs text-muted-foreground mt-1">{new Date(page.updatedAt).toLocaleDateString()}</p>
+                              <div className="space-y-1">
+                                <p className="text-sm font-bold text-foreground leading-tight truncate">{page.businessName}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-1">{page.tagline}</p>
+                                <div className="flex items-center gap-1.5 mt-1.5">
+                                  <WifiOff className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                  <span className="text-[11px] text-muted-foreground">No domain linked</span>
+                                  <span className="text-[10px] text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded-full flex-shrink-0">Not connected</span>
+                                </div>
                               </div>
-                              <div className="flex gap-2 mt-auto">
-                                <Button size="sm" asChild className="flex-1 rounded-lg text-xs">
-                                  <Link href={`/landing-pages/edit/${page.id}`}>
-                                    <Edit className="w-3 h-3 mr-1" />
-                                    Edit
-                                  </Link>
+                              <p className="text-[11px] text-muted-foreground">
+                                Updated {new Date(page.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                              </p>
+                              <div className="flex gap-2 mt-auto pt-1">
+                                <Button size="sm" variant="outline" className="flex-1 rounded-lg text-xs gap-1.5 hover:border-primary/50 hover:text-primary" asChild>
+                                  <Link href={`/landing-pages/edit/${page.id}`}><Eye className="w-3 h-3" />Preview</Link>
+                                </Button>
+                                <Button size="sm" className="flex-1 rounded-lg text-xs gap-1.5" asChild>
+                                  <Link href={`/landing-pages/edit/${page.id}`}><Edit className="w-3 h-3" />Edit</Link>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className={`rounded-lg text-xs gap-1 px-2.5 transition-colors ${copiedPageId === page.id ? "border-emerald-400 text-emerald-600 bg-emerald-50" : "hover:border-primary/50 hover:text-primary"}`}
+                                  onClick={() => copyPageCode(page.html, page.id)}
+                                  title="Copy HTML code"
+                                >
+                                  {copiedPageId === page.id ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                                 </Button>
                               </div>
                             </div>
@@ -669,36 +957,84 @@ export default function LandingPageWizard() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                         {savedLandingPages.filter((page) => page.status === "published").map((page) => (
-                          <div key={page.id} className="group rounded-2xl border border-emerald-200/50 bg-background hover:border-emerald-400/60 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-200 overflow-hidden flex flex-col">
-                            {/* Preview area */}
-                            <div className="relative h-40 bg-gradient-to-br from-emerald-100/40 via-emerald-50/20 to-background border-b border-emerald-200/30 flex items-center justify-center overflow-hidden">
-                              <div className="absolute inset-0 opacity-10">
-                                <div className="absolute top-4 left-4 w-12 h-12 rounded-full bg-white/20" />
-                                <div className="absolute bottom-6 right-6 w-16 h-8 rounded bg-white/20" />
-                                <div className="absolute top-1/3 right-4 w-20 h-1 rounded-full bg-white/10" />
-                                <div className="absolute bottom-1/3 left-4 w-24 h-1 rounded-full bg-white/10" />
-                              </div>
-                              <div className="relative text-center space-y-2">
-                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 mx-auto flex items-center justify-center">
-                                  <span className="text-white font-bold text-xl">{page.businessName.split(" ").slice(0, 2).map(w => w[0]).join("")}</span>
+                          <div key={page.id} className="group rounded-2xl border border-emerald-200/50 bg-card hover:border-emerald-400/60 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-200 overflow-hidden flex flex-col">
+                            {/* Mini preview */}
+                            <div className="relative h-44 bg-gradient-to-br from-emerald-100/40 via-emerald-50/20 to-background border-b border-emerald-200/30 overflow-hidden flex-shrink-0">
+                              {/* Browser chrome */}
+                              <div className="absolute top-0 left-0 right-0 h-6 bg-background/80 backdrop-blur-sm border-b border-border/40 flex items-center gap-1.5 px-2.5">
+                                <span className="w-2 h-2 rounded-full bg-red-400/80" />
+                                <span className="w-2 h-2 rounded-full bg-yellow-400/80" />
+                                <span className="w-2 h-2 rounded-full bg-green-400/80" />
+                                <div className="flex-1 mx-2 h-3 rounded-full bg-muted/70 flex items-center px-2">
+                                  <span className="text-[8px] text-muted-foreground truncate">preview.universell.co</span>
                                 </div>
-                                <p className="text-xs text-muted-foreground font-medium">{page.businessName}</p>
                               </div>
-                              <span className="absolute top-3 right-3 text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">Live</span>
+                              {/* Content blocks */}
+                              <div className="absolute inset-x-0 top-6 bottom-0 p-3 flex flex-col gap-2 overflow-hidden">
+                                <div className="flex items-center justify-between">
+                                  <div className="w-14 h-3 rounded-full bg-emerald-500/50" />
+                                  <div className="flex gap-1.5">
+                                    {[1, 2, 3].map((i) => (
+                                      <div key={i} className="w-6 h-2 rounded-full bg-muted-foreground/20" />
+                                    ))}
+                                  </div>
+                                </div>
+                                <div className="flex-1 rounded-xl bg-emerald-100/30 flex flex-col items-center justify-center gap-1.5 px-3 text-center">
+                                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white text-[10px] font-bold">
+                                    {page.businessName.split(" ").slice(0, 2).map(w => w[0]).join("")}
+                                  </div>
+                                  <div className="w-24 h-2 rounded-full bg-foreground/20" />
+                                  <div className="w-16 h-1.5 rounded-full bg-foreground/10" />
+                                  <div className="w-14 h-4 rounded-full bg-emerald-500/80 mt-0.5" />
+                                </div>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                  {[1, 2, 3].map((i) => (
+                                    <div key={i} className="rounded-lg bg-background/60 border border-border/40 p-1.5 space-y-1">
+                                      <div className="w-3 h-3 rounded bg-emerald-400/30" />
+                                      <div className="w-full h-1.5 rounded-full bg-foreground/10" />
+                                      <div className="w-2/3 h-1 rounded-full bg-foreground/8" />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              {/* Hover overlay */}
+                              <div className="absolute inset-0 bg-background/0 group-hover:bg-background/50 group-hover:backdrop-blur-[2px] transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                <Button size="sm" variant="outline" className="gap-1.5 shadow-lg text-xs border-emerald-400 text-emerald-700" asChild>
+                                  <Link href={`/landing-pages/edit/${page.id}`}><Eye className="w-3.5 h-3.5" />Preview</Link>
+                                </Button>
+                              </div>
+                              <span className="absolute top-8 right-2.5 text-[10px] font-semibold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full">Live</span>
                             </div>
 
-                            {/* Content area */}
+                            {/* Content */}
                             <div className="flex-1 p-4 flex flex-col gap-3">
-                              <div className="min-h-0">
-                                <p className="text-sm font-semibold text-foreground line-clamp-1">{page.tagline}</p>
-                                <p className="text-xs text-muted-foreground mt-1">{new Date(page.updatedAt).toLocaleDateString()}</p>
+                              <div className="space-y-1">
+                                <p className="text-sm font-bold text-foreground leading-tight truncate">{page.businessName}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-1">{page.tagline}</p>
+                                <div className="flex items-center gap-1.5 mt-1.5">
+                                  <Wifi className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                                  <span className="text-[11px] font-medium text-emerald-600">Connected</span>
+                                  <span className="text-[10px] text-emerald-500 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full flex-shrink-0">Live</span>
+                                </div>
                               </div>
-                              <div className="flex gap-2 mt-auto">
-                                <Button size="sm" variant="outline" asChild className="flex-1 rounded-lg text-xs">
-                                  <Link href={`/landing-pages/edit/${page.id}`}>
-                                    <Eye className="w-3 h-3 mr-1" />
-                                    View
-                                  </Link>
+                              <p className="text-[11px] text-muted-foreground">
+                                Updated {new Date(page.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                              </p>
+                              <div className="flex gap-2 mt-auto pt-1">
+                                <Button size="sm" variant="outline" className="flex-1 rounded-lg text-xs gap-1.5 hover:border-emerald-400 hover:text-emerald-700" asChild>
+                                  <Link href={`/landing-pages/edit/${page.id}`}><Eye className="w-3 h-3" />Preview</Link>
+                                </Button>
+                                <Button size="sm" className="flex-1 rounded-lg text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700" asChild>
+                                  <Link href={`/landing-pages/edit/${page.id}`}><Edit className="w-3 h-3" />Edit</Link>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className={`rounded-lg text-xs gap-1 px-2.5 transition-colors ${copiedPageId === page.id ? "border-emerald-400 text-emerald-600 bg-emerald-50" : "hover:border-emerald-400 hover:text-emerald-700"}`}
+                                  onClick={() => copyPageCode(page.html, page.id)}
+                                  title="Copy HTML code"
+                                >
+                                  {copiedPageId === page.id ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                                 </Button>
                               </div>
                             </div>
