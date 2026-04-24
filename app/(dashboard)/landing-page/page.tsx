@@ -713,7 +713,7 @@ export default function LandingPageWizard() {
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[10px] font-bold"
                               style={{ background: `linear-gradient(135deg, ${page.primaryColor}, ${page.accentColor})` }}
                             >
-                              {page.businessName.split(" ").slice(0, 2).map(w => w[0]).join("")}
+                              {page.businessName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("")}
                             </div>
                             <div className="w-24 h-2 rounded-full bg-foreground/20" />
                             <div className="w-16 h-1.5 rounded-full bg-foreground/10" />
@@ -878,7 +878,7 @@ export default function LandingPageWizard() {
                                 </div>
                                 <div className="flex-1 rounded-xl bg-primary/10 flex flex-col items-center justify-center gap-1.5 px-3 text-center">
                                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-[10px] font-bold">
-                                    {page.businessName.split(" ").slice(0, 2).map(w => w[0]).join("")}
+                                    {page.businessName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("")}
                                   </div>
                                   <div className="w-24 h-2 rounded-full bg-foreground/20" />
                                   <div className="w-16 h-1.5 rounded-full bg-foreground/10" />
@@ -981,7 +981,7 @@ export default function LandingPageWizard() {
                                 </div>
                                 <div className="flex-1 rounded-xl bg-emerald-100/30 flex flex-col items-center justify-center gap-1.5 px-3 text-center">
                                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white text-[10px] font-bold">
-                                    {page.businessName.split(" ").slice(0, 2).map(w => w[0]).join("")}
+                                    {page.businessName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("")}
                                   </div>
                                   <div className="w-24 h-2 rounded-full bg-foreground/20" />
                                   <div className="w-16 h-1.5 rounded-full bg-foreground/10" />
