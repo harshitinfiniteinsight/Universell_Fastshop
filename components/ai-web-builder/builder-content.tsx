@@ -77,6 +77,29 @@ const initialWizardData: WizardData = {
   themeColor: "#3b82f6",
 };
 
+const templateSlides = [
+  {
+    src: "https://github.com/user-attachments/assets/e701848f-a446-48c6-b533-c7cfd025c34f",
+    alt: "Proland – tech product landing page sample",
+    label: "Product Showcase",
+  },
+  {
+    src: "https://github.com/user-attachments/assets/00f4c188-aa4c-4f3b-9a93-28135e087589",
+    alt: "Mailchimp-style marketing landing page sample",
+    label: "Marketing Campaign",
+  },
+  {
+    src: "https://github.com/user-attachments/assets/5965ba34-f784-4841-8d42-21f0745d121d",
+    alt: "Nextora – modern business landing page sample",
+    label: "Business Overview",
+  },
+  {
+    src: "https://github.com/user-attachments/assets/0096d192-0205-44c6-941a-3cc4dc12cb54",
+    alt: "Sunbasket – e-commerce landing page sample",
+    label: "E-Commerce Landing",
+  },
+];
+
 interface AIBuilderContentProps {
   builderType: BuilderType;
 }
@@ -279,29 +302,6 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
     },
   ];
 
-  const templateSlides = [
-    {
-      src: "https://github.com/user-attachments/assets/e701848f-a446-48c6-b533-c7cfd025c34f",
-      alt: "Proland – tech product landing page sample",
-      label: "Product Showcase",
-    },
-    {
-      src: "https://github.com/user-attachments/assets/00f4c188-aa4c-4f3b-9a93-28135e087589",
-      alt: "Mailchimp-style marketing landing page sample",
-      label: "Marketing Campaign",
-    },
-    {
-      src: "https://github.com/user-attachments/assets/5965ba34-f784-4841-8d42-21f0745d121d",
-      alt: "Nextora – modern business landing page sample",
-      label: "Business Overview",
-    },
-    {
-      src: "https://github.com/user-attachments/assets/0096d192-0205-44c6-941a-3cc4dc12cb54",
-      alt: "Sunbasket – e-commerce landing page sample",
-      label: "E-Commerce Landing",
-    },
-  ];
-
   const previewRotationCount = isLandingPageBuilder
     ? landingPagePreviewTemplates.length
     : websitePagePreviewTemplates.length;
@@ -324,7 +324,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
     }, 2800);
 
     return () => clearInterval(interval);
-  }, [isLandingPageBuilder, step, templateSlides.length]);
+  }, [isLandingPageBuilder, step]);
 
   useEffect(() => {
     if (!isLandingPageBuilder) return;
@@ -989,13 +989,14 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               style={{ transform: `translateX(-${slideIndex * 100}%)` }}
                             >
                               {templateSlides.map((slide, idx) => (
-                                <div key={idx} className="min-w-full">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
+                                <div key={idx} className="relative min-w-full aspect-[16/10]">
+                                  <Image
                                     src={slide.src}
                                     alt={slide.alt}
-                                    className="w-full object-cover"
-                                    style={{ display: "block" }}
+                                    fill
+                                    sizes="(max-width: 1024px) 100vw, 42vw"
+                                    className="object-cover"
+                                    priority={idx === 0}
                                   />
                                 </div>
                               ))}
