@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,8 @@ import {
   CalendarClock,
   FileText,
   ChevronLeft,
+  BookOpen,
+  Link2,
 } from "lucide-react";
 import {
   Dialog,
@@ -69,13 +71,32 @@ type SavedLandingPageDraft = {
 const LANDING_PAGE_DRAFT_KEY = "universell-landing-page-draft";
 const SAVED_LANDING_PAGES_KEY = "universell-saved-landing-pages";
 
-const FORM_TYPES = [
+type FormType = {
+  label: string;
+  value: string;
+  icon: React.ElementType;
+  instant?: boolean;
+};
+
+const FORM_TYPES: FormType[] = [
   { label: "Custom Form", value: "Add a custom form", icon: FileText },
   { label: "Payment Form", value: "Add a payment form", icon: CreditCard },
   { label: "Lead Form", value: "Add a lead form", icon: UserPlus },
   { label: "Ticket Form", value: "Add a ticket form", icon: Ticket },
   { label: "Product QR Code", value: "Add a product QR code", icon: QrCode },
-  { label: "Schedule Me", value: "Add a schedule me booking form", icon: CalendarClock },
+  { label: "Schedule Me", value: "Add a schedule me booking form", icon: CalendarClock, instant: true },
+  { label: "Booking Form", value: "Add a booking form", icon: BookOpen },
+  { label: "Fastshop Link", value: "Add a Fastshop link", icon: Link2 },
+];
+
+// Merchant inventory items shown under Product QR Code
+const MERCHANT_INVENTORY: { id: string; name: string }[] = [
+  { id: "inv-1", name: "Espresso" },
+  { id: "inv-2", name: "Cappuccino" },
+  { id: "inv-3", name: "Croissant" },
+  { id: "inv-4", name: "Sourdough Loaf" },
+  { id: "inv-5", name: "Blueberry Muffin" },
+  { id: "inv-6", name: "Latte" },
 ];
 
 const EXISTING_FORMS: Record<string, { id: string; name: string }[]> = {
@@ -97,13 +118,14 @@ const EXISTING_FORMS: Record<string, { id: string; name: string }[]> = {
     { id: "tf-1", name: "Support Ticket" },
     { id: "tf-2", name: "Event Registration" },
   ],
-  "Product QR Code": [
-    { id: "qr-1", name: "Menu QR Code" },
-    { id: "qr-2", name: "Product Catalog QR" },
+  "Product QR Code": MERCHANT_INVENTORY,
+  "Booking Form": [
+    { id: "bf-1", name: "Table Reservation" },
+    { id: "bf-2", name: "Appointment Booking" },
   ],
-  "Schedule Me": [
-    { id: "sm-1", name: "Consultation Booking" },
-    { id: "sm-2", name: "Service Appointment" },
+  "Fastshop Link": [
+    { id: "fl-1", name: "Main Store" },
+    { id: "fl-2", name: "Featured Collection" },
   ],
 };
 
@@ -748,12 +770,19 @@ export default function GeneratedLandingPageEditor() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 pt-2">
-                    {FORM_TYPES.map(({ label, icon: Icon }) => (
+                    {FORM_TYPES.map(({ label, value, icon: Icon, instant }) => (
                       <button
                         key={label}
                         onClick={() => {
-                          setSelectedFormType(label);
-                          setSelectedExistingForm("");
+                          if (instant) {
+                            setInputMessage(value);
+                            setShowFormModal(false);
+                            setSelectedFormType(null);
+                            setSelectedExistingForm("");
+                          } else {
+                            setSelectedFormType(label);
+                            setSelectedExistingForm("");
+                          }
                         }}
                         className="flex items-center gap-2 text-sm px-3 py-2.5 rounded-lg border border-border bg-muted hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600 text-left transition-colors"
                       >
