@@ -26,7 +26,6 @@ import {
   Loader2,
   LayoutTemplate,
   Target,
-  Globe,
   ExternalLink,
   ChevronRight,
   Code,
@@ -98,24 +97,24 @@ const initialWizardData: WizardData = {
 
 const templateSlides = [
   {
-    src: "https://github.com/user-attachments/assets/e701848f-a446-48c6-b533-c7cfd025c34f",
-    alt: "Proland – tech product landing page sample",
-    label: "Product Showcase",
+    src: "https://github.com/user-attachments/assets/d2a27feb-16d4-4d90-a35e-8cee7f4bc2c7",
+    alt: "Business website template sample",
+    label: "Business Website",
   },
   {
-    src: "https://github.com/user-attachments/assets/00f4c188-aa4c-4f3b-9a93-28135e087589",
-    alt: "Mailchimp-style marketing landing page sample",
-    label: "Marketing Campaign",
+    src: "https://github.com/user-attachments/assets/31d121d4-9cdb-445e-8934-d446015dfec4",
+    alt: "Portfolio gallery website template sample",
+    label: "Portfolio Gallery",
   },
   {
-    src: "https://github.com/user-attachments/assets/5965ba34-f784-4841-8d42-21f0745d121d",
-    alt: "Nextora – modern business landing page sample",
-    label: "Business Overview",
+    src: "https://github.com/user-attachments/assets/5cccb920-43e1-49cf-85fb-673f0bd48309",
+    alt: "Event & community website template sample",
+    label: "Event & Community",
   },
   {
-    src: "https://github.com/user-attachments/assets/0096d192-0205-44c6-941a-3cc4dc12cb54",
-    alt: "Sunbasket – e-commerce landing page sample",
-    label: "E-Commerce Landing",
+    src: "https://github.com/user-attachments/assets/474e00fb-143a-4024-9d1c-ff1227ac473f",
+    alt: "Campaign landing page template sample",
+    label: "Campaign Landing",
   },
 ];
 
@@ -338,14 +337,14 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
   }, [step, previewRotationCount]);
 
   useEffect(() => {
-    if (!isLandingPageBuilder || step !== "intro") return;
+    if (step !== "intro") return;
 
     const interval = setInterval(() => {
       setSlideIndex((prev) => (prev + 1) % templateSlides.length);
     }, 2800);
 
     return () => clearInterval(interval);
-  }, [isLandingPageBuilder, step]);
+  }, [step]);
 
   useEffect(() => {
     if (!isLandingPageBuilder) return;
@@ -405,8 +404,6 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
     return () => window.removeEventListener("focus", loadSavedWebsites);
   }, [isWebsiteBuilder]);
 
-  const activeWebsitePagePreview =
-    websitePagePreviewTemplates[animatedSectionIndex % websitePagePreviewTemplates.length];
   const activeLandingPagePreview =
     landingPagePreviewTemplates[animatedSectionIndex % landingPagePreviewTemplates.length];
   const activeLandingAccent = activeLandingPagePreview.accent;
@@ -770,33 +767,6 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
 
                   <div className="flex flex-col gap-5">
                     <div className="relative">
-                      <div className="absolute -left-6 top-10 hidden w-44 rounded-2xl border border-border/60 bg-card/95 p-4 shadow-xl backdrop-blur-sm lg:block">
-                        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                          <Target className="h-4 w-4" style={{ color: activeWebsitePagePreview.accent }} />
-                          Active Page Type
-                        </div>
-                        <div className="space-y-2 text-xs text-muted-foreground">
-                          <div className="rounded-lg bg-muted/60 px-3 py-2">{activeWebsitePagePreview.badge}</div>
-                          <div className="rounded-lg bg-muted/60 px-3 py-2">{activeWebsitePagePreview.label}</div>
-                          <div className="rounded-lg bg-muted/60 px-3 py-2">Multi-page consistency</div>
-                        </div>
-                      </div>
-
-                      <div className="absolute -right-4 bottom-14 hidden w-40 rounded-2xl border border-border/60 bg-card/95 p-4 shadow-xl backdrop-blur-sm md:block">
-                        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                          <Palette className="h-4 w-4" style={{ color: activeWebsitePagePreview.accent }} />
-                          Page Library
-                        </div>
-                        <div className="mb-3 flex gap-2">
-                          <span className="h-8 w-8 rounded-full" style={{ backgroundColor: activeWebsitePagePreview.accent }} />
-                          <span className="h-8 w-8 rounded-full" style={{ backgroundColor: `${activeWebsitePagePreview.accent}66` }} />
-                          <span className="h-8 w-8 rounded-full bg-foreground/20" />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Homepage, about, testimonials, products, services, and contact pages.
-                        </p>
-                      </div>
-
                       <div className="rounded-[2rem] border border-border/70 bg-background/80 p-4 shadow-2xl backdrop-blur-sm">
                         <div className="overflow-hidden rounded-[1.6rem] border border-border/70 bg-card">
                           <div className="flex items-center justify-between border-b border-border px-5 py-4">
@@ -806,86 +776,50 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               <span className="h-2.5 w-2.5 rounded-full bg-primary/15" />
                             </div>
                             <div className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-                              Multi-page Website Preview
+                              Template Samples
                             </div>
                           </div>
 
-                          <div className="space-y-5 p-5">
-                            <div className="rounded-3xl p-6 transition-all duration-500" style={{ background: `linear-gradient(135deg, ${activeWebsitePagePreview.accent}22, #ffffff)` }}>
-                              <div className="mb-4 flex items-center justify-between gap-4">
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{activeWebsitePagePreview.label}</p>
-                                  <h3 className="mt-2 text-2xl font-bold text-foreground">{activeWebsitePagePreview.title}</h3>
-                                </div>
-                                <div className="rounded-2xl bg-background/80 p-3 shadow-sm">
-                                  <Globe className="h-6 w-6" style={{ color: activeWebsitePagePreview.accent }} />
-                                </div>
-                              </div>
-
-                              <p className="max-w-md text-sm leading-6 text-muted-foreground">
-                                {activeWebsitePagePreview.note}
-                              </p>
-
-                              <div className="mt-4 overflow-hidden rounded-2xl border border-border/70 bg-card/80">
-                                <div className="relative aspect-[16/8] w-full">
+                          {/* Image slideshow */}
+                          <div className="relative overflow-hidden" role="region" aria-label="Website template slideshow">
+                            <div
+                              className="flex transition-transform duration-700 ease-in-out"
+                              style={{ transform: `translateX(-${slideIndex * 100}%)` }}
+                              aria-live="polite"
+                              aria-atomic="true"
+                            >
+                              {templateSlides.map((slide, idx) => (
+                                <div key={idx} className="relative min-w-full aspect-[16/10]" aria-hidden={idx !== slideIndex}>
                                   <Image
-                                    src={activeWebsitePagePreview.image}
-                                    alt={`${activeWebsitePagePreview.badge} preview`}
+                                    src={slide.src}
+                                    alt={slide.alt}
                                     fill
                                     sizes="(max-width: 1024px) 100vw, 42vw"
                                     className="object-cover"
-                                    priority
+                                    priority={idx === 0}
                                   />
                                 </div>
-                              </div>
-
-                              <div className="mt-5 rounded-full bg-background/80 p-1">
-                                <div
-                                  className="h-2 rounded-full transition-all duration-500"
-                                  style={{ width: `${activeWebsitePagePreview.progress}%`, backgroundColor: activeWebsitePagePreview.accent }}
-                                />
-                              </div>
+                              ))}
                             </div>
-
-                            <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
-                              <div className="space-y-4 rounded-2xl border border-border/70 bg-background p-4">
-                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                  <LayoutTemplate className="h-4 w-4 text-primary" />
-                                  Generated Page System
-                                </div>
-                                {activeWebsitePagePreview.sections.map((section) => (
-                                  <div key={section.title} className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-3">
-                                    <span className="text-sm text-foreground">{section.title}</span>
-                                    <span className="rounded-full px-2.5 py-1 text-xs font-medium" style={{ backgroundColor: `${activeWebsitePagePreview.accent}22`, color: activeWebsitePagePreview.accent }}>{section.status}</span>
-                                  </div>
+                            {/* Slide label + dot indicators */}
+                            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3">
+                              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow backdrop-blur-sm pointer-events-none">
+                                {templateSlides[slideIndex].label}
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {templateSlides.map((_, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => setSlideIndex(idx)}
+                                    className="h-2 rounded-full transition-all duration-300"
+                                    style={{
+                                      width: idx === slideIndex ? "20px" : "8px",
+                                      backgroundColor: idx === slideIndex ? "hsl(var(--primary))" : "rgba(255,255,255,0.5)",
+                                    }}
+                                    aria-label={`Go to slide ${idx + 1}`}
+                                    aria-current={idx === slideIndex ? "true" : undefined}
+                                  />
                                 ))}
-                              </div>
-
-                              <div className="space-y-4">
-                                <div className="rounded-2xl border border-border/70 bg-background p-4">
-                                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                                    <FileText className="h-4 w-4" style={{ color: activeWebsitePagePreview.accent }} />
-                                    {activeWebsitePagePreview.noteTitle}
-                                  </div>
-                                  <p className="text-sm leading-6 text-muted-foreground">
-                                    &ldquo;{activeWebsitePagePreview.note}&rdquo;
-                                  </p>
-                                </div>
-
-                                <div className="rounded-2xl border border-border/70 bg-background p-4">
-                                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                                    <Zap className="h-4 w-4" style={{ color: activeWebsitePagePreview.accent }} />
-                                    AI Checklist
-                                  </div>
-                                  <div className="space-y-2">
-                                    {activeWebsitePagePreview.checklist.map((item) => (
-                                      <div key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Check className="h-4 w-4" style={{ color: activeWebsitePagePreview.accent }} />
-                                        {item}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
                               </div>
                             </div>
                           </div>
@@ -1032,13 +966,15 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                           </div>
 
                           {/* Image slideshow */}
-                          <div className="relative overflow-hidden">
+                          <div className="relative overflow-hidden" role="region" aria-label="Website template slideshow">
                             <div
                               className="flex transition-transform duration-700 ease-in-out"
                               style={{ transform: `translateX(-${slideIndex * 100}%)` }}
+                              aria-live="polite"
+                              aria-atomic="true"
                             >
                               {templateSlides.map((slide, idx) => (
-                                <div key={idx} className="relative min-w-full aspect-[16/10]">
+                                <div key={idx} className="relative min-w-full aspect-[16/10]" aria-hidden={idx !== slideIndex}>
                                   <Image
                                     src={slide.src}
                                     alt={slide.alt}
@@ -1051,8 +987,8 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               ))}
                             </div>
                             {/* Slide label + dot indicators */}
-                            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3 pointer-events-none">
-                              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow backdrop-blur-sm">
+                            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3">
+                              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow backdrop-blur-sm pointer-events-none">
                                 {templateSlides[slideIndex].label}
                               </span>
                               <div className="flex items-center gap-1.5">
@@ -1060,12 +996,13 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                   <button
                                     key={idx}
                                     onClick={() => setSlideIndex(idx)}
-                                    className="pointer-events-auto h-2 rounded-full transition-all duration-300"
+                                    className="h-2 rounded-full transition-all duration-300"
                                     style={{
                                       width: idx === slideIndex ? "20px" : "8px",
                                       backgroundColor: idx === slideIndex ? activeLandingAccent : "rgba(255,255,255,0.5)",
                                     }}
                                     aria-label={`Go to slide ${idx + 1}`}
+                                    aria-current={idx === slideIndex ? "true" : undefined}
                                   />
                                 ))}
                               </div>
