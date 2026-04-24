@@ -39,6 +39,19 @@ import Image from "next/image";
 type AIWebBuilderStep = "intro" | "business-info" | "ai-chat" | "generation" | "done";
 type BuilderType = "landing-page" | "website";
 
+type SavedLandingPageDraft = {
+  id: string;
+  businessName: string;
+  tagline: string;
+  description: string;
+  html: string;
+  css: string;
+  updatedAt: string;
+  status: "draft" | "published";
+};
+
+const SAVED_LANDING_PAGES_KEY = "universell-saved-landing-pages";
+
 const initialWizardData: WizardData = {
   businessInfo: {
     name: "Modern Store",
@@ -81,6 +94,8 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
   const [taglinePrompt, setTaglinePrompt] = useState("");
   const [descriptionPrompt, setDescriptionPrompt] = useState("");
   const [learnMoreModalOpen, setLearnMoreModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"generate" | "view-existing">("generate");
+  const [savedLandingPages, setSavedLandingPages] = useState<SavedLandingPageDraft[]>([]);
 
   const isLandingPageBuilder = builderType === "landing-page";
   const isWebsiteBuilder = builderType === "website";
@@ -277,6 +292,35 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
     return () => clearInterval(interval);
   }, [step, previewRotationCount]);
 
+  useEffect(() => {
+    if (!isLandingPageBuilder) return;
+    const loadSavedPages = () => {
+      try {
+        const raw = localStorage.getItem(SAVED_LANDING_PAGES_KEY);
+        if (!raw) {
+          setSavedLandingPages([]);
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        const normalized = parsed
+          .map((item: Omit<SavedLandingPageDraft, "status"> & { status?: "draft" | "published" }) => ({
+            ...item,
+            status: item.status ?? "draft",
+          }))
+          .sort(
+            (a: SavedLandingPageDraft, b: SavedLandingPageDraft) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
+        setSavedLandingPages(normalized);
+      } catch {
+        setSavedLandingPages([]);
+      }
+    };
+    loadSavedPages();
+    window.addEventListener("focus", loadSavedPages);
+    return () => window.removeEventListener("focus", loadSavedPages);
+  }, [isLandingPageBuilder]);
+
   const activeWebsitePagePreview =
     websitePagePreviewTemplates[animatedSectionIndex % websitePagePreviewTemplates.length];
   const activeLandingPagePreview =
@@ -444,6 +488,32 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
       {/* Card wrapper */}
       <div className="bg-card rounded-lg shadow-sm border border-border">
         {step === "intro" && (
+          <>
+            {isLandingPageBuilder && (
+              <div className="flex border-b border-border px-4 lg:px-6">
+                <button
+                  onClick={() => setActiveTab("generate")}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "generate"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Generate New
+                </button>
+                <button
+                  onClick={() => setActiveTab("view-existing")}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "view-existing"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  View Existing Landing Pages
+                </button>
+              </div>
+            )}
+            {(!isLandingPageBuilder || activeTab === "generate") && (
           <div className="relative overflow-hidden px-4 py-6 lg:px-6 lg:py-8">
             <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-background pointer-events-none" />
             <div className="absolute top-0 right-0 w-72 h-72 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
@@ -1009,6 +1079,100 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
               )}
             </div>
           </div>
+            )}
+            {isLandingPageBuilder && activeTab === "view-existing" && (
+              <div className="p-6 lg:p-8">
+                {savedLandingPages.length === 0 ? (
+                  <div className="rounded-3xl border border-dashed border-border bg-gradient-to-br from-primary/5 to-primary/2 p-12 text-center">
+                    <div className="flex justify-center mb-4">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <FileText className="w-8 h-8 text-primary" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">No landing pages yet</h3>
+                    <p className="text-muted-foreground mt-2">Generate your first landing page to get started.</p>
+                    <button
+                      onClick={() => setActiveTab("generate")}
+                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Generate your first page
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                    {savedLandingPages.map((page) => (
+                      <div
+                        key={page.id}
+                        className={`group rounded-2xl border bg-background hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col ${
+                          page.status === "published"
+                            ? "border-emerald-200/50 hover:border-emerald-400/60 hover:shadow-emerald-500/10"
+                            : "border-border hover:border-primary/50 hover:shadow-primary/10"
+                        }`}
+                      >
+                        <div
+                          className={`relative h-40 border-b flex items-center justify-center overflow-hidden ${
+                            page.status === "published"
+                              ? "bg-gradient-to-br from-emerald-100/40 via-emerald-50/20 to-background border-emerald-200/30"
+                              : "bg-gradient-to-br from-primary/20 via-primary/5 to-background border-border/50"
+                          }`}
+                        >
+                          <div className="absolute inset-0 opacity-10">
+                            <div className="absolute top-4 left-4 w-12 h-12 rounded-full bg-white/20" />
+                            <div className="absolute bottom-6 right-6 w-16 h-8 rounded bg-white/20" />
+                          </div>
+                          <div className="relative text-center space-y-2">
+                            <div
+                              className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center ${
+                                page.status === "published"
+                                  ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
+                                  : "bg-gradient-to-br from-primary to-primary/60"
+                              }`}
+                            >
+                              <span className="text-white font-bold text-xl">
+                                {page.businessName
+                                  .split(" ")
+                                  .slice(0, 2)
+                                  .map((w: string) => w[0])
+                                  .join("")}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground font-medium">{page.businessName}</p>
+                          </div>
+                          <span
+                            className={`absolute top-3 right-3 text-[10px] font-semibold px-2 py-1 rounded-full ${
+                              page.status === "published"
+                                ? "text-emerald-700 bg-emerald-100"
+                                : "text-primary bg-primary/20"
+                            }`}
+                          >
+                            {page.status === "published" ? "Live" : "Draft"}
+                          </span>
+                        </div>
+                        <div className="flex-1 p-4 flex flex-col gap-3">
+                          <div className="min-h-0">
+                            <p className="text-sm font-semibold text-foreground line-clamp-1">{page.tagline}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(page.updatedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex gap-2 mt-auto">
+                            <Link
+                              href={`/landing-pages/edit/${page.id}`}
+                              className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                            >
+                              <Edit className="w-3 h-3" />
+                              Edit
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {/* Business Info Step */}
