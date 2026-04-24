@@ -107,7 +107,7 @@ function HomepageSlide({ isActive }: { isActive: boolean }) {
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {["Homepage", "About Us", "Services", "Contact"].map((p) => (
+            {PAGE_LABELS.map((p) => (
               <span
                 key={p}
                 className="rounded-full px-3 py-1 text-xs"
