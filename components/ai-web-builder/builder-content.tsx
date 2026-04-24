@@ -31,6 +31,7 @@ import {
   Code,
   Layers,
   Palette,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -1141,6 +1142,13 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                           <div className="flex gap-2 mt-auto">
                             <Link
                               href={`/landing-pages/edit/${encodeURIComponent(page.id)}`}
+                              className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                            >
+                              <Eye className="w-3 h-3" />
+                              Preview
+                            </Link>
+                            <Link
+                              href={`/landing-pages/edit/${encodeURIComponent(page.id)}`}
                               className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                             >
                               <Edit className="w-3 h-3" />
@@ -1263,13 +1271,22 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                           <p className="text-[11px] text-muted-foreground">
                             {new Date(site.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                           </p>
-                          <Link
-                            href={`/website-pages`}
-                            className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                          >
-                            <Edit className="w-3 h-3" />
-                            Edit
-                          </Link>
+                          <div className="flex items-center gap-2">
+                            <Link
+                              href={`/website-pages`}
+                              className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                            >
+                              <Eye className="w-3 h-3" />
+                              Preview
+                            </Link>
+                            <Link
+                              href={`/website-pages`}
+                              className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                            >
+                              <Edit className="w-3 h-3" />
+                              Edit
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </div>
