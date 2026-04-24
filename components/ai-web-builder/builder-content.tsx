@@ -127,6 +127,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
   const [step, setStep] = useState<AIWebBuilderStep>("intro");
   const [wizardData, setWizardData] = useState<WizardData>(initialWizardData);
   const [generatedPageName, setGeneratedPageName] = useState("Homepage");
+  const [generatedPages, setGeneratedPages] = useState<string[]>([]);
   const [animatedSectionIndex, setAnimatedSectionIndex] = useState(0);
   const [slideIndex, setSlideIndex] = useState(0);
   const [generatingTagline, setGeneratingTagline] = useState(false);
@@ -566,18 +567,20 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
     updateBusinessInfo("logoPreview", preview);
   };
 
-  const saveWebsiteToStorage = () => {
+  const saveWebsiteToStorage = (pages: string[]) => {
     if (!isWebsiteBuilder) return;
     try {
       const raw = localStorage.getItem(SAVED_WEBSITES_KEY);
       const existing: SavedWebsiteDraft[] = raw ? JSON.parse(raw) : [];
+      const id = `website-${Date.now()}`;
+      // Use a deterministic preview image derived from the new entry's id
       const previewImage = websitePreviewImages[existing.length % websitePreviewImages.length];
       const newEntry: SavedWebsiteDraft = {
-        id: `website-${Date.now()}`,
+        id,
         businessName: wizardData.businessInfo.name,
         tagline: wizardData.businessInfo.tagline,
         description: wizardData.businessInfo.description,
-        pages: ["Homepage", "About Us", "Contact", "Terms & Conditions", "Privacy Policy"],
+        pages: pages.length > 0 ? pages : ["Homepage", "About Us", "Contact", "Terms & Conditions", "Privacy Policy"],
         updatedAt: new Date().toISOString(),
         status: "draft",
         previewImage,
@@ -586,6 +589,11 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
     } catch {
       // ignore storage errors
     }
+  };
+
+  const handleGenerationComplete = () => {
+    saveWebsiteToStorage(generatedPages);
+    setStep("done");
   };
 
   return (
@@ -655,7 +663,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                 </button>
               </div>
             )}
-            {(!isLandingPageBuilder && !isWebsiteBuilder) || activeTab === "generate" ? (
+            {activeTab === "generate" ? (
           <div className="relative overflow-hidden px-4 py-6 lg:px-6 lg:py-8">
             <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-background pointer-events-none" />
             <div className="absolute top-0 right-0 w-72 h-72 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
@@ -1527,8 +1535,8 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
           <div className="p-6 lg:p-10">
             <AiGenerationStep
               wizardData={wizardData}
-              onUpdate={(pages) => setGeneratedPageName(pages[0] || "Homepage")}
-              onNext={() => { saveWebsiteToStorage(); setStep("done"); }}
+              onUpdate={(pages) => { setGeneratedPageName(pages[0] || "Homepage"); setGeneratedPages(pages); }}
+              onNext={handleGenerationComplete}
               onBack={() => setStep("ai-chat")}
             />
           </div>
