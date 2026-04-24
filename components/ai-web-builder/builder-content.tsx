@@ -969,7 +969,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               aria-hidden={lpCarouselIndex !== 0}
                             >
                               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(180,83,9,0.25)" }}>
-                                <span className="font-bold text-sm" style={{ color: "#fbbf24" }}>☕ Brew &amp; Co.</span>
+                                <span className="font-bold text-sm" style={{ color: "#fbbf24" }}><span aria-hidden="true">☕</span> Brew &amp; Co.</span>
                                 <div className="flex gap-4 text-xs" style={{ color: "rgba(253,230,138,0.5)" }}>
                                   <span>Menu</span><span>About</span><span>Visit</span>
                                 </div>
@@ -1002,7 +1002,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               aria-hidden={lpCarouselIndex !== 1}
                             >
                               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(249,115,22,0.2)" }}>
-                                <span className="font-bold text-sm" style={{ color: "#f97316" }}>⚡ FitCore</span>
+                                <span className="font-bold text-sm" style={{ color: "#f97316" }}><span aria-hidden="true">⚡</span> FitCore</span>
                                 <span className="rounded-full px-3 py-1.5 text-xs font-semibold" style={{ background: "rgba(249,115,22,0.15)", color: "#f97316" }}>Join Now</span>
                               </div>
                               <div className="flex flex-1 flex-col items-start justify-center px-8 py-8">
@@ -1033,7 +1033,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               aria-hidden={lpCarouselIndex !== 2}
                             >
                               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(59,130,246,0.2)" }}>
-                                <span className="font-bold text-sm text-white">⚡ VoltPro</span>
+                                <span className="font-bold text-sm text-white"><span aria-hidden="true">⚡</span> VoltPro</span>
                                 <span className="rounded-full px-3 py-1.5 text-xs font-semibold" style={{ background: "rgba(59,130,246,0.2)", color: "#60a5fa" }}>Get Quote</span>
                               </div>
                               <div className="flex flex-1 flex-col items-start justify-center px-8 py-8">
@@ -1064,7 +1064,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               aria-hidden={lpCarouselIndex !== 3}
                             >
                               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(99,102,241,0.15)" }}>
-                                <span className="font-bold text-sm" style={{ color: "#6366f1" }}>✦ Launchpad</span>
+                                <span className="font-bold text-sm" style={{ color: "#6366f1" }}><span aria-hidden="true">✦</span> Launchpad</span>
                                 <span className="rounded-full px-3 py-1.5 text-xs font-semibold" style={{ background: "#6366f1", color: "#fff" }}>Try Free</span>
                               </div>
                               <div className="flex flex-1 flex-col items-start justify-center px-8 py-8">
@@ -1082,21 +1082,23 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
 
                             {/* Dot indicators */}
                             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                              {[0, 1, 2, 3].map((i) => (
-                                <button
-                                  key={i}
-                                  onClick={() => setLpCarouselIndex(i)}
-                                  className="h-2 rounded-full transition-all duration-300"
-                                  style={{
-                                    width: i === lpCarouselIndex ? "20px" : "8px",
-                                    background: lpCarouselIndex === 3
-                                      ? i === lpCarouselIndex ? "#6366f1" : "rgba(99,102,241,0.3)"
-                                      : i === lpCarouselIndex ? "#fff" : "rgba(255,255,255,0.35)",
-                                  }}
-                                  aria-label={`Go to slide ${i + 1}`}
-                                  aria-current={i === lpCarouselIndex ? "true" : undefined}
-                                />
-                              ))}
+                              {[0, 1, 2, 3].map((i) => {
+                                const isActive = i === lpCarouselIndex;
+                                const isLightSlide = lpCarouselIndex === 3;
+                                const dotBg = isActive
+                                  ? isLightSlide ? "#6366f1" : "#fff"
+                                  : isLightSlide ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.35)";
+                                return (
+                                  <button
+                                    key={i}
+                                    onClick={() => setLpCarouselIndex(i)}
+                                    className="h-2 rounded-full transition-all duration-300"
+                                    style={{ width: isActive ? "20px" : "8px", background: dotBg }}
+                                    aria-label={`Go to slide ${i + 1}`}
+                                    aria-current={isActive ? "true" : undefined}
+                                  />
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
