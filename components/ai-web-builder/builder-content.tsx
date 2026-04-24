@@ -659,7 +659,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  View Existing
+                  View Websites
                 </button>
               </div>
             )}
@@ -769,60 +769,6 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                   </div>
 
                   <div className="flex flex-col gap-5">
-                    {/* Website templates mini cards */}
-                    <div className="rounded-2xl border border-border/70 bg-background/90 p-4 shadow-sm">
-                      <div className="mb-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
-                            <Globe className="h-3.5 w-3.5 text-primary" />
-                          </div>
-                          <span className="text-sm font-semibold text-foreground">Your Websites</span>
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">4</span>
-                        </div>
-                        <Link href="/website-pages" className="text-xs font-medium text-primary hover:underline">View all →</Link>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5">
-                        {[
-                          { name: "Sunrise Cafe", pages: "6 pages", accent: "#f97316", status: "Live" },
-                          { name: "Tech Studio", pages: "8 pages", accent: "#8b5cf6", status: "Draft" },
-                          { name: "Green Market", pages: "5 pages", accent: "#10b981", status: "Live" },
-                          { name: "Luxe Salon", pages: "7 pages", accent: "#ec4899", status: "Draft" },
-                        ].map((site) => (
-                          <div key={site.name} className="group relative overflow-hidden rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer">
-                            <div className="h-20 bg-muted/30 overflow-hidden relative px-2 pt-1.5 pb-1">
-                              <div className="flex items-center justify-between mb-1.5">
-                                <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: site.accent }} />
-                                <div className="flex gap-1">
-                                  <div className="h-1 w-4 rounded-full bg-muted-foreground/20" />
-                                  <div className="h-1 w-4 rounded-full bg-muted-foreground/20" />
-                                  <div className="h-1 w-4 rounded-full bg-muted-foreground/20" />
-                                </div>
-                              </div>
-                              <div className="rounded mb-1.5 px-1.5 py-1" style={{ backgroundColor: `${site.accent}22` }}>
-                                <div className="h-1.5 w-14 rounded-full mb-1" style={{ backgroundColor: `${site.accent}99` }} />
-                                <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
-                              </div>
-                              <div className="flex gap-1">
-                                {[1,2,3].map(i => (
-                                  <div key={i} className="flex-1 h-4 rounded" style={{ backgroundColor: `${site.accent}18` }} />
-                                ))}
-                              </div>
-                              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${site.accent}15, transparent)` }} />
-                            </div>
-                            <div className="px-3 py-2">
-                              <div className="flex items-center justify-between gap-1 mb-0.5">
-                                <p className="text-xs font-semibold text-foreground truncate">{site.name}</p>
-                                <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                                  site.status === "Live" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-                                }`}>{site.status}</span>
-                              </div>
-                              <p className="text-[10px] text-muted-foreground">{site.pages}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
                     <div className="relative">
                       <div className="absolute -left-6 top-10 hidden w-44 rounded-2xl border border-border/60 bg-card/95 p-4 shadow-xl backdrop-blur-sm lg:block">
                         <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -1273,103 +1219,125 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
             )}
             {isWebsiteBuilder && activeTab === "view-existing" && (
               <div className="p-6 lg:p-8">
-                {savedWebsites.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-border bg-gradient-to-br from-primary/5 to-primary/2 p-12 text-center">
-                    <div className="flex justify-center mb-4">
-                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Globe className="w-8 h-8 text-primary" />
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {[
+                    {
+                      id: "dummy-1",
+                      businessName: "Sunrise Cafe",
+                      tagline: "Fresh brews and good vibes every morning",
+                      description: "A cozy neighborhood cafe offering handcrafted coffee, seasonal pastries, and a warm community atmosphere.",
+                      pages: ["Homepage", "Menu", "About Us", "Contact", "Events", "Gallery"],
+                      updatedAt: "2024-03-15T10:00:00Z",
+                      status: "published" as const,
+                      previewImage: websitePreviewImages[0],
+                    },
+                    {
+                      id: "dummy-2",
+                      businessName: "Tech Studio",
+                      tagline: "Innovative software solutions for modern businesses",
+                      description: "A full-service digital agency specializing in web apps, mobile development, and cloud architecture.",
+                      pages: ["Homepage", "Services", "Portfolio", "About Us", "Blog", "Contact", "Pricing", "Case Studies"],
+                      updatedAt: "2024-03-10T14:30:00Z",
+                      status: "draft" as const,
+                      previewImage: websitePreviewImages[1],
+                    },
+                    {
+                      id: "dummy-3",
+                      businessName: "Green Market",
+                      tagline: "Farm-fresh produce delivered to your door",
+                      description: "An organic marketplace connecting local farmers with health-conscious consumers across the region.",
+                      pages: ["Homepage", "Shop", "About Us", "Farmers", "Contact"],
+                      updatedAt: "2024-03-08T09:15:00Z",
+                      status: "published" as const,
+                      previewImage: websitePreviewImages[2],
+                    },
+                    {
+                      id: "dummy-4",
+                      businessName: "Luxe Salon",
+                      tagline: "Where beauty meets luxury",
+                      description: "A premium hair and beauty salon offering bespoke styling, treatments, and wellness experiences.",
+                      pages: ["Homepage", "Services", "Book Now", "Gallery", "About Us", "Blog", "Contact"],
+                      updatedAt: "2024-03-05T16:45:00Z",
+                      status: "draft" as const,
+                      previewImage: websitePreviewImages[3],
+                    },
+                  ].map((site) => (
+                    <div
+                      key={site.id}
+                      className={`group relative flex flex-col rounded-2xl border bg-card overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ${
+                        site.status === "published"
+                          ? "border-emerald-200/60 hover:border-emerald-400/70 hover:shadow-emerald-500/10"
+                          : "border-border hover:border-primary/50 hover:shadow-primary/10"
+                      }`}
+                    >
+                      {/* Preview image */}
+                      <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted">
+                        <Image
+                          src={site.previewImage}
+                          alt={`${site.businessName} preview`}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                          className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                        />
+                        {/* Overlay gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        {/* Status badge */}
+                        <span
+                          className={`absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm ${
+                            site.status === "published"
+                              ? "text-emerald-700 bg-emerald-100/90"
+                              : "text-amber-700 bg-amber-100/90"
+                          }`}
+                        >
+                          {site.status === "published" ? "Live" : "Draft"}
+                        </span>
+                        {/* Pages count badge */}
+                        <span className="absolute top-3 left-3 text-[11px] font-medium px-2.5 py-1 rounded-full bg-background/80 text-foreground backdrop-blur-sm">
+                          {site.pages.length} pages
+                        </span>
+                      </div>
+
+                      {/* Card body */}
+                      <div className="flex flex-col flex-1 p-4 gap-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="text-sm font-semibold text-foreground truncate">{site.businessName}</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{site.tagline}</p>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground leading-5 line-clamp-2">{site.description}</p>
+
+                        {/* Pages chips */}
+                        <div className="flex flex-wrap gap-1.5">
+                          {site.pages.slice(0, 3).map((page) => (
+                            <span key={page} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                              {page}
+                            </span>
+                          ))}
+                          {site.pages.length > 3 && (
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                              +{site.pages.length - 3} more
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/60">
+                          <p className="text-[11px] text-muted-foreground">
+                            {new Date(site.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </p>
+                          <Link
+                            href={`/website-pages`}
+                            className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                          >
+                            <Edit className="w-3 h-3" />
+                            Edit
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                    <h3 className="text-xl font-bold text-foreground">No websites yet</h3>
-                    <p className="text-muted-foreground mt-2">Generate your first website to get started.</p>
-                    <button
-                      onClick={() => setActiveTab("generate")}
-                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      Generate your first website
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {savedWebsites.map((site) => (
-                      <div
-                        key={site.id}
-                        className={`group relative flex flex-col rounded-2xl border bg-card overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ${
-                          site.status === "published"
-                            ? "border-emerald-200/60 hover:border-emerald-400/70 hover:shadow-emerald-500/10"
-                            : "border-border hover:border-primary/50 hover:shadow-primary/10"
-                        }`}
-                      >
-                        {/* Preview image */}
-                        <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted">
-                          <Image
-                            src={site.previewImage}
-                            alt={`${site.businessName} preview`}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                            className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                          />
-                          {/* Overlay gradient */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          {/* Status badge */}
-                          <span
-                            className={`absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm ${
-                              site.status === "published"
-                                ? "text-emerald-700 bg-emerald-100/90"
-                                : "text-amber-700 bg-amber-100/90"
-                            }`}
-                          >
-                            {site.status === "published" ? "Live" : "Draft"}
-                          </span>
-                          {/* Pages count badge */}
-                          <span className="absolute top-3 left-3 text-[11px] font-medium px-2.5 py-1 rounded-full bg-background/80 text-foreground backdrop-blur-sm">
-                            {site.pages.length} pages
-                          </span>
-                        </div>
-
-                        {/* Card body */}
-                        <div className="flex flex-col flex-1 p-4 gap-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <h3 className="text-sm font-semibold text-foreground truncate">{site.businessName}</h3>
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{site.tagline}</p>
-                            </div>
-                          </div>
-
-                          <p className="text-xs text-muted-foreground leading-5 line-clamp-2">{site.description}</p>
-
-                          {/* Pages chips */}
-                          <div className="flex flex-wrap gap-1.5">
-                            {site.pages.slice(0, 3).map((page) => (
-                              <span key={page} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                                {page}
-                              </span>
-                            ))}
-                            {site.pages.length > 3 && (
-                              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                                +{site.pages.length - 3} more
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/60">
-                            <p className="text-[11px] text-muted-foreground">
-                              {new Date(site.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                            </p>
-                            <Link
-                              href={`/website-pages`}
-                              className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                            >
-                              <Edit className="w-3 h-3" />
-                              Edit
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
             )}
           </>
