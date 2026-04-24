@@ -1132,6 +1132,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               <span className="text-white font-bold text-xl">
                                 {page.businessName
                                   .split(" ")
+                                  .filter((w: string) => w.length > 0)
                                   .slice(0, 2)
                                   .map((w: string) => w[0])
                                   .join("")}
@@ -1158,7 +1159,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                           </div>
                           <div className="flex gap-2 mt-auto">
                             <Link
-                              href={`/landing-pages/edit/${page.id}`}
+                              href={`/landing-pages/edit/${encodeURIComponent(page.id)}`}
                               className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                             >
                               <Edit className="w-3 h-3" />
