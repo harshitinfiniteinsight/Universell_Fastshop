@@ -781,13 +781,15 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                           </div>
 
                           {/* Image slideshow */}
-                          <div className="relative overflow-hidden">
+                          <div className="relative overflow-hidden" role="region" aria-label="Website template slideshow">
                             <div
                               className="flex transition-transform duration-700 ease-in-out"
                               style={{ transform: `translateX(-${slideIndex * 100}%)` }}
+                              aria-live="polite"
+                              aria-atomic="true"
                             >
                               {templateSlides.map((slide, idx) => (
-                                <div key={idx} className="relative min-w-full aspect-[16/10]">
+                                <div key={idx} className="relative min-w-full aspect-[16/10]" aria-hidden={idx !== slideIndex}>
                                   <Image
                                     src={slide.src}
                                     alt={slide.alt}
@@ -800,8 +802,8 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               ))}
                             </div>
                             {/* Slide label + dot indicators */}
-                            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3 pointer-events-none">
-                              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow backdrop-blur-sm">
+                            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3">
+                              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow backdrop-blur-sm pointer-events-none">
                                 {templateSlides[slideIndex].label}
                               </span>
                               <div className="flex items-center gap-1.5">
@@ -809,12 +811,13 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                   <button
                                     key={idx}
                                     onClick={() => setSlideIndex(idx)}
-                                    className="pointer-events-auto h-2 rounded-full transition-all duration-300"
+                                    className="h-2 rounded-full transition-all duration-300"
                                     style={{
                                       width: idx === slideIndex ? "20px" : "8px",
                                       backgroundColor: idx === slideIndex ? "hsl(var(--primary))" : "rgba(255,255,255,0.5)",
                                     }}
                                     aria-label={`Go to slide ${idx + 1}`}
+                                    aria-current={idx === slideIndex ? "true" : undefined}
                                   />
                                 ))}
                               </div>
@@ -963,13 +966,15 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                           </div>
 
                           {/* Image slideshow */}
-                          <div className="relative overflow-hidden">
+                          <div className="relative overflow-hidden" role="region" aria-label="Website template slideshow">
                             <div
                               className="flex transition-transform duration-700 ease-in-out"
                               style={{ transform: `translateX(-${slideIndex * 100}%)` }}
+                              aria-live="polite"
+                              aria-atomic="true"
                             >
                               {templateSlides.map((slide, idx) => (
-                                <div key={idx} className="relative min-w-full aspect-[16/10]">
+                                <div key={idx} className="relative min-w-full aspect-[16/10]" aria-hidden={idx !== slideIndex}>
                                   <Image
                                     src={slide.src}
                                     alt={slide.alt}
@@ -982,8 +987,8 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               ))}
                             </div>
                             {/* Slide label + dot indicators */}
-                            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3 pointer-events-none">
-                              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow backdrop-blur-sm">
+                            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3">
+                              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow backdrop-blur-sm pointer-events-none">
                                 {templateSlides[slideIndex].label}
                               </span>
                               <div className="flex items-center gap-1.5">
@@ -991,12 +996,13 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                   <button
                                     key={idx}
                                     onClick={() => setSlideIndex(idx)}
-                                    className="pointer-events-auto h-2 rounded-full transition-all duration-300"
+                                    className="h-2 rounded-full transition-all duration-300"
                                     style={{
                                       width: idx === slideIndex ? "20px" : "8px",
                                       backgroundColor: idx === slideIndex ? activeLandingAccent : "rgba(255,255,255,0.5)",
                                     }}
                                     aria-label={`Go to slide ${idx + 1}`}
+                                    aria-current={idx === slideIndex ? "true" : undefined}
                                   />
                                 ))}
                               </div>
