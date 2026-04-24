@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   LayoutDashboard,
   Package,
@@ -28,6 +28,8 @@ import {
   Save,
   RotateCcw,
   Trash2,
+  Check,
+  X,
 } from "lucide-react";
 
 const sidebarTopItems = [
@@ -88,9 +90,79 @@ const footerMenuItems = [
   { name: "Contact", path: "Page • /contact" },
 ];
 
+interface MenuItem {
+  id: number;
+  name: string;
+  path: string;
+  system?: boolean;
+}
+
 export default function EcommerceFastshopPage() {
   const [activeView, setActiveView] = useState<"preview" | "all-pages" | "menu">("preview");
   const [selectedPageName, setSelectedPageName] = useState("Homepage");
+
+  const [nextId, setNextId] = useState(headerMenuItems.length + footerMenuItems.length);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(headerMenuItems.map((item, i) => ({ ...item, id: i })));
+  const [footerItems, setFooterItems] = useState<MenuItem[]>(footerMenuItems.map((item, i) => ({ ...item, id: headerMenuItems.length + i })));
+
+  const [showHeaderAdd, setShowHeaderAdd] = useState(false);
+  const [headerNewName, setHeaderNewName] = useState("");
+  const [headerNewPath, setHeaderNewPath] = useState("");
+
+  const [showFooterAdd, setShowFooterAdd] = useState(false);
+  const [footerNewName, setFooterNewName] = useState("");
+  const [footerNewPath, setFooterNewPath] = useState("");
+
+  const headerNameRef = useRef<HTMLInputElement>(null);
+  const footerNameRef = useRef<HTMLInputElement>(null);
+
+  const handleShowHeaderAdd = () => {
+    setShowHeaderAdd(true);
+    setHeaderNewName("");
+    setHeaderNewPath("");
+    setTimeout(() => headerNameRef.current?.focus(), 0);
+  };
+
+  const handleConfirmHeaderAdd = () => {
+    const name = headerNewName.trim();
+    if (!name) return;
+    const path = headerNewPath.trim() || `/${name.toLowerCase().replace(/\s+/g, "-")}`;
+    setMenuItems((prev: MenuItem[]) => [...prev, { name, path: `Page • ${path}`, id: nextId }]);
+    setNextId((id) => id + 1);
+    setShowHeaderAdd(false);
+    setHeaderNewName("");
+    setHeaderNewPath("");
+  };
+
+  const handleCancelHeaderAdd = () => {
+    setShowHeaderAdd(false);
+    setHeaderNewName("");
+    setHeaderNewPath("");
+  };
+
+  const handleShowFooterAdd = () => {
+    setShowFooterAdd(true);
+    setFooterNewName("");
+    setFooterNewPath("");
+    setTimeout(() => footerNameRef.current?.focus(), 0);
+  };
+
+  const handleConfirmFooterAdd = () => {
+    const name = footerNewName.trim();
+    if (!name) return;
+    const path = footerNewPath.trim() || `/${name.toLowerCase().replace(/\s+/g, "-")}`;
+    setFooterItems((prev: MenuItem[]) => [...prev, { name, path: `Page • ${path}`, id: nextId }]);
+    setNextId((id) => id + 1);
+    setShowFooterAdd(false);
+    setFooterNewName("");
+    setFooterNewPath("");
+  };
+
+  const handleCancelFooterAdd = () => {
+    setShowFooterAdd(false);
+    setFooterNewName("");
+    setFooterNewPath("");
+  };
 
   return (
     <div className="space-y-4">
@@ -329,23 +401,26 @@ export default function EcommerceFastshopPage() {
                       <div>
                         <h3 className="text-sm font-semibold text-foreground">Header Menu Structure</h3>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Drag and drop to reorder. Nest items to create dropdown menus.
+                          Drag and drop to reorder.
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
-                          5 items
+                          {menuItems.length} item{menuItems.length !== 1 ? "s" : ""}
                         </span>
-                        <button className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white">
+                        <button
+                          onClick={handleShowHeaderAdd}
+                          className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white"
+                        >
                           <Plus className="w-3 h-3" /> Add Item
                         </button>
                       </div>
                     </div>
 
                     <div className="p-3 space-y-2">
-                      {headerMenuItems.map((item) => (
+                      {menuItems.map((item) => (
                         <div
-                          key={item.name}
+                          key={item.id}
                           className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5"
                         >
                           <div className="flex items-center gap-3 min-w-0">
@@ -370,10 +445,46 @@ export default function EcommerceFastshopPage() {
                                 <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-primary" />
                               </button>
                             </div>
-                            <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                            <button onClick={() => setMenuItems((prev: MenuItem[]) => prev.filter((i) => i.id !== item.id))}>
+                              <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive transition-colors" />
+                            </button>
                           </div>
                         </div>
                       ))}
+
+                      {showHeaderAdd && (
+                        <div className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2">
+                          <input
+                            ref={headerNameRef}
+                            type="text"
+                            placeholder="Label"
+                            value={headerNewName}
+                            onChange={(e) => setHeaderNewName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleConfirmHeaderAdd();
+                              if (e.key === "Escape") handleCancelHeaderAdd();
+                            }}
+                            className="flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none border-b border-border focus:border-primary"
+                          />
+                          <input
+                            type="text"
+                            placeholder="/path"
+                            value={headerNewPath}
+                            onChange={(e) => setHeaderNewPath(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleConfirmHeaderAdd();
+                              if (e.key === "Escape") handleCancelHeaderAdd();
+                            }}
+                            className="flex-1 min-w-0 bg-transparent text-xs text-muted-foreground placeholder:text-muted-foreground outline-none border-b border-border focus:border-primary"
+                          />
+                          <button onClick={handleConfirmHeaderAdd} className="text-primary hover:text-primary/80">
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button onClick={handleCancelHeaderAdd} className="text-muted-foreground hover:text-foreground">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -385,18 +496,21 @@ export default function EcommerceFastshopPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
-                          2 items
+                          {footerItems.length} item{footerItems.length !== 1 ? "s" : ""}
                         </span>
-                        <button className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground">
+                        <button
+                          onClick={handleShowFooterAdd}
+                          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground"
+                        >
                           <Plus className="w-3 h-3" /> Add Item
                         </button>
                       </div>
                     </div>
 
                     <div className="p-3 space-y-2">
-                      {footerMenuItems.map((item) => (
+                      {footerItems.map((item) => (
                         <div
-                          key={item.name}
+                          key={item.id}
                           className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5"
                         >
                           <div className="flex items-center gap-3 min-w-0">
@@ -417,10 +531,46 @@ export default function EcommerceFastshopPage() {
                                 <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-primary" />
                               </button>
                             </div>
-                            <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                            <button onClick={() => setFooterItems((prev: MenuItem[]) => prev.filter((i) => i.id !== item.id))}>
+                              <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive transition-colors" />
+                            </button>
                           </div>
                         </div>
                       ))}
+
+                      {showFooterAdd && (
+                        <div className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2">
+                          <input
+                            ref={footerNameRef}
+                            type="text"
+                            placeholder="Label"
+                            value={footerNewName}
+                            onChange={(e) => setFooterNewName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleConfirmFooterAdd();
+                              if (e.key === "Escape") handleCancelFooterAdd();
+                            }}
+                            className="flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none border-b border-border focus:border-primary"
+                          />
+                          <input
+                            type="text"
+                            placeholder="/path"
+                            value={footerNewPath}
+                            onChange={(e) => setFooterNewPath(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleConfirmFooterAdd();
+                              if (e.key === "Escape") handleCancelFooterAdd();
+                            }}
+                            className="flex-1 min-w-0 bg-transparent text-xs text-muted-foreground placeholder:text-muted-foreground outline-none border-b border-border focus:border-primary"
+                          />
+                          <button onClick={handleConfirmFooterAdd} className="text-primary hover:text-primary/80">
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button onClick={handleCancelFooterAdd} className="text-muted-foreground hover:text-foreground">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -450,8 +600,8 @@ export default function EcommerceFastshopPage() {
                             <span className="font-semibold text-foreground">FastShop</span>
                           </div>
                           <div className="flex items-center gap-4">
-                            {headerMenuItems.map((item) => (
-                              <span key={item.name} className={item.name === "Home" ? "text-primary font-medium" : ""}>
+                            {menuItems.map((item) => (
+                              <span key={item.id} className={item.name === "Home" ? "text-primary font-medium" : ""}>
                                 {item.name}
                               </span>
                             ))}
@@ -475,8 +625,8 @@ export default function EcommerceFastshopPage() {
                       <div className="mt-auto flex items-center justify-between border-t border-border px-4 py-3 text-[10px] text-muted-foreground">
                         <span>© 2026 FastShop</span>
                         <div className="flex items-center gap-3">
-                          {footerMenuItems.map((item) => (
-                            <span key={item.name}>{item.name}</span>
+                          {footerItems.map((item) => (
+                            <span key={item.id}>{item.name}</span>
                           ))}
                         </div>
                       </div>

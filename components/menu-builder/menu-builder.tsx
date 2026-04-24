@@ -365,7 +365,7 @@ export function MenuBuilder() {
                     <nav className="flex items-center gap-3">
                       {visibleHeaderItems.length > 0 ? (
                         visibleHeaderItems.map((item, idx) => (
-                          <div key={item.id} className="relative group">
+                          <div key={item.id}>
                             <span
                               className={cn(
                                 "text-xs font-medium transition-colors cursor-pointer",
@@ -375,21 +375,7 @@ export function MenuBuilder() {
                               )}
                             >
                               {item.label}
-                              {item.children.length > 0 && " ▼"}
                             </span>
-                            {/* Dropdown indicator */}
-                            {item.children.length > 0 && (
-                              <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-md shadow-lg py-1 min-w-[120px] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                {item.children.map((child) => (
-                                  <div
-                                    key={child.id}
-                                    className="px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted"
-                                  >
-                                    {child.label}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
                           </div>
                         ))
                       ) : (
