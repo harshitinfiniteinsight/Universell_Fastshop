@@ -4202,7 +4202,11 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
           <div className="text-center mt-4">
             <p className="text-sm text-muted-foreground">
               <Globe className="w-4 h-4 inline mr-1.5 text-primary/60" />
-              Universell AI has helped create <span className="font-semibold text-foreground">10,000+</span> websites
+              {mode === "landing-page"
+                ? "Universell AI - Gorgeous designs that compel buyers trust"
+                : shouldAskBusinessModel
+                ? "Universell AI - The powerhouse behind refined E-commerce brands"
+                : "Universell AI - Powerful websites built to out perform your competition!"}
             </p>
           </div>
         </div>
