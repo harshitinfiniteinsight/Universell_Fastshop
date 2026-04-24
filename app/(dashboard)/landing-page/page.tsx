@@ -700,7 +700,25 @@ export default function LandingPageWizard() {
                             src={page.previewImage}
                             alt={`${page.pageName} preview`}
                             className="w-full h-full object-cover object-top"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = "none";
+                              const fallback = target.nextElementSibling as HTMLElement | null;
+                              if (fallback) fallback.style.display = "flex";
+                            }}
                           />
+                          {/* Fallback when image fails to load */}
+                          <div
+                            className="absolute inset-0 hidden flex-col items-center justify-center gap-1.5"
+                            style={{ background: `linear-gradient(135deg, ${page.primaryColor}22, ${page.accentColor}14)` }}
+                          >
+                            <div
+                              className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold"
+                              style={{ background: `linear-gradient(135deg, ${page.primaryColor}, ${page.accentColor})` }}
+                            >
+                              {page.businessName.split(" ").filter(Boolean).slice(0, 2).map((w: string) => w[0]).join("")}
+                            </div>
+                          </div>
                           {/* Subtle brand-color gradient overlay at the bottom */}
                           <div
                             className="absolute inset-0 pointer-events-none"
@@ -853,7 +871,7 @@ export default function LandingPageWizard() {
                                     pointerEvents: "none",
                                   }}
                                   scrolling="no"
-                                  sandbox="allow-same-origin"
+                                  sandbox=""
                                   title={`Preview of ${page.businessName}`}
                                 />
                               </div>
@@ -946,7 +964,7 @@ export default function LandingPageWizard() {
                                     pointerEvents: "none",
                                   }}
                                   scrolling="no"
-                                  sandbox="allow-same-origin"
+                                  sandbox=""
                                   title={`Preview of ${page.businessName}`}
                                 />
                               </div>
