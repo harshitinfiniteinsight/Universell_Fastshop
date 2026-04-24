@@ -50,7 +50,26 @@ type SavedLandingPageDraft = {
   status: "draft" | "published";
 };
 
+type SavedWebsiteDraft = {
+  id: string;
+  businessName: string;
+  tagline: string;
+  description: string;
+  pages: string[];
+  updatedAt: string;
+  status: "draft" | "published";
+  previewImage: string;
+};
+
 const SAVED_LANDING_PAGES_KEY = "universell-saved-landing-pages";
+const SAVED_WEBSITES_KEY = "universell-saved-websites";
+
+const websitePreviewImages = [
+  "https://github.com/user-attachments/assets/e701848f-a446-48c6-b533-c7cfd025c34f",
+  "https://github.com/user-attachments/assets/00f4c188-aa4c-4f3b-9a93-28135e087589",
+  "https://github.com/user-attachments/assets/5965ba34-f784-4841-8d42-21f0745d121d",
+  "https://github.com/user-attachments/assets/0096d192-0205-44c6-941a-3cc4dc12cb54",
+];
 
 const initialWizardData: WizardData = {
   businessInfo: {
@@ -120,6 +139,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
   const [learnMoreModalOpen, setLearnMoreModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"generate" | "view-existing">("generate");
   const [savedLandingPages, setSavedLandingPages] = useState<SavedLandingPageDraft[]>([]);
+  const [savedWebsites, setSavedWebsites] = useState<SavedWebsiteDraft[]>([]);
 
   const isLandingPageBuilder = builderType === "landing-page";
   const isWebsiteBuilder = builderType === "website";
@@ -355,6 +375,35 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
     return () => window.removeEventListener("focus", loadSavedPages);
   }, [isLandingPageBuilder]);
 
+  useEffect(() => {
+    if (!isWebsiteBuilder) return;
+    const loadSavedWebsites = () => {
+      try {
+        const raw = localStorage.getItem(SAVED_WEBSITES_KEY);
+        if (!raw) {
+          setSavedWebsites([]);
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        const normalized = parsed
+          .map((item: Omit<SavedWebsiteDraft, "status"> & { status?: "draft" | "published" }) => ({
+            ...item,
+            status: item.status ?? "draft",
+          }))
+          .sort(
+            (a: SavedWebsiteDraft, b: SavedWebsiteDraft) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
+        setSavedWebsites(normalized);
+      } catch {
+        setSavedWebsites([]);
+      }
+    };
+    loadSavedWebsites();
+    window.addEventListener("focus", loadSavedWebsites);
+    return () => window.removeEventListener("focus", loadSavedWebsites);
+  }, [isWebsiteBuilder]);
+
   const activeWebsitePagePreview =
     websitePagePreviewTemplates[animatedSectionIndex % websitePagePreviewTemplates.length];
   const activeLandingPagePreview =
@@ -517,6 +566,28 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
     updateBusinessInfo("logoPreview", preview);
   };
 
+  const saveWebsiteToStorage = () => {
+    if (!isWebsiteBuilder) return;
+    try {
+      const raw = localStorage.getItem(SAVED_WEBSITES_KEY);
+      const existing: SavedWebsiteDraft[] = raw ? JSON.parse(raw) : [];
+      const previewImage = websitePreviewImages[existing.length % websitePreviewImages.length];
+      const newEntry: SavedWebsiteDraft = {
+        id: `website-${Date.now()}`,
+        businessName: wizardData.businessInfo.name,
+        tagline: wizardData.businessInfo.tagline,
+        description: wizardData.businessInfo.description,
+        pages: ["Homepage", "About Us", "Contact", "Terms & Conditions", "Privacy Policy"],
+        updatedAt: new Date().toISOString(),
+        status: "draft",
+        previewImage,
+      };
+      localStorage.setItem(SAVED_WEBSITES_KEY, JSON.stringify([newEntry, ...existing]));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Card wrapper */}
@@ -560,7 +631,31 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                 )}
               </div>
             )}
-            {(!isLandingPageBuilder || activeTab === "generate") && (
+            {isWebsiteBuilder && (
+              <div className="flex items-center border-b border-border px-4 lg:px-6">
+                <button
+                  onClick={() => setActiveTab("generate")}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "generate"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Generate New
+                </button>
+                <button
+                  onClick={() => setActiveTab("view-existing")}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "view-existing"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  View Existing
+                </button>
+              </div>
+            )}
+            {(!isLandingPageBuilder && !isWebsiteBuilder) || activeTab === "generate" ? (
           <div className="relative overflow-hidden px-4 py-6 lg:px-6 lg:py-8">
             <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-background pointer-events-none" />
             <div className="absolute top-0 right-0 w-72 h-72 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
@@ -1074,7 +1169,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
               )}
             </div>
           </div>
-            )}
+            ) : null}
             {isLandingPageBuilder && activeTab === "view-existing" && (
               <div className="p-6 lg:p-8">
                 {savedLandingPages.length === 0 ? (
@@ -1156,6 +1251,107 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                             <Link
                               href={`/landing-pages/edit/${encodeURIComponent(page.id)}`}
                               className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                            >
+                              <Edit className="w-3 h-3" />
+                              Edit
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {isWebsiteBuilder && activeTab === "view-existing" && (
+              <div className="p-6 lg:p-8">
+                {savedWebsites.length === 0 ? (
+                  <div className="rounded-3xl border border-dashed border-border bg-gradient-to-br from-primary/5 to-primary/2 p-12 text-center">
+                    <div className="flex justify-center mb-4">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Globe className="w-8 h-8 text-primary" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">No websites yet</h3>
+                    <p className="text-muted-foreground mt-2">Generate your first website to get started.</p>
+                    <button
+                      onClick={() => setActiveTab("generate")}
+                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Generate your first website
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {savedWebsites.map((site) => (
+                      <div
+                        key={site.id}
+                        className={`group relative flex flex-col rounded-2xl border bg-card overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ${
+                          site.status === "published"
+                            ? "border-emerald-200/60 hover:border-emerald-400/70 hover:shadow-emerald-500/10"
+                            : "border-border hover:border-primary/50 hover:shadow-primary/10"
+                        }`}
+                      >
+                        {/* Preview image */}
+                        <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted">
+                          <Image
+                            src={site.previewImage}
+                            alt={`${site.businessName} preview`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                            className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                          />
+                          {/* Overlay gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          {/* Status badge */}
+                          <span
+                            className={`absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm ${
+                              site.status === "published"
+                                ? "text-emerald-700 bg-emerald-100/90"
+                                : "text-amber-700 bg-amber-100/90"
+                            }`}
+                          >
+                            {site.status === "published" ? "Live" : "Draft"}
+                          </span>
+                          {/* Pages count badge */}
+                          <span className="absolute top-3 left-3 text-[11px] font-medium px-2.5 py-1 rounded-full bg-background/80 text-foreground backdrop-blur-sm">
+                            {site.pages.length} pages
+                          </span>
+                        </div>
+
+                        {/* Card body */}
+                        <div className="flex flex-col flex-1 p-4 gap-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <h3 className="text-sm font-semibold text-foreground truncate">{site.businessName}</h3>
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{site.tagline}</p>
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-muted-foreground leading-5 line-clamp-2">{site.description}</p>
+
+                          {/* Pages chips */}
+                          <div className="flex flex-wrap gap-1.5">
+                            {site.pages.slice(0, 3).map((page) => (
+                              <span key={page} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                {page}
+                              </span>
+                            ))}
+                            {site.pages.length > 3 && (
+                              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                +{site.pages.length - 3} more
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/60">
+                            <p className="text-[11px] text-muted-foreground">
+                              {new Date(site.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </p>
+                            <Link
+                              href={`/website-pages`}
+                              className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                             >
                               <Edit className="w-3 h-3" />
                               Edit
@@ -1332,7 +1528,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
             <AiGenerationStep
               wizardData={wizardData}
               onUpdate={(pages) => setGeneratedPageName(pages[0] || "Homepage")}
-              onNext={() => setStep("done")}
+              onNext={() => { saveWebsiteToStorage(); setStep("done"); }}
               onBack={() => setStep("ai-chat")}
             />
           </div>
