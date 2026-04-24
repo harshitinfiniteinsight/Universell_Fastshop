@@ -55,6 +55,15 @@ type SavedLandingPageDraft = {
 const LANDING_PAGE_DRAFT_KEY = "universell-landing-page-draft";
 const SAVED_LANDING_PAGES_KEY = "universell-saved-landing-pages";
 
+const FORM_TYPES = [
+  { label: "Custom Form", value: "Add a custom form" },
+  { label: "Payment Form", value: "Add a payment form" },
+  { label: "Lead Form", value: "Add a lead form" },
+  { label: "Ticket Form", value: "Add a ticket form" },
+  { label: "Product QR Code", value: "Add a product QR code" },
+  { label: "Schedule Me", value: "Add a schedule me booking form" },
+] as const;
+
 const FALLBACK_DRAFT: LandingDraft = {
   businessName: "Sunrise Cafe & Bakery",
   tagline: "Where every morning starts with warmth",
@@ -610,14 +619,7 @@ export default function GeneratedLandingPageEditor() {
                   <DialogTitle>Insert a Form</DialogTitle>
                 </DialogHeader>
                 <div className="grid grid-cols-2 gap-2 pt-2">
-                  {[
-                    { label: "Custom Form", value: "Add a custom form" },
-                    { label: "Payment Form", value: "Add a payment form" },
-                    { label: "Lead Form", value: "Add a lead form" },
-                    { label: "Ticket Form", value: "Add a ticket form" },
-                    { label: "Product QR Code", value: "Add a product QR code" },
-                    { label: "Schedule Me", value: "Add a schedule me booking form" },
-                  ].map(({ label, value }) => (
+                  {FORM_TYPES.map(({ label, value }) => (
                     <button
                       key={label}
                       onClick={() => {
