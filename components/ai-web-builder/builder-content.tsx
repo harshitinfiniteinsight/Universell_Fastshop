@@ -130,6 +130,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
   const [generatedPages, setGeneratedPages] = useState<string[]>([]);
   const [animatedSectionIndex, setAnimatedSectionIndex] = useState(0);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [lpCarouselIndex, setLpCarouselIndex] = useState(0);
   const [generatingTagline, setGeneratingTagline] = useState(false);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [generatingLogo, setGeneratingLogo] = useState(false);
@@ -346,6 +347,16 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
 
     return () => clearInterval(interval);
   }, [step]);
+
+  useEffect(() => {
+    if (step !== "intro" || !isLandingPageBuilder) return;
+
+    const interval = setInterval(() => {
+      setLpCarouselIndex((prev) => (prev + 1) % 4);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [step, isLandingPageBuilder]);
 
   useEffect(() => {
     if (!isLandingPageBuilder) return;
@@ -838,33 +849,18 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                     </div>
 
                     <div className="space-y-5">
-                      <div className="flex flex-wrap gap-2">
-                        {[
-                          "Conversion-focused layout",
-                          "AI campaign copy",
-                          "CTA-first structure",
-                        ].map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full border border-border bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-
                       <h2 className="text-4xl font-bold text-foreground leading-[1.15] tracking-tight lg:text-5xl">
-                        Capture attention &amp; convert it into{" "}
+                        Create high-converting{" "}
                         <span className="relative inline-block">
                           <span className="relative z-10 bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">
-                            real results.
+                            landing pages with AI.
                           </span>
                           <span className="absolute bottom-1 left-0 w-full h-3 bg-primary/15 -rotate-1 rounded" />
                         </span>
                       </h2>
 
-                      <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:text-lg">
-                        Generate focused campaign pages built for lead generation with compelling headlines, persuasive benefit blocks, trust signals, and call-to-action sections that convert visitors into qualified leads.
+                      <p className="max-w-xl text-base leading-7 text-muted-foreground lg:text-lg">
+                        Generate pages that convert visitors into leads — launch in minutes, not days.
                       </p>
                     </div>
 
@@ -873,17 +869,17 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                         {
                           icon: Target,
                           title: "Conversion strategy",
-                          description: "Start from your goal and let AI shape the ideal message-to-CTA journey.",
+                          description: "AI maps the ideal message-to-CTA flow for your offer.",
                         },
                         {
                           icon: FileText,
                           title: "Persuasive copy",
-                          description: "Generate headlines, subtext, proof points, and callouts for your offer.",
+                          description: "Generate headlines, benefit bullets, and CTAs that convert.",
                         },
                         {
                           icon: Zap,
                           title: "Fast launch",
-                          description: "Go from idea to campaign-ready draft in minutes with guided inputs.",
+                          description: "From idea to campaign-ready page in under 5 minutes.",
                         },
                       ].map((item) => {
                         const Icon = item.icon;
@@ -891,12 +887,12 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                         return (
                           <div
                             key={item.title}
-                            className="rounded-2xl border border-border/80 bg-background/80 p-4 shadow-sm backdrop-blur-sm"
+                            className="rounded-2xl border border-border/80 bg-background/80 p-5 shadow-sm backdrop-blur-sm"
                           >
                             <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                               <Icon className="h-5 w-5" />
                             </div>
-                            <h3 className="mb-2 text-sm font-semibold text-foreground">{item.title}</h3>
+                            <h3 className="mb-1.5 text-sm font-semibold text-foreground">{item.title}</h3>
                             <p className="text-sm leading-6 text-muted-foreground">{item.description}</p>
                           </div>
                         );
@@ -908,27 +904,13 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                         onClick={() => setStep("business-info")}
                         className="gap-2 bg-primary px-6 text-primary-foreground hover:bg-primary/90"
                       >
-                        Get started now <ArrowRight className="h-4 w-4" />
+                        Get started <ArrowRight className="h-4 w-4" />
                       </Button>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 rounded-3xl border border-border/70 bg-background/70 p-5 shadow-sm md:grid-cols-3">
-                      {[
-                        { label: "Goal-focused", value: "1 CTA", note: "Every section supports one outcome" },
-                        { label: "Draft speed", value: "3-5 min", note: "Concept to page structure" },
-                        { label: "Core blocks", value: "Hero + Proof", note: "Benefits, FAQs, CTA, trust" },
-                      ].map((metric) => (
-                        <div key={metric.label} className="space-y-1">
-                          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{metric.label}</p>
-                          <p className="text-2xl font-bold text-foreground">{metric.value}</p>
-                          <p className="text-sm text-muted-foreground">{metric.note}</p>
-                        </div>
-                      ))}
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-5">
-                    <div className="relative xl:min-h-[920px]">
+                    <div className="relative">
                       <div className="absolute -left-6 top-10 hidden w-44 rounded-2xl border border-border/60 bg-card/95 p-4 shadow-xl backdrop-blur-sm lg:block">
                         <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                           <Target className="h-4 w-4" style={{ color: activeLandingAccent }} />
@@ -953,8 +935,9 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                         </div>
                       </div>
 
-                      <div className="rounded-[2rem] border border-border/70 bg-background/80 p-4 shadow-2xl backdrop-blur-sm xl:min-h-[920px]">
-                        <div className="overflow-hidden rounded-[1.6rem] border border-border/70 bg-card xl:min-h-[880px]">
+                      <div className="rounded-[2rem] border border-border/70 bg-background/80 p-4 shadow-2xl backdrop-blur-sm">
+                        <div className="overflow-hidden rounded-[1.6rem] border border-border/70 bg-card">
+                          {/* Browser chrome */}
                           <div className="flex items-center justify-between border-b border-border px-5 py-4">
                             <div className="flex items-center gap-2">
                               <span className="h-2.5 w-2.5 rounded-full bg-primary/40" />
@@ -962,95 +945,160 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               <span className="h-2.5 w-2.5 rounded-full bg-primary/15" />
                             </div>
                             <div className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-                              Template Samples
+                              {["Cafe", "Fitness", "Electric", "SaaS"][lpCarouselIndex]} Landing Page
                             </div>
                           </div>
 
-                          {/* Image slideshow */}
-                          <div className="relative overflow-hidden" role="region" aria-label="Website template slideshow">
+                          {/* Animated landing page carousel */}
+                          <div
+                            className="relative overflow-hidden"
+                            style={{ minHeight: "500px" }}
+                            role="region"
+                            aria-label="Landing page preview carousel"
+                            aria-live="polite"
+                          >
+                            {/* Slide 1 — Cafe */}
                             <div
-                              className="flex transition-transform duration-700 ease-in-out"
-                              style={{ transform: `translateX(-${slideIndex * 100}%)` }}
-                              aria-live="polite"
-                              aria-atomic="true"
+                              className="absolute inset-0 flex flex-col transition-all duration-700 ease-in-out"
+                              style={{
+                                opacity: lpCarouselIndex === 0 ? 1 : 0,
+                                transform: lpCarouselIndex === 0 ? "translateX(0)" : "translateX(24px)",
+                                pointerEvents: lpCarouselIndex === 0 ? "auto" : "none",
+                                background: "linear-gradient(135deg, #1c0a00 0%, #2d1400 50%, #1a0900 100%)",
+                              }}
+                              aria-hidden={lpCarouselIndex !== 0}
                             >
-                              {templateSlides.map((slide, idx) => (
-                                <div key={idx} className="relative min-w-full aspect-[16/10]" aria-hidden={idx !== slideIndex}>
-                                  <Image
-                                    src={slide.src}
-                                    alt={slide.alt}
-                                    fill
-                                    sizes="(max-width: 1024px) 100vw, 42vw"
-                                    className="object-cover"
-                                    priority={idx === 0}
-                                  />
+                              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(180,83,9,0.25)" }}>
+                                <span className="font-bold text-sm" style={{ color: "#fbbf24" }}><span aria-hidden="true">☕</span> Brew &amp; Co.</span>
+                                <div className="flex gap-4 text-xs" style={{ color: "rgba(253,230,138,0.5)" }}>
+                                  <span>Menu</span><span>About</span><span>Visit</span>
                                 </div>
-                              ))}
+                              </div>
+                              <div className="flex flex-1 flex-col items-start justify-center px-8 py-8">
+                                <span className="mb-3 text-xs uppercase tracking-[0.2em]" style={{ color: "rgba(251,191,36,0.7)" }}>Artisan Coffee</span>
+                                <h2 className="mb-4 text-3xl font-bold leading-tight text-white">Crafted with Care,<br />Served with Love</h2>
+                                <p className="mb-7 text-sm" style={{ color: "rgba(253,230,138,0.5)" }}>Fresh-roasted blends, slow-brewed for the perfect cup.</p>
+                                <span className="rounded-full px-6 py-3 text-sm font-bold" style={{ background: "#d97706", color: "#fff" }}>Visit Us Today →</span>
+                              </div>
+                              <div className="grid grid-cols-3 gap-3 px-8 pb-12">
+                                {[["12+", "Blends"], ["★ 4.9", "Rating"], ["10yr", "Open"]].map(([v, l]) => (
+                                  <div key={l} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+                                    <div className="font-bold text-sm" style={{ color: "#fbbf24" }}>{v}</div>
+                                    <div className="mt-0.5 text-xs" style={{ color: "rgba(253,230,138,0.4)" }}>{l}</div>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                            {/* Slide label + dot indicators */}
-                            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3">
-                              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow backdrop-blur-sm pointer-events-none">
-                                {templateSlides[slideIndex].label}
-                              </span>
-                              <div className="flex items-center gap-1.5">
-                                {templateSlides.map((_, idx) => (
+
+                            {/* Slide 2 — Fitness */}
+                            <div
+                              className="absolute inset-0 flex flex-col transition-all duration-700 ease-in-out"
+                              style={{
+                                opacity: lpCarouselIndex === 1 ? 1 : 0,
+                                transform: lpCarouselIndex === 1 ? "translateX(0)" : "translateX(24px)",
+                                pointerEvents: lpCarouselIndex === 1 ? "auto" : "none",
+                                background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+                              }}
+                              aria-hidden={lpCarouselIndex !== 1}
+                            >
+                              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(249,115,22,0.2)" }}>
+                                <span className="font-bold text-sm" style={{ color: "#f97316" }}><span aria-hidden="true">⚡</span> FitCore</span>
+                                <span className="rounded-full px-3 py-1.5 text-xs font-semibold" style={{ background: "rgba(249,115,22,0.15)", color: "#f97316" }}>Join Now</span>
+                              </div>
+                              <div className="flex flex-1 flex-col items-start justify-center px-8 py-8">
+                                <div className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-medium" style={{ background: "rgba(249,115,22,0.15)", color: "#f97316" }}>🔥 Transform in 12 Weeks</div>
+                                <h2 className="mb-4 text-3xl font-bold leading-tight text-white">Build the body<br />you&apos;ve always wanted</h2>
+                                <p className="mb-7 text-sm" style={{ color: "#94a3b8" }}>Expert coaching, proven plans, real results.</p>
+                                <span className="rounded-full px-6 py-3 text-sm font-bold" style={{ background: "#f97316", color: "#fff" }}>Book Free Session →</span>
+                              </div>
+                              <div className="grid grid-cols-3 gap-3 px-8 pb-12">
+                                {[["500+", "Members"], ["★ 4.8", "Reviews"], ["#1", "Rated"]].map(([v, l]) => (
+                                  <div key={l} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.05)" }}>
+                                    <div className="font-bold text-sm" style={{ color: "#f97316" }}>{v}</div>
+                                    <div className="mt-0.5 text-xs" style={{ color: "#64748b" }}>{l}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Slide 3 — Electric Services */}
+                            <div
+                              className="absolute inset-0 flex flex-col transition-all duration-700 ease-in-out"
+                              style={{
+                                opacity: lpCarouselIndex === 2 ? 1 : 0,
+                                transform: lpCarouselIndex === 2 ? "translateX(0)" : "translateX(24px)",
+                                pointerEvents: lpCarouselIndex === 2 ? "auto" : "none",
+                                background: "linear-gradient(135deg, #0c1445 0%, #0f2060 50%, #0a1535 100%)",
+                              }}
+                              aria-hidden={lpCarouselIndex !== 2}
+                            >
+                              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(59,130,246,0.2)" }}>
+                                <span className="font-bold text-sm text-white"><span aria-hidden="true">⚡</span> VoltPro</span>
+                                <span className="rounded-full px-3 py-1.5 text-xs font-semibold" style={{ background: "rgba(59,130,246,0.2)", color: "#60a5fa" }}>Get Quote</span>
+                              </div>
+                              <div className="flex flex-1 flex-col items-start justify-center px-8 py-8">
+                                <div className="mb-4 flex items-center gap-2">
+                                  <span className="h-2 w-2 rounded-full" style={{ background: "#22c55e" }} />
+                                  <span className="text-xs" style={{ color: "#86efac" }}>Licensed &amp; Insured</span>
+                                </div>
+                                <h2 className="mb-4 text-3xl font-bold leading-tight text-white">Trusted Electrical<br />Services 24/7</h2>
+                                <p className="mb-7 text-sm" style={{ color: "rgba(147,197,253,0.6)" }}>Residential &amp; commercial. Same-day service available.</p>
+                                <span className="rounded-full px-6 py-3 text-sm font-bold" style={{ background: "#3b82f6", color: "#fff" }}>Get a Free Quote →</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 px-8 pb-12">
+                                {["Panel Upgrades", "EV Charging", "Rewiring", "Inspections"].map((s) => (
+                                  <div key={s} className="rounded-xl px-3 py-2 text-xs font-medium" style={{ background: "rgba(59,130,246,0.15)", color: "#93c5fd" }}>⚡ {s}</div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Slide 4 — SaaS Product */}
+                            <div
+                              className="absolute inset-0 flex flex-col transition-all duration-700 ease-in-out"
+                              style={{
+                                opacity: lpCarouselIndex === 3 ? 1 : 0,
+                                transform: lpCarouselIndex === 3 ? "translateX(0)" : "translateX(24px)",
+                                pointerEvents: lpCarouselIndex === 3 ? "auto" : "none",
+                                background: "linear-gradient(135deg, #fafafa 0%, #eef2ff 100%)",
+                              }}
+                              aria-hidden={lpCarouselIndex !== 3}
+                            >
+                              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(99,102,241,0.15)" }}>
+                                <span className="font-bold text-sm" style={{ color: "#6366f1" }}><span aria-hidden="true">✦</span> Launchpad</span>
+                                <span className="rounded-full px-3 py-1.5 text-xs font-semibold" style={{ background: "#6366f1", color: "#fff" }}>Try Free</span>
+                              </div>
+                              <div className="flex flex-1 flex-col items-start justify-center px-8 py-8">
+                                <div className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-medium" style={{ background: "rgba(99,102,241,0.1)", color: "#6366f1" }}>🚀 Now in public beta</div>
+                                <h2 className="mb-4 text-3xl font-bold leading-tight" style={{ color: "#111827" }}>Ship faster.<br />Scale smarter.</h2>
+                                <p className="mb-7 text-sm" style={{ color: "#6b7280" }}>The all-in-one platform for modern software teams.</p>
+                                <span className="rounded-full px-6 py-3 text-sm font-bold" style={{ background: "#6366f1", color: "#fff" }}>Start Free Trial →</span>
+                              </div>
+                              <div className="space-y-2 px-8 pb-12">
+                                {["✓ No credit card required", "✓ 14-day free trial", "✓ Cancel anytime"].map((f) => (
+                                  <div key={f} className="text-sm" style={{ color: "#6b7280" }}>{f}</div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Dot indicators */}
+                            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                              {[0, 1, 2, 3].map((i) => {
+                                const isActive = i === lpCarouselIndex;
+                                const isLightSlide = lpCarouselIndex === 3;
+                                const dotBg = isActive
+                                  ? isLightSlide ? "#6366f1" : "#fff"
+                                  : isLightSlide ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.35)";
+                                return (
                                   <button
-                                    key={idx}
-                                    onClick={() => setSlideIndex(idx)}
+                                    key={i}
+                                    onClick={() => setLpCarouselIndex(i)}
                                     className="h-2 rounded-full transition-all duration-300"
-                                    style={{
-                                      width: idx === slideIndex ? "20px" : "8px",
-                                      backgroundColor: idx === slideIndex ? activeLandingAccent : "rgba(255,255,255,0.5)",
-                                    }}
-                                    aria-label={`Go to slide ${idx + 1}`}
-                                    aria-current={idx === slideIndex ? "true" : undefined}
+                                    style={{ width: isActive ? "20px" : "8px", background: dotBg }}
+                                    aria-label={`Go to slide ${i + 1}`}
+                                    aria-current={isActive ? "true" : undefined}
                                   />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-5 p-5">
-                            <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
-                              <div className="space-y-4 rounded-2xl border border-border/70 bg-background p-4">
-                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                  <LayoutTemplate className="h-4 w-4 text-primary" />
-                                  Conversion Sections
-                                </div>
-                                {activeLandingPagePreview.sections.map((section) => (
-                                  <div key={section.title} className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-3">
-                                    <span className="text-sm text-foreground">{section.title}</span>
-                                    <span className="rounded-full px-2.5 py-1 text-xs font-medium" style={{ backgroundColor: activeLandingAccentSoft, color: activeLandingAccent }}>{section.status}</span>
-                                  </div>
-                                ))}
-                              </div>
-
-                              <div className="space-y-4">
-                                <div className="rounded-2xl border border-border/70 bg-background p-4">
-                                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                                    <FileText className="h-4 w-4" style={{ color: activeLandingAccent }} />
-                                    {activeLandingPagePreview.noteTitle}
-                                  </div>
-                                  <p className="text-sm leading-6 text-muted-foreground">
-                                    &ldquo;{activeLandingPagePreview.note}&rdquo;
-                                  </p>
-                                </div>
-
-                                <div className="rounded-2xl border border-border/70 bg-background p-4">
-                                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                                    <Check className="h-4 w-4" style={{ color: activeLandingAccent }} />
-                                    Conversion Checklist
-                                  </div>
-                                  <div className="space-y-2">
-                                    {activeLandingPagePreview.checklist.map((item) => (
-                                      <div key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Check className="h-4 w-4" style={{ color: activeLandingAccent }} />
-                                        {item}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
