@@ -17,6 +17,13 @@ import {
   Bot,
   PanelsTopLeft,
   ClipboardList,
+  CreditCard,
+  UserPlus,
+  Ticket,
+  QrCode,
+  CalendarClock,
+  FileText,
+  ChevronLeft,
 } from "lucide-react";
 import {
   Dialog,
@@ -24,6 +31,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type EditorMessage = {
   id: string;
@@ -56,13 +70,42 @@ const LANDING_PAGE_DRAFT_KEY = "universell-landing-page-draft";
 const SAVED_LANDING_PAGES_KEY = "universell-saved-landing-pages";
 
 const FORM_TYPES = [
-  { label: "Custom Form", value: "Add a custom form" },
-  { label: "Payment Form", value: "Add a payment form" },
-  { label: "Lead Form", value: "Add a lead form" },
-  { label: "Ticket Form", value: "Add a ticket form" },
-  { label: "Product QR Code", value: "Add a product QR code" },
-  { label: "Schedule Me", value: "Add a schedule me booking form" },
-] as const;
+  { label: "Custom Form", value: "Add a custom form", icon: FileText },
+  { label: "Payment Form", value: "Add a payment form", icon: CreditCard },
+  { label: "Lead Form", value: "Add a lead form", icon: UserPlus },
+  { label: "Ticket Form", value: "Add a ticket form", icon: Ticket },
+  { label: "Product QR Code", value: "Add a product QR code", icon: QrCode },
+  { label: "Schedule Me", value: "Add a schedule me booking form", icon: CalendarClock },
+];
+
+const EXISTING_FORMS: Record<string, { id: string; name: string }[]> = {
+  "Custom Form": [
+    { id: "cf-1", name: "Contact Us Form" },
+    { id: "cf-2", name: "Feedback Form" },
+    { id: "cf-3", name: "Survey Form" },
+  ],
+  "Payment Form": [
+    { id: "pf-1", name: "Checkout Form" },
+    { id: "pf-2", name: "Subscription Form" },
+  ],
+  "Lead Form": [
+    { id: "lf-1", name: "Newsletter Signup" },
+    { id: "lf-2", name: "Free Trial Request" },
+    { id: "lf-3", name: "Demo Request" },
+  ],
+  "Ticket Form": [
+    { id: "tf-1", name: "Support Ticket" },
+    { id: "tf-2", name: "Event Registration" },
+  ],
+  "Product QR Code": [
+    { id: "qr-1", name: "Menu QR Code" },
+    { id: "qr-2", name: "Product Catalog QR" },
+  ],
+  "Schedule Me": [
+    { id: "sm-1", name: "Consultation Booking" },
+    { id: "sm-2", name: "Service Appointment" },
+  ],
+};
 
 const FALLBACK_DRAFT: LandingDraft = {
   businessName: "Sunrise Cafe & Bakery",
@@ -282,6 +325,8 @@ export default function GeneratedLandingPageEditor() {
   const [css, setCss] = useState<string>(baseCss);
   const [isGrapesReady, setIsGrapesReady] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
+  const [selectedFormType, setSelectedFormType] = useState<string | null>(null);
+  const [selectedExistingForm, setSelectedExistingForm] = useState<string>("");
 
   const grapesContainerRef = useRef<HTMLDivElement>(null);
   const grapesBlocksRef = useRef<HTMLDivElement>(null);
@@ -613,25 +658,111 @@ export default function GeneratedLandingPageEditor() {
               </button>
             </div>
 
-            <Dialog open={showFormModal} onOpenChange={setShowFormModal}>
+            <Dialog
+              open={showFormModal}
+              onOpenChange={(open) => {
+                setShowFormModal(open);
+                if (!open) {
+                  setSelectedFormType(null);
+                  setSelectedExistingForm("");
+                }
+              }}
+            >
               <DialogContent className="sm:max-w-sm">
                 <DialogHeader>
-                  <DialogTitle>Insert a Form</DialogTitle>
+                  <DialogTitle>
+                    {selectedFormType ? (
+                      <button
+                        onClick={() => {
+                          setSelectedFormType(null);
+                          setSelectedExistingForm("");
+                        }}
+                        className="flex items-center gap-1.5 text-sm font-semibold hover:text-orange-600 transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        {selectedFormType}
+                      </button>
+                    ) : (
+                      "Insert a Form"
+                    )}
+                  </DialogTitle>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  {FORM_TYPES.map(({ label, value }) => (
-                    <button
-                      key={label}
-                      onClick={() => {
-                        setInputMessage(value);
-                        setShowFormModal(false);
-                      }}
-                      className="text-sm px-3 py-2.5 rounded-lg border border-border bg-muted hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600 text-left transition-colors"
+
+                {selectedFormType ? (
+                  <div className="space-y-4 pt-1">
+                    <p className="text-xs text-muted-foreground">
+                      Select an existing form to embed, or create a new one.
+                    </p>
+                    <Select
+                      value={selectedExistingForm}
+                      onValueChange={setSelectedExistingForm}
                     >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a form…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(EXISTING_FORMS[selectedFormType] ?? []).map((form) => (
+                          <SelectItem key={form.id} value={form.id}>
+                            {form.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const formType = FORM_TYPES.find(
+                            (f) => f.label === selectedFormType
+                          );
+                          if (formType) setInputMessage(formType.value);
+                          setShowFormModal(false);
+                          setSelectedFormType(null);
+                          setSelectedExistingForm("");
+                        }}
+                      >
+                        Create new
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={!selectedExistingForm}
+                        onClick={() => {
+                          const form = (
+                            EXISTING_FORMS[selectedFormType] ?? []
+                          ).find((f) => f.id === selectedExistingForm);
+                          if (form) {
+                            setInputMessage(
+                              `Embed the existing "${form.name}" form`
+                            );
+                          }
+                          setShowFormModal(false);
+                          setSelectedFormType(null);
+                          setSelectedExistingForm("");
+                        }}
+                        className="bg-orange-500 hover:bg-orange-600 text-white"
+                      >
+                        Use this form
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    {FORM_TYPES.map(({ label, icon: Icon }) => (
+                      <button
+                        key={label}
+                        onClick={() => {
+                          setSelectedFormType(label);
+                          setSelectedExistingForm("");
+                        }}
+                        className="flex items-center gap-2 text-sm px-3 py-2.5 rounded-lg border border-border bg-muted hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600 text-left transition-colors"
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </div>
