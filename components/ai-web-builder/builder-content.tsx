@@ -86,6 +86,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
   const [wizardData, setWizardData] = useState<WizardData>(initialWizardData);
   const [generatedPageName, setGeneratedPageName] = useState("Homepage");
   const [animatedSectionIndex, setAnimatedSectionIndex] = useState(0);
+  const [slideIndex, setSlideIndex] = useState(0);
   const [generatingTagline, setGeneratingTagline] = useState(false);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [generatingLogo, setGeneratingLogo] = useState(false);
@@ -278,6 +279,29 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
     },
   ];
 
+  const templateSlides = [
+    {
+      src: "https://github.com/user-attachments/assets/e701848f-a446-48c6-b533-c7cfd025c34f",
+      alt: "Proland – tech product landing page sample",
+      label: "Product Showcase",
+    },
+    {
+      src: "https://github.com/user-attachments/assets/00f4c188-aa4c-4f3b-9a93-28135e087589",
+      alt: "Mailchimp-style marketing landing page sample",
+      label: "Marketing Campaign",
+    },
+    {
+      src: "https://github.com/user-attachments/assets/5965ba34-f784-4841-8d42-21f0745d121d",
+      alt: "Nextora – modern business landing page sample",
+      label: "Business Overview",
+    },
+    {
+      src: "https://github.com/user-attachments/assets/0096d192-0205-44c6-941a-3cc4dc12cb54",
+      alt: "Sunbasket – e-commerce landing page sample",
+      label: "E-Commerce Landing",
+    },
+  ];
+
   const previewRotationCount = isLandingPageBuilder
     ? landingPagePreviewTemplates.length
     : websitePagePreviewTemplates.length;
@@ -291,6 +315,16 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
 
     return () => clearInterval(interval);
   }, [step, previewRotationCount]);
+
+  useEffect(() => {
+    if (!isLandingPageBuilder || step !== "intro") return;
+
+    const interval = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % templateSlides.length);
+    }, 2800);
+
+    return () => clearInterval(interval);
+  }, [isLandingPageBuilder, step, templateSlides.length]);
 
   useEffect(() => {
     if (!isLandingPageBuilder) return;
@@ -490,27 +524,40 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
         {step === "intro" && (
           <>
             {isLandingPageBuilder && (
-              <div className="flex border-b border-border px-4 lg:px-6">
-                <button
-                  onClick={() => setActiveTab("generate")}
-                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === "generate"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Generate New
-                </button>
-                <button
-                  onClick={() => setActiveTab("view-existing")}
-                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === "view-existing"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  View Existing Landing Pages
-                </button>
+              <div className="flex items-center justify-between border-b border-border px-4 lg:px-6">
+                <div className="flex">
+                  <button
+                    onClick={() => setActiveTab("generate")}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === "generate"
+                        ? "border-primary text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Generate New
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("view-existing")}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === "view-existing"
+                        ? "border-primary text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    View Existing Landing Pages
+                  </button>
+                </div>
+                {activeTab === "generate" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 shrink-0"
+                    onClick={() => {}}
+                  >
+                    <LayoutTemplate className="h-4 w-4" />
+                    Select Template
+                  </Button>
+                )}
               </div>
             )}
             {(!isLandingPageBuilder || activeTab === "generate") && (
@@ -931,56 +978,51 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                               <span className="h-2.5 w-2.5 rounded-full bg-primary/15" />
                             </div>
                             <div className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-                              Campaign Page Preview
+                              Template Samples
+                            </div>
+                          </div>
+
+                          {/* Image slideshow */}
+                          <div className="relative overflow-hidden">
+                            <div
+                              className="flex transition-transform duration-700 ease-in-out"
+                              style={{ transform: `translateX(-${slideIndex * 100}%)` }}
+                            >
+                              {templateSlides.map((slide, idx) => (
+                                <div key={idx} className="min-w-full">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={slide.src}
+                                    alt={slide.alt}
+                                    className="w-full object-cover"
+                                    style={{ display: "block" }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            {/* Slide label + dot indicators */}
+                            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3 pointer-events-none">
+                              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow backdrop-blur-sm">
+                                {templateSlides[slideIndex].label}
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {templateSlides.map((_, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => setSlideIndex(idx)}
+                                    className="pointer-events-auto h-2 rounded-full transition-all duration-300"
+                                    style={{
+                                      width: idx === slideIndex ? "20px" : "8px",
+                                      backgroundColor: idx === slideIndex ? activeLandingAccent : "rgba(255,255,255,0.5)",
+                                    }}
+                                    aria-label={`Go to slide ${idx + 1}`}
+                                  />
+                                ))}
+                              </div>
                             </div>
                           </div>
 
                           <div className="space-y-5 p-5">
-                            <div
-                              className="rounded-3xl p-6 transition-all duration-500"
-                              style={{ background: `linear-gradient(135deg, ${activeLandingAccentSoft}, color-mix(in srgb, ${activeLandingAccent} 8%, white) 52%, #ffffff)` }}
-                            >
-                              <div className="mb-4 flex items-center justify-between gap-4">
-                                <div>
-                                  <div className="inline-flex rounded-full bg-background/80 px-3 py-1 text-[11px] font-medium shadow-sm" style={{ color: activeLandingAccent }}>
-                                    {activeLandingPagePreview.badge}
-                                  </div>
-                                  <p className="mt-3 text-xs uppercase tracking-[0.3em] text-muted-foreground">{activeLandingPagePreview.label}</p>
-                                  <h3 className="mt-2 min-h-[92px] text-2xl font-bold text-foreground">{activeLandingPagePreview.title}</h3>
-                                </div>
-                                <div className="rounded-2xl bg-background/80 p-3 shadow-sm">
-                                  <Zap className="h-6 w-6" style={{ color: activeLandingAccent }} />
-                                </div>
-                              </div>
-
-                              <p className="max-w-md min-h-[72px] text-sm leading-6 text-muted-foreground">
-                                {activeLandingPagePreview.description}
-                              </p>
-
-                              <div className="mt-4 overflow-hidden rounded-2xl border border-border/70 bg-card/80">
-                                <div className="relative aspect-[16/8] w-full">
-                                  <Image
-                                    src={activeLandingPagePreview.image}
-                                    alt={`${activeLandingPagePreview.badge} template preview`}
-                                    fill
-                                    sizes="(max-width: 1024px) 100vw, 42vw"
-                                    className="object-cover"
-                                    priority
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="mt-5 rounded-full bg-background/80 p-1">
-                                <div
-                                  className="h-2 rounded-full transition-all duration-500"
-                                  style={{
-                                    backgroundColor: activeLandingAccent,
-                                    width: `${activeLandingPagePreview.progress}%`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-
                             <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
                               <div className="space-y-4 rounded-2xl border border-border/70 bg-background p-4">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
