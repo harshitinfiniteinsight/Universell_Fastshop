@@ -36,6 +36,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { LandingPageCarousel } from "./LandingPageCarousel";
+import { WebsitePreviewCarousel } from "./WebsitePreviewCarousel";
 
 type AIWebBuilderStep = "intro" | "business-info" | "ai-chat" | "generation" | "done";
 type BuilderType = "landing-page" | "website";
@@ -97,28 +98,6 @@ const initialWizardData: WizardData = {
   themeColor: "#3b82f6",
 };
 
-const templateSlides = [
-  {
-    src: "https://github.com/user-attachments/assets/d2a27feb-16d4-4d90-a35e-8cee7f4bc2c7",
-    alt: "Business website template sample",
-    label: "Business Website",
-  },
-  {
-    src: "https://github.com/user-attachments/assets/31d121d4-9cdb-445e-8934-d446015dfec4",
-    alt: "Portfolio gallery website template sample",
-    label: "Portfolio Gallery",
-  },
-  {
-    src: "https://github.com/user-attachments/assets/5cccb920-43e1-49cf-85fb-673f0bd48309",
-    alt: "Event & community website template sample",
-    label: "Event & Community",
-  },
-  {
-    src: "https://github.com/user-attachments/assets/474e00fb-143a-4024-9d1c-ff1227ac473f",
-    alt: "Campaign landing page template sample",
-    label: "Campaign Landing",
-  },
-];
 
 interface AIBuilderContentProps {
   builderType: BuilderType;
@@ -130,7 +109,6 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
   const [generatedPageName, setGeneratedPageName] = useState("Homepage");
   const [generatedPages, setGeneratedPages] = useState<string[]>([]);
   const [animatedSectionIndex, setAnimatedSectionIndex] = useState(0);
-  const [slideIndex, setSlideIndex] = useState(0);
 
   const [generatingTagline, setGeneratingTagline] = useState(false);
   const [generatingDescription, setGeneratingDescription] = useState(false);
@@ -338,16 +316,6 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
 
     return () => clearInterval(interval);
   }, [step, previewRotationCount]);
-
-  useEffect(() => {
-    if (step !== "intro") return;
-
-    const interval = setInterval(() => {
-      setSlideIndex((prev) => (prev + 1) % templateSlides.length);
-    }, 2800);
-
-    return () => clearInterval(interval);
-  }, [step]);
 
   useEffect(() => {
     if (!isLandingPageBuilder) return;
@@ -679,33 +647,18 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                     </div>
 
                     <div className="space-y-5">
-                      <div className="flex flex-wrap gap-2">
-                        {[
-                          "Strategy-led layout",
-                          "Brand-aware copy",
-                          "Multi-page generation",
-                        ].map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full border border-border bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-
                       <h2 className="text-4xl font-bold text-foreground leading-[1.15] tracking-tight lg:text-5xl">
-                        Design pages to capture attention{" "}
+                        Build a complete website{" "}
                         <span className="relative inline-block">
                           <span className="relative z-10 bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">
-                            and drive action.
+                            with AI
                           </span>
                           <span className="absolute bottom-1 left-0 w-full h-3 bg-primary/15 -rotate-1 rounded" />
                         </span>
                       </h2>
 
-                      <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:text-lg">
-                        From one short brief, Universell generates a complete multi-page website in minutes, including core pages like homepage, about us, testimonials, services, products, and contact.
+                      <p className="max-w-lg text-base leading-7 text-muted-foreground lg:text-lg">
+                        Go from a short brief to a complete, multi-page website in minutes.
                       </p>
                     </div>
 
@@ -714,17 +667,17 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                         {
                           icon: Layers,
                           title: "Smart structure",
-                          description: "AI maps hero, proof, services, FAQs, and CTAs into a complete website flow.",
+                          description: "AI builds your full page flow — hero, proof, services, FAQs, and CTAs.",
                         },
                         {
                           icon: Palette,
-                          title: "Create multi page website",
-                          description: "Generate essential pages with consistent design and messaging across the full site.",
+                          title: "Multi-page generation",
+                          description: "Generate all core pages with consistent design in a single step.",
                         },
                         {
                           icon: Code,
                           title: "Production-ready",
-                          description: "Generate sections designed for desktop and mobile with clean, scalable layouts.",
+                          description: "Clean, responsive layouts for desktop and mobile out of the box.",
                         },
                       ].map((item) => {
                         const Icon = item.icon;
@@ -749,86 +702,13 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                         onClick={() => setStep("business-info")}
                         className="gap-2 bg-primary px-6 text-primary-foreground hover:bg-primary/90"
                       >
-                        Get started now <ArrowRight className="h-4 w-4" />
+                        Get started <ArrowRight className="h-4 w-4" />
                       </Button>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 rounded-3xl border border-border/70 bg-background/70 p-5 shadow-sm md:grid-cols-3">
-                      {[
-                        { label: "Average setup", value: "5 min", note: "From brief to draft" },
-                        { label: "Core pages", value: "6+", note: "Home, services, about, contact" },
-                        { label: "AI outputs", value: "Copy + UI", note: "Messaging and visual direction" },
-                      ].map((metric) => (
-                        <div key={metric.label} className="space-y-1">
-                          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{metric.label}</p>
-                          <p className="text-2xl font-bold text-foreground">{metric.value}</p>
-                          <p className="text-sm text-muted-foreground">{metric.note}</p>
-                        </div>
-                      ))}
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-5">
-                    <div className="relative">
-                      <div className="rounded-[2rem] border border-border/70 bg-background/80 p-4 shadow-2xl backdrop-blur-sm">
-                        <div className="overflow-hidden rounded-[1.6rem] border border-border/70 bg-card">
-                          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                            <div className="flex items-center gap-2">
-                              <span className="h-2.5 w-2.5 rounded-full bg-primary/40" />
-                              <span className="h-2.5 w-2.5 rounded-full bg-primary/25" />
-                              <span className="h-2.5 w-2.5 rounded-full bg-primary/15" />
-                            </div>
-                            <div className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-                              Template Samples
-                            </div>
-                          </div>
-
-                          {/* Image slideshow */}
-                          <div className="relative overflow-hidden" role="region" aria-label="Website template slideshow">
-                            <div
-                              className="flex transition-transform duration-700 ease-in-out"
-                              style={{ transform: `translateX(-${slideIndex * 100}%)` }}
-                              aria-live="polite"
-                              aria-atomic="true"
-                            >
-                              {templateSlides.map((slide, idx) => (
-                                <div key={idx} className="relative min-w-full aspect-[16/10]" aria-hidden={idx !== slideIndex}>
-                                  <Image
-                                    src={slide.src}
-                                    alt={slide.alt}
-                                    fill
-                                    sizes="(max-width: 1024px) 100vw, 42vw"
-                                    className="object-cover"
-                                    priority={idx === 0}
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                            {/* Slide label + dot indicators */}
-                            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3">
-                              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow backdrop-blur-sm pointer-events-none">
-                                {templateSlides[slideIndex].label}
-                              </span>
-                              <div className="flex items-center gap-1.5">
-                                {templateSlides.map((_, idx) => (
-                                  <button
-                                    key={idx}
-                                    onClick={() => setSlideIndex(idx)}
-                                    className="h-2 rounded-full transition-all duration-300"
-                                    style={{
-                                      width: idx === slideIndex ? "20px" : "8px",
-                                      backgroundColor: idx === slideIndex ? "hsl(var(--primary))" : "rgba(255,255,255,0.5)",
-                                    }}
-                                    aria-label={`Go to slide ${idx + 1}`}
-                                    aria-current={idx === slideIndex ? "true" : undefined}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  <div>
+                    <WebsitePreviewCarousel />
                   </div>
                 </div>
               ) : (
