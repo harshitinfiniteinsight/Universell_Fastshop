@@ -153,6 +153,14 @@ type DomainChatMessage = {
 const SERVER_IP = "76.76.21.21";
 const CNAME_TARGET = "cname.vercel-dns.com";
 
+// Maps domain provider / registrar names to their management URLs
+const PROVIDER_URLS: Record<string, string> = {
+  GoDaddy: "https://godaddy.com",
+  Namecheap: "https://namecheap.com",
+  "Google Domains": "https://domains.google",
+  Cloudflare: "https://cloudflare.com",
+};
+
 const PROVIDER_INSTRUCTIONS: Record<string, { steps: string[]; notes?: string[] }> = {
   GoDaddy: {
     steps: [
@@ -686,8 +694,9 @@ export default function GeneratedLandingPageEditor() {
   const handleDomainNameSubmit = () => {
     const name = domainNameInput.trim();
     if (!name) return;
-    const domainPattern = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
-    if (!domainPattern.test(name)) {
+    // Validates domain format: alphanumeric labels (optionally with hyphens) separated by dots, ending with 2+ letter TLD
+    const DOMAIN_PATTERN = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+    if (!DOMAIN_PATTERN.test(name)) {
       addDomainMessage(
         "assistant",
         `"${name}" doesn't look like a valid domain. Please enter it in the format: mybusiness.com`
@@ -745,9 +754,15 @@ export default function GeneratedLandingPageEditor() {
   };
 
   const handleCopyValue = (value: string) => {
-    navigator.clipboard.writeText(value).catch(() => {});
+    navigator.clipboard.writeText(value).catch(() => {
+      addDomainMessage("assistant", `Could not copy automatically. Please copy manually: ${value}`);
+    });
     setCopiedValue(value);
     setTimeout(() => setCopiedValue(null), 2000);
+  };
+
+  const handleDomainInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleDomainNameSubmit();
   };
 
   const domainProgressStep =
@@ -1141,12 +1156,7 @@ export default function GeneratedLandingPageEditor() {
                       {/* Open provider link */}
                       {domainProvider !== "Other" && (
                         <a
-                          href={
-                            domainProvider === "GoDaddy" ? "https://godaddy.com" :
-                            domainProvider === "Namecheap" ? "https://namecheap.com" :
-                            domainProvider === "Google Domains" ? "https://domains.google" :
-                            "https://cloudflare.com"
-                          }
+                          href={PROVIDER_URLS[domainProvider] ?? "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
@@ -1173,11 +1183,7 @@ export default function GeneratedLandingPageEditor() {
                       </ol>
                       {domainBuyingRegistrar !== "Not sure" && (
                         <a
-                          href={
-                            domainBuyingRegistrar === "GoDaddy" ? "https://godaddy.com" :
-                            domainBuyingRegistrar === "Namecheap" ? "https://namecheap.com" :
-                            "https://domains.google"
-                          }
+                          href={PROVIDER_URLS[domainBuyingRegistrar] ?? "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
@@ -1226,7 +1232,7 @@ export default function GeneratedLandingPageEditor() {
                         type="text"
                         value={domainNameInput}
                         onChange={(e) => setDomainNameInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") handleDomainNameSubmit(); }}
+                        onKeyDown={handleDomainInputKeyDown}
                         placeholder="e.g. mybusiness.com"
                         className="flex-1 h-9 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors"
                       />
