@@ -9,7 +9,7 @@ function LandingPageBuilderInner() {
       <div className="space-y-1">
         <h1 className="text-2xl font-bold text-foreground">Landing Page Builder</h1>
         <p className="text-muted-foreground">
-          Generate high-converting landing pages with AI in minutes
+          No code. No designer. Just high-converting pages — live in minutes.
         </p>
       </div>
       <AIBuilderContent builderType="landing-page" />
