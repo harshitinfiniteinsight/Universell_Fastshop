@@ -26,6 +26,10 @@ import {
   ChevronLeft,
   BookOpen,
   Link2,
+  Globe,
+  Copy,
+  CheckCircle2,
+  ExternalLink,
 } from "lucide-react";
 import {
   Dialog,
@@ -128,6 +132,114 @@ const EXISTING_FORMS: Record<string, { id: string; name: string }[]> = {
     { id: "fl-2", name: "Featured Collection" },
   ],
 };
+
+// ─── Connect Domain feature ───────────────────────────────────────────────────
+
+type DomainFlowStep =
+  | "start"
+  | "enter-domain"
+  | "choose-provider"
+  | "show-instructions"
+  | "needs-domain-registrar"
+  | "buying-guide"
+  | "done";
+
+type DomainChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+};
+
+const SERVER_IP = "76.76.21.21";
+const CNAME_TARGET = "cname.vercel-dns.com";
+
+const PROVIDER_INSTRUCTIONS: Record<string, { steps: string[]; notes?: string[] }> = {
+  GoDaddy: {
+    steps: [
+      "Log in to GoDaddy → My Products → Domains",
+      "Click your domain → Manage DNS",
+      `Add A Record: Host = @, Points to = ${SERVER_IP}, TTL = 600`,
+      `Add CNAME Record: Host = www, Points to = ${CNAME_TARGET}, TTL = 1 hour`,
+      "Click Save",
+    ],
+  },
+  Namecheap: {
+    steps: [
+      "Log in to Namecheap → Domain List → Manage",
+      "Open the Advanced DNS tab",
+      `Add A Record: Host = @, Value = ${SERVER_IP}, TTL = Automatic`,
+      `Add CNAME Record: Host = www, Value = ${CNAME_TARGET}, TTL = Automatic`,
+      "Save all records",
+    ],
+  },
+  "Google Domains": {
+    steps: [
+      "Go to domains.google.com → My Domains → Manage",
+      "Open DNS → Custom records",
+      `Add A Record: Name = @, IPv4 address = ${SERVER_IP}`,
+      `Add CNAME Record: Name = www, Domain name = ${CNAME_TARGET}`,
+      "Save changes",
+    ],
+  },
+  Cloudflare: {
+    steps: [
+      "Log in to Cloudflare → select your domain",
+      "Go to DNS → Records",
+      `Add A Record: Name = @, IPv4 = ${SERVER_IP} — set proxy to DNS only (grey cloud)`,
+      `Add CNAME Record: Name = www, Target = ${CNAME_TARGET} — DNS only`,
+      "Save records",
+    ],
+    notes: [
+      "⚠️ The Cloudflare proxy (orange cloud) must be OFF. Use DNS-only mode.",
+    ],
+  },
+  Other: {
+    steps: [
+      "Log in to your domain registrar's control panel",
+      "Find DNS Management or DNS Zone Editor",
+      `Add A Record: Host = @ (or blank), Value = ${SERVER_IP}`,
+      `Add CNAME Record: Host = www, Value = ${CNAME_TARGET}`,
+      "Save and allow up to 48 hours for propagation",
+    ],
+  },
+};
+
+const BUYING_STEPS: Record<string, string[]> = {
+  GoDaddy: [
+    "Go to godaddy.com and search your business name",
+    "Choose .com, .net, or .store for best results",
+    "Add to cart and complete checkout",
+    "Come back here once you have it!",
+  ],
+  Namecheap: [
+    "Go to namecheap.com and search your domain",
+    ".com domains are typically $8–$12/year",
+    "Create an account and complete checkout",
+    "Come back here once you have it!",
+  ],
+  "Google Domains": [
+    "Go to domains.google.com",
+    "Search for your desired domain name",
+    "Select and purchase — clean UI, transparent pricing",
+    "Come back here once you have it!",
+  ],
+  "Not sure": [
+    "We recommend Namecheap for affordable pricing",
+    "Go to namecheap.com and search your business name",
+    "Pick a .com, .store, or .shop domain",
+    "Come back here once you have it!",
+  ],
+};
+
+const initialDomainMessages: DomainChatMessage[] = [
+  {
+    id: "d0",
+    role: "assistant",
+    content: "Hi! I'll guide you through connecting your domain step-by-step. Do you already own a domain?",
+  },
+];
+
+// ─── End Connect Domain constants ─────────────────────────────────────────────
 
 const FALLBACK_DRAFT: LandingDraft = {
   businessName: "Sunrise Cafe & Bakery",
@@ -350,6 +462,16 @@ export default function GeneratedLandingPageEditor() {
   const [selectedFormType, setSelectedFormType] = useState<string | null>(null);
   const [selectedExistingForm, setSelectedExistingForm] = useState<string>("");
 
+  // Connect Domain modal state
+  const [showDomainModal, setShowDomainModal] = useState(false);
+  const [domainFlowStep, setDomainFlowStep] = useState<DomainFlowStep>("start");
+  const [domainMessages, setDomainMessages] = useState<DomainChatMessage[]>(initialDomainMessages);
+  const [domainNameInput, setDomainNameInput] = useState("");
+  const [domainName, setDomainName] = useState("");
+  const [domainProvider, setDomainProvider] = useState<string | null>(null);
+  const [domainBuyingRegistrar, setDomainBuyingRegistrar] = useState<string | null>(null);
+  const [copiedValue, setCopiedValue] = useState<string | null>(null);
+
   const grapesContainerRef = useRef<HTMLDivElement>(null);
   const grapesBlocksRef = useRef<HTMLDivElement>(null);
   const grapesLayersRef = useRef<HTMLDivElement>(null);
@@ -527,6 +649,116 @@ export default function GeneratedLandingPageEditor() {
     }, 1200);
   };
 
+  // ─── Domain flow helpers ─────────────────────────────────────────────────────
+
+  const addDomainMessage = (role: "user" | "assistant", content: string) => {
+    setDomainMessages((prev) => [
+      ...prev,
+      { id: `dm-${Date.now()}-${Math.random()}`, role, content },
+    ]);
+  };
+
+  const handleDomainModalClose = (open: boolean) => {
+    setShowDomainModal(open);
+    if (!open) {
+      setDomainFlowStep("start");
+      setDomainMessages(initialDomainMessages);
+      setDomainNameInput("");
+      setDomainName("");
+      setDomainProvider(null);
+      setDomainBuyingRegistrar(null);
+      setCopiedValue(null);
+    }
+  };
+
+  const handleOwnsYes = () => {
+    addDomainMessage("user", "Yes, I have a domain");
+    addDomainMessage("assistant", "Great! Please type your domain name below (e.g. mybusiness.com).");
+    setDomainFlowStep("enter-domain");
+  };
+
+  const handleOwnsNo = () => {
+    addDomainMessage("user", "No, I need one");
+    addDomainMessage("assistant", "No problem! I can guide you to get a domain. Where would you like to buy one?");
+    setDomainFlowStep("needs-domain-registrar");
+  };
+
+  const handleDomainNameSubmit = () => {
+    const name = domainNameInput.trim();
+    if (!name) return;
+    const domainPattern = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+    if (!domainPattern.test(name)) {
+      addDomainMessage(
+        "assistant",
+        `"${name}" doesn't look like a valid domain. Please enter it in the format: mybusiness.com`
+      );
+      return;
+    }
+    setDomainName(name);
+    setDomainNameInput("");
+    addDomainMessage("user", name);
+    addDomainMessage("assistant", `Got it — ${name}. Who is your domain provider?`);
+    setDomainFlowStep("choose-provider");
+  };
+
+  const handleProviderSelect = (provider: string) => {
+    setDomainProvider(provider);
+    addDomainMessage("user", provider);
+    addDomainMessage(
+      "assistant",
+      `Here are the DNS steps for ${provider}. Follow them carefully and click "Mark as Done" when finished.`
+    );
+    setDomainFlowStep("show-instructions");
+  };
+
+  const handleRegistrarSelect = (registrar: string) => {
+    setDomainBuyingRegistrar(registrar);
+    addDomainMessage("user", registrar);
+    addDomainMessage(
+      "assistant",
+      `Here are the steps to get your domain from ${registrar === "Not sure" ? "Namecheap (our recommendation)" : registrar}. Once purchased, click "I've purchased a domain" to continue.`
+    );
+    setDomainFlowStep("buying-guide");
+  };
+
+  const handlePurchasedDomain = () => {
+    addDomainMessage("user", "I've purchased a domain");
+    addDomainMessage("assistant", "Excellent! Please type your new domain name so I can guide you through connecting it.");
+    setDomainFlowStep("enter-domain");
+  };
+
+  const handleMarkAsDone = () => {
+    addDomainMessage("user", "Mark as Done");
+    addDomainMessage(
+      "assistant",
+      `🎉 Your domain is connected! DNS changes can take up to 48 hours to propagate. You'll know it's live when your landing page loads at ${domainName || "your domain"}.`
+    );
+    setDomainFlowStep("done");
+  };
+
+  const handleNeedHelp = () => {
+    addDomainMessage("user", "I need help");
+    addDomainMessage(
+      "assistant",
+      "No worries! Double-check that you added both the A record and the CNAME record exactly as shown. DNS propagation can take up to 48 hours. You can also select 'Other' to see generic steps, or reach out to your provider's support."
+    );
+  };
+
+  const handleCopyValue = (value: string) => {
+    navigator.clipboard.writeText(value).catch(() => {});
+    setCopiedValue(value);
+    setTimeout(() => setCopiedValue(null), 2000);
+  };
+
+  const domainProgressStep =
+    domainFlowStep === "start"
+      ? 1
+      : domainFlowStep === "show-instructions" || domainFlowStep === "done"
+      ? 3
+      : 2;
+
+  // ─── End domain flow helpers ──────────────────────────────────────────────────
+
   const persistLandingPage = (status: "draft" | "published") => {
     const currentId = Array.isArray(params?.id) ? params.id[0] : params?.id;
     const draftId = currentId && currentId !== "new" ? currentId : `lp-${Date.now()}`;
@@ -678,6 +910,13 @@ export default function GeneratedLandingPageEditor() {
                 <ClipboardList className="w-3 h-3" />
                 Add Form
               </button>
+              <button
+                onClick={() => setShowDomainModal(true)}
+                className="text-[11px] px-2 py-1 rounded-full bg-blue-500 text-white hover:bg-blue-600 flex items-center gap-1"
+              >
+                <Globe className="w-3 h-3" />
+                Connect Domain
+              </button>
             </div>
 
             <Dialog
@@ -792,6 +1031,279 @@ export default function GeneratedLandingPageEditor() {
                     ))}
                   </div>
                 )}
+              </DialogContent>
+            </Dialog>
+
+            {/* Connect Domain modal */}
+            <Dialog open={showDomainModal} onOpenChange={handleDomainModalClose}>
+              <DialogContent className="sm:max-w-md p-0 overflow-hidden flex flex-col max-h-[90vh]">
+                {/* Header */}
+                <div className="px-5 pt-5 pb-4 border-b border-border shrink-0">
+                  <DialogHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <Globe className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <div>
+                        <DialogTitle className="text-base font-semibold leading-tight">
+                          Connect Your Domain
+                        </DialogTitle>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Let AI guide you step-by-step
+                        </p>
+                      </div>
+                    </div>
+                  </DialogHeader>
+                  {/* Progress bar */}
+                  <div className="mt-4 flex items-center gap-1.5">
+                    {[1, 2, 3].map((n) => (
+                      <div
+                        key={n}
+                        className={cn(
+                          "h-1.5 flex-1 rounded-full transition-all duration-300",
+                          domainProgressStep >= n ? "bg-blue-500" : "bg-muted"
+                        )}
+                      />
+                    ))}
+                    <span className="text-[11px] text-muted-foreground ml-1 shrink-0">
+                      Step {domainProgressStep} of 3
+                    </span>
+                  </div>
+                </div>
+
+                {/* Chat messages */}
+                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+                  {domainMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "rounded-xl px-3 py-2.5 text-sm leading-relaxed",
+                        msg.role === "user"
+                          ? "bg-blue-500 text-white ml-8"
+                          : "bg-muted text-foreground mr-8"
+                      )}
+                    >
+                      {msg.content}
+                    </div>
+                  ))}
+
+                  {/* Inline DNS instructions card */}
+                  {domainFlowStep === "show-instructions" && domainProvider && (
+                    <div className="mr-8 rounded-xl border border-border bg-card p-3 space-y-2.5">
+                      {/* Copyable values */}
+                      <div className="space-y-1.5">
+                        {[
+                          { label: "A Record (IP)", value: SERVER_IP },
+                          { label: "CNAME Target", value: CNAME_TARGET },
+                        ].map(({ label, value }) => (
+                          <div
+                            key={label}
+                            className="flex items-center justify-between gap-2 rounded-lg bg-muted px-2.5 py-1.5"
+                          >
+                            <div>
+                              <p className="text-[10px] text-muted-foreground">{label}</p>
+                              <p className="text-xs font-mono font-medium">{value}</p>
+                            </div>
+                            <button
+                              onClick={() => handleCopyValue(value)}
+                              className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                              title="Copy"
+                            >
+                              {copiedValue === value ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Step list */}
+                      <ol className="space-y-1.5 list-none">
+                        {(PROVIDER_INSTRUCTIONS[domainProvider]?.steps ?? []).map((step, i) => (
+                          <li key={i} className="flex gap-2 text-xs text-foreground">
+                            <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center text-[10px] font-semibold mt-0.5">
+                              {i + 1}
+                            </span>
+                            <span className="leading-relaxed">{step}</span>
+                          </li>
+                        ))}
+                      </ol>
+
+                      {/* Provider notes */}
+                      {PROVIDER_INSTRUCTIONS[domainProvider]?.notes?.map((note, i) => (
+                        <p key={i} className="text-xs text-amber-600 bg-amber-50 rounded-lg px-2.5 py-2">
+                          {note}
+                        </p>
+                      ))}
+
+                      {/* Open provider link */}
+                      {domainProvider !== "Other" && (
+                        <a
+                          href={
+                            domainProvider === "GoDaddy" ? "https://godaddy.com" :
+                            domainProvider === "Namecheap" ? "https://namecheap.com" :
+                            domainProvider === "Google Domains" ? "https://domains.google" :
+                            "https://cloudflare.com"
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Open {domainProvider}
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Inline buying guide card */}
+                  {domainFlowStep === "buying-guide" && domainBuyingRegistrar && (
+                    <div className="mr-8 rounded-xl border border-border bg-card p-3 space-y-2">
+                      <ol className="space-y-1.5 list-none">
+                        {(BUYING_STEPS[domainBuyingRegistrar] ?? BUYING_STEPS["Not sure"]).map((step, i) => (
+                          <li key={i} className="flex gap-2 text-xs text-foreground">
+                            <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center text-[10px] font-semibold mt-0.5">
+                              {i + 1}
+                            </span>
+                            <span className="leading-relaxed">{step}</span>
+                          </li>
+                        ))}
+                      </ol>
+                      {domainBuyingRegistrar !== "Not sure" && (
+                        <a
+                          href={
+                            domainBuyingRegistrar === "GoDaddy" ? "https://godaddy.com" :
+                            domainBuyingRegistrar === "Namecheap" ? "https://namecheap.com" :
+                            "https://domains.google"
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Go to {domainBuyingRegistrar}
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Success state */}
+                  {domainFlowStep === "done" && (
+                    <div className="mr-8 rounded-xl bg-green-50 border border-green-200 p-4 text-center space-y-1">
+                      <p className="text-2xl">🎉</p>
+                      <p className="text-sm font-semibold text-green-700">Domain connected!</p>
+                      <p className="text-xs text-green-600">
+                        Allow up to 48 hours for DNS to propagate globally.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom action area */}
+                <div className="px-4 pb-4 pt-3 border-t border-border shrink-0 space-y-2">
+                  {domainFlowStep === "start" && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleOwnsYes}
+                        className="flex-1 text-sm px-3 py-2 rounded-lg border border-border bg-muted hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                      >
+                        Yes, I have a domain
+                      </button>
+                      <button
+                        onClick={handleOwnsNo}
+                        className="flex-1 text-sm px-3 py-2 rounded-lg border border-border bg-muted hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                      >
+                        No, I need one
+                      </button>
+                    </div>
+                  )}
+
+                  {domainFlowStep === "enter-domain" && (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={domainNameInput}
+                        onChange={(e) => setDomainNameInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleDomainNameSubmit(); }}
+                        placeholder="e.g. mybusiness.com"
+                        className="flex-1 h-9 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors"
+                      />
+                      <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white shrink-0" onClick={handleDomainNameSubmit}>
+                        <Send className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {domainFlowStep === "choose-provider" && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {["GoDaddy", "Namecheap", "Google Domains", "Cloudflare", "Other"].map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => handleProviderSelect(p)}
+                          className="text-sm px-3 py-2 rounded-lg border border-border bg-muted hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600 text-left transition-colors"
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {domainFlowStep === "show-instructions" && (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                        onClick={handleMarkAsDone}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                        Mark as Done
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={handleNeedHelp}
+                      >
+                        I need help
+                      </Button>
+                    </div>
+                  )}
+
+                  {domainFlowStep === "needs-domain-registrar" && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {["GoDaddy", "Namecheap", "Google Domains", "Not sure"].map((r) => (
+                        <button
+                          key={r}
+                          onClick={() => handleRegistrarSelect(r)}
+                          className="text-sm px-3 py-2 rounded-lg border border-border bg-muted hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600 text-left transition-colors"
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {domainFlowStep === "buying-guide" && (
+                    <button
+                      onClick={handlePurchasedDomain}
+                      className="w-full text-sm px-3 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                    >
+                      I&apos;ve purchased a domain →
+                    </button>
+                  )}
+
+                  {domainFlowStep === "done" && (
+                    <Button
+                      size="sm"
+                      className="w-full bg-green-500 hover:bg-green-600 text-white"
+                      onClick={() => handleDomainModalClose(false)}
+                    >
+                      Close
+                    </Button>
+                  )}
+                </div>
               </DialogContent>
             </Dialog>
           </div>
