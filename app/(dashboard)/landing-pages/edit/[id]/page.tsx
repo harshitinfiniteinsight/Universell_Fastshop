@@ -927,7 +927,7 @@ export default function GeneratedLandingPageEditor() {
               </button>
               <button
                 onClick={() => setShowDomainModal(true)}
-                className="text-[11px] px-2 py-1 rounded-full bg-blue-500 text-white hover:bg-blue-600 flex items-center gap-1"
+                className="text-[11px] px-2 py-1 rounded-full bg-orange-500 text-white hover:bg-orange-600 flex items-center gap-1"
               >
                 <Globe className="w-3 h-3" />
                 Connect Domain
