@@ -648,17 +648,17 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
 
                     <div className="space-y-5">
                       <h2 className="text-4xl font-bold text-foreground leading-[1.15] tracking-tight lg:text-5xl">
-                        Build a complete website{" "}
+                        Publish your full website{" "}
                         <span className="relative inline-block">
                           <span className="relative z-10 bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">
-                            with AI
+                            without touching code.
                           </span>
                           <span className="absolute bottom-1 left-0 w-full h-3 bg-primary/15 -rotate-1 rounded" />
                         </span>
                       </h2>
 
                       <p className="max-w-lg text-base leading-7 text-muted-foreground lg:text-lg">
-                        Go from a short brief to a complete, multi-page website in minutes.
+                        From portfolio to business site — AI builds every page, handles the copy, and gets you live fast.
                       </p>
                     </div>
 
@@ -666,18 +666,18 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                       {[
                         {
                           icon: Layers,
-                          title: "Smart structure",
-                          description: "AI builds your full page flow — hero, proof, services, FAQs, and CTAs.",
+                          title: "Full website generation",
+                          description: "AI creates your homepage, about, services, and more — all in one step.",
                         },
                         {
                           icon: Palette,
-                          title: "Multi-page generation",
-                          description: "Generate all core pages with consistent design in a single step.",
+                          title: "Customizable layouts",
+                          description: "Choose your structure and style. Every section adapts to your brand and content.",
                         },
                         {
                           icon: Code,
-                          title: "Production-ready",
-                          description: "Clean, responsive layouts for desktop and mobile out of the box.",
+                          title: "Multi-page, zero friction",
+                          description: "Consistent design across all pages — responsive, polished, and ready to publish.",
                         },
                       ].map((item) => {
                         const Icon = item.icon;
@@ -721,17 +721,17 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
 
                     <div className="space-y-5">
                       <h2 className="text-4xl font-bold text-foreground leading-[1.15] tracking-tight lg:text-5xl">
-                        Create high-converting{" "}
+                        Launch campaigns that{" "}
                         <span className="relative inline-block">
                           <span className="relative z-10 bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">
-                            landing pages with AI.
+                            convert — in minutes.
                           </span>
                           <span className="absolute bottom-1 left-0 w-full h-3 bg-primary/15 -rotate-1 rounded" />
                         </span>
                       </h2>
 
                       <p className="max-w-xl text-base leading-7 text-muted-foreground lg:text-lg">
-                        Generate pages that convert visitors into leads — launch in minutes, not days.
+                        No developer. No designer. No code. Turn any offer into a high-converting landing page in minutes.
                       </p>
                     </div>
 
@@ -739,18 +739,18 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                       {[
                         {
                           icon: Target,
-                          title: "Conversion strategy",
-                          description: "AI maps the ideal message-to-CTA flow for your offer.",
+                          title: "AI-driven conversion strategy",
+                          description: "AI structures your page around one goal — maximum leads, clicks, or sign-ups.",
                         },
                         {
                           icon: FileText,
-                          title: "Persuasive copy",
-                          description: "Generate headlines, benefit bullets, and CTAs that convert.",
+                          title: "Persuasive copy, instantly",
+                          description: "Get audience-targeted headlines, benefit bullets, and CTAs written for you.",
                         },
                         {
                           icon: Zap,
-                          title: "Fast launch",
-                          description: "From idea to campaign-ready page in under 5 minutes.",
+                          title: "Live in under 5 minutes",
+                          description: "Go from brief to campaign-ready page without writing a single line of code.",
                         },
                       ].map((item) => {
                         const Icon = item.icon;

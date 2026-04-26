@@ -9,7 +9,7 @@ function WebsiteBuilderInner() {
       <div className="space-y-1">
         <h1 className="text-2xl font-bold text-foreground">Website Builder</h1>
         <p className="text-muted-foreground">
-          Generate a complete multi-page website with AI in minutes
+          Your full website, built by AI — no code, no setup, no limits.
         </p>
       </div>
       <AIBuilderContent builderType="website" />
