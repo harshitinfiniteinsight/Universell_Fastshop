@@ -36,6 +36,8 @@ import {
   Plus,
   TrendingUp,
   TrendingDown,
+  Copy,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -594,6 +596,27 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
     setStep("done");
   };
 
+  const duplicateLandingPage = (page: SavedLandingPageDraft) => {
+    try {
+      const raw = localStorage.getItem(SAVED_LANDING_PAGES_KEY);
+      const existing: SavedLandingPageDraft[] = raw ? JSON.parse(raw) : [];
+      const duplicate: SavedLandingPageDraft = {
+        ...page,
+        id: `lp-${Date.now()}`,
+        businessName: `${page.businessName} (Copy)`,
+        updatedAt: new Date().toISOString(),
+        status: "draft",
+      };
+      const updated = [duplicate, ...existing].sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+      localStorage.setItem(SAVED_LANDING_PAGES_KEY, JSON.stringify(updated));
+      setSavedLandingPages(updated);
+    } catch {
+      // ignore storage errors
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Card wrapper */}
@@ -930,6 +953,14 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                         </div>
                       </div>
 
+                      {/* Metrics helper text */}
+                      <div className="flex items-start gap-2 px-1 -mt-2">
+                        <Info className="w-3.5 h-3.5 text-muted-foreground/60 mt-0.5 shrink-0" />
+                        <p className="text-xs text-muted-foreground/70 leading-relaxed">
+                          Lead capture and avg conversion metrics will be activated only when you select and add lead forms that you have created in our system.
+                        </p>
+                      </div>
+
                       {/* Filter row */}
                       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         {/* Status tabs */}
@@ -948,8 +979,8 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                             </button>
                           ))}
                         </div>
-                        {/* Search */}
-                        <div className="relative flex-1">
+                        {/* Search — constrained width so it doesn't span the full row */}
+                        <div className="relative w-full sm:w-72 sm:max-w-xs">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                           <input
                             type="text"
@@ -997,82 +1028,126 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                           {filteredPages.map((page) => {
                             const metrics = getPageMetrics(page.id, page.status);
                             const isLive = page.status === "published";
-                            // Placeholder URL slug — replace with real published URL when available
                             const slug = toSlug(page.businessName);
+                            const initials = page.businessName
+                              .split(" ")
+                              .filter((w: string) => w.length > 0)
+                              .slice(0, 2)
+                              .map((w: string) => w[0])
+                              .join("");
+                            const updatedDate = new Date(page.updatedAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            });
 
                             return (
                               <div
                                 key={page.id}
-                                className={`group rounded-2xl border bg-background hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col ${
+                                className={`group rounded-2xl border bg-card shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${
                                   isLive
-                                    ? "border-emerald-200/50 hover:border-emerald-400/60 hover:shadow-emerald-500/10"
-                                    : "border-border hover:border-primary/50 hover:shadow-primary/10"
+                                    ? "border-emerald-200/60 hover:border-emerald-400/70 hover:shadow-emerald-500/10"
+                                    : "border-border hover:border-primary/40 hover:shadow-primary/10"
                                 }`}
                               >
-                                {/* Preview area */}
-                                <div
-                                  className={`relative h-36 border-b flex items-center justify-center overflow-hidden ${
-                                    isLive
-                                      ? "bg-gradient-to-br from-emerald-100/40 via-emerald-50/20 to-background border-emerald-200/30"
-                                      : "bg-gradient-to-br from-primary/20 via-primary/5 to-background border-border/50"
-                                  }`}
-                                >
-                                  {/* Decorative shapes */}
-                                  <div className="absolute inset-0 overflow-hidden opacity-20">
-                                    <div className="absolute top-3 left-5 w-10 h-10 rounded-full bg-white/30" />
-                                    <div className="absolute bottom-4 right-8 w-14 h-7 rounded bg-white/30" />
-                                    <div className="absolute top-8 right-12 w-8 h-8 rounded-lg bg-white/20" />
-                                  </div>
-
-                                  {/* Initials avatar */}
-                                  <div className="relative text-center space-y-1.5">
+                                {/* ── Live preview (iframe) ── */}
+                                <div className="relative overflow-hidden bg-muted" style={{ height: "192px" }}>
+                                  {page.html ? (
                                     <div
-                                      className={`w-14 h-14 rounded-full mx-auto flex items-center justify-center shadow-md ${
+                                      style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        left: 0,
+                                        width: "960px",
+                                        height: "540px",
+                                        transformOrigin: "top left",
+                                        // 192px container ÷ 540px iframe height ≈ 0.356
+                                        transform: "scale(0.356)",
+                                        pointerEvents: "none",
+                                      }}
+                                    >
+                                      {/* sandbox="" applies all sandbox restrictions (no scripts, no forms,
+                                          no popups, no same-origin access) — this is intentionally the
+                                          most restrictive setting for safe HTML previews. */}
+                                      <iframe
+                                        srcDoc={page.html}
+                                        style={{ width: "960px", height: "540px", border: "none", display: "block" }}
+                                        sandbox=""
+                                        scrolling="no"
+                                        title={`Preview: ${page.tagline}`}
+                                      />
+                                    </div>
+                                  ) : (
+                                    /* Fallback placeholder when no HTML is stored */
+                                    <div
+                                      className={`absolute inset-0 flex flex-col gap-2 p-4 ${
                                         isLive
-                                          ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
-                                          : "bg-gradient-to-br from-primary to-primary/70"
+                                          ? "bg-gradient-to-br from-emerald-100/60 via-emerald-50/30 to-background"
+                                          : "bg-gradient-to-br from-primary/15 via-primary/5 to-background"
                                       }`}
                                     >
-                                      <span className="text-white font-bold text-lg">
-                                        {page.businessName
-                                          .split(" ")
-                                          .filter((w: string) => w.length > 0)
-                                          .slice(0, 2)
-                                          .map((w: string) => w[0])
-                                          .join("")}
-                                      </span>
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${isLive ? "bg-emerald-500" : "bg-primary"}`}>
+                                          {initials}
+                                        </div>
+                                        <div className="h-2 w-20 rounded-full bg-current opacity-20" />
+                                        <div className="ml-auto h-2 w-10 rounded-full bg-current opacity-10" />
+                                      </div>
+                                      <div className="flex-1 flex flex-col justify-center gap-2">
+                                        <div className="h-3 w-3/4 rounded bg-current opacity-15" />
+                                        <div className="h-2 w-1/2 rounded bg-current opacity-10" />
+                                        <div className="mt-2 h-6 w-24 rounded-md bg-current opacity-20" />
+                                      </div>
+                                      <div className="grid grid-cols-3 gap-1.5">
+                                        {[1, 2, 3].map((i) => (
+                                          <div key={i} className="h-12 rounded-lg bg-current opacity-10" />
+                                        ))}
+                                      </div>
                                     </div>
-                                    <p className="text-[11px] text-muted-foreground font-medium">{page.businessName}</p>
-                                  </div>
+                                  )}
+
+                                  {/* Subtle gradient overlay at bottom */}
+                                  <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card/60 to-transparent pointer-events-none" />
 
                                   {/* Status badge */}
                                   <span
-                                    className={`absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${
+                                    className={`absolute top-3 left-3 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm ${
                                       isLive
-                                        ? "text-emerald-700 bg-emerald-100"
-                                        : "text-amber-700 bg-amber-100"
+                                        ? "text-emerald-700 bg-emerald-100/90"
+                                        : "text-amber-700 bg-amber-100/90"
                                     }`}
                                   >
-                                    <span
-                                      className={`w-1.5 h-1.5 rounded-full ${isLive ? "bg-emerald-500" : "bg-amber-500"}`}
-                                    />
+                                    <span className={`w-1.5 h-1.5 rounded-full ${isLive ? "bg-emerald-500" : "bg-amber-500"}`} />
                                     {isLive ? "Live" : "Draft"}
                                   </span>
                                 </div>
 
-                                {/* Card body */}
-                                <div className="flex-1 p-4 flex flex-col gap-3">
-                                  <div className="min-h-0">
-                                    <p className="text-sm font-semibold text-foreground line-clamp-1">{page.tagline}</p>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                                      {/* Placeholder URL — replace with real published URL */}
-                                      {isLive ? `${slug}.com/${slug.split("-")[0]}` : `Draft · ${new Date(page.updatedAt).toLocaleDateString()}`}
+                                {/* ── Card body ── */}
+                                <div className="flex-1 flex flex-col p-4 gap-3">
+                                  {/* Title & subtitle */}
+                                  <div>
+                                    <h3 className="text-sm font-semibold text-foreground leading-snug line-clamp-1">
+                                      {page.tagline}
+                                    </h3>
+                                    <p className="text-[12px] text-muted-foreground mt-0.5 font-medium">
+                                      {page.businessName}
                                     </p>
                                   </div>
 
-                                  {/* Per-card stats (placeholder metrics) */}
+                                  {/* Metadata row */}
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[11px] text-muted-foreground/70 font-mono truncate">
+                                      {isLive ? `${slug}.com` : "Not published"}
+                                    </span>
+                                    <span className="text-muted-foreground/40 text-[11px]">·</span>
+                                    <span className="text-[11px] text-muted-foreground/70">
+                                      Updated {updatedDate}
+                                    </span>
+                                  </div>
+
+                                  {/* Per-card stats (placeholder metrics, live pages only) */}
                                   {isLive && (
-                                    <div className="grid grid-cols-3 gap-2 py-2 border-y border-border/60">
+                                    <div className="grid grid-cols-3 gap-2 py-2.5 border-y border-border/60">
                                       <div>
                                         <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">Views</p>
                                         <p className="text-sm font-bold text-foreground">{fmtNum(metrics.views)}</p>
@@ -1086,11 +1161,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                         <div className="flex items-baseline gap-1">
                                           <p className="text-sm font-bold text-foreground">{metrics.cvr}%</p>
                                           {metrics.cvrTrend !== 0 && (
-                                            <span
-                                              className={`text-[9px] font-medium ${
-                                                metrics.cvrTrend > 0 ? "text-emerald-600" : "text-red-500"
-                                              }`}
-                                            >
+                                            <span className={`text-[9px] font-medium ${metrics.cvrTrend > 0 ? "text-emerald-600" : "text-red-500"}`}>
                                               {metrics.cvrTrend > 0 ? `+${metrics.cvrTrend}%` : `${metrics.cvrTrend}%`}
                                             </span>
                                           )}
@@ -1099,8 +1170,8 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                     </div>
                                   )}
 
-                                  {/* Actions */}
-                                  <div className="flex gap-2 mt-auto">
+                                  {/* ── Action buttons ── */}
+                                  <div className="flex items-center gap-2 mt-auto pt-1">
                                     <Link
                                       href={`/landing-pages/edit/${encodeURIComponent(page.id)}`}
                                       className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:border-primary/50 hover:text-primary transition-colors"
@@ -1115,6 +1186,13 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                       <Edit className="w-3 h-3" />
                                       Edit
                                     </Link>
+                                    <button
+                                      onClick={() => duplicateLandingPage(page)}
+                                      title="Duplicate page"
+                                      className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors shrink-0"
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                    </button>
                                   </div>
                                 </div>
                               </div>
