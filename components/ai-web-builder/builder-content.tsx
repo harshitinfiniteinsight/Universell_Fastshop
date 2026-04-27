@@ -1133,7 +1133,6 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                           {filteredPages.map((page) => {
                             const metrics = getPageMetrics(page.id, page.status);
                             const isLive = page.status === "published";
-                            const slug = page.domain ?? toSlug(page.businessName);
                             const initials = page.businessName
                               .split(" ")
                               .filter((w: string) => w.length > 0)
@@ -1172,7 +1171,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                         width: "960px",
                                         height: "540px",
                                         transformOrigin: "top left",
-                                        transform: "scale(var(--lp-scale, 0.334))",
+                        transform: "scale(0.334)", /* 16:9 container height ≈ aspect-[16/9] ≈ width×0.5625; 960*0.5625=540px. scale=containerWidth/960 ≈ 0.334 for a ~320px wide card */
                                         pointerEvents: "none",
                                       }}
                                     >
@@ -1239,7 +1238,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                   {/* Metadata row */}
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <span className="text-[11px] text-muted-foreground/70 font-mono truncate max-w-[120px]">
-                                      {isLive ? slug : "Not published"}
+                                      {isLive ? (page.domain ?? `${toSlug(page.businessName)}.com`) : "Not published"}
                                     </span>
                                     <span className="text-muted-foreground/40 text-[11px]">·</span>
                                     <span className="text-[11px] text-muted-foreground/70">
@@ -1290,7 +1289,10 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                     </Link>
                                     {!page.isDummy && (
                                       <button
-                                        onClick={() => duplicateLandingPage(savedLandingPages.find((p: SavedLandingPageDraft) => p.id === page.id)!)}
+                                        onClick={() => {
+                                          const realPage = savedLandingPages.find((p: SavedLandingPageDraft) => p.id === page.id);
+                                          if (realPage) duplicateLandingPage(realPage);
+                                        }}
                                         title="Duplicate page"
                                         className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors shrink-0"
                                       >
