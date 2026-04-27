@@ -88,6 +88,19 @@ const getPageMetrics = (id: string, status: string) => {
   return { views, leads, cvr, cvrTrend };
 };
 
+/**
+ * Compute deterministic mock metrics for a website based on its ID.
+ * These are placeholder values used until a real analytics integration is added.
+ */
+const getWebsiteMetrics = (id: string, status: string) => {
+  if (status !== "published") return { views: 0, leads: 0, cvr: 0 };
+  const hash = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const views = 6000 + (hash % 22000);
+  const leads = Math.round(views * (0.035 + (hash % 9) * 0.005));
+  const cvr = parseFloat(((leads / views) * 100).toFixed(1));
+  return { views, leads, cvr };
+};
+
 /** Convert a business name into a URL-safe slug. */
 const toSlug = (name: string) =>
   name
@@ -238,6 +251,8 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
   const [savedWebsites, setSavedWebsites] = useState<SavedWebsiteDraft[]>([]);
   const [pageFilter, setPageFilter] = useState<"all" | "live" | "draft">("all");
   const [pageSearch, setPageSearch] = useState("");
+  const [websiteFilter, setWebsiteFilter] = useState<"all" | "live" | "draft">("all");
+  const [websiteSearch, setWebsiteSearch] = useState("");
 
   const isLandingPageBuilder = builderType === "landing-page";
   const isWebsiteBuilder = builderType === "website";
@@ -1312,9 +1327,9 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
               </div>
             )}
             {isWebsiteBuilder && activeTab === "view-existing" && (
-              <div className="p-6 lg:p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {[
+              <div className="p-6 lg:p-8 space-y-6">
+                {(() => {
+                  const dummyWebsites = [
                     {
                       id: "dummy-1",
                       businessName: "Sunrise Cafe",
@@ -1355,92 +1370,254 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                       status: "draft" as const,
                       previewImage: websitePreviewImages[3],
                     },
-                  ].map((site) => (
-                    <div
-                      key={site.id}
-                      className={`group relative flex flex-col rounded-2xl border bg-card overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ${
-                        site.status === "published"
-                          ? "border-emerald-200/60 hover:border-emerald-400/70 hover:shadow-emerald-500/10"
-                          : "border-border hover:border-primary/50 hover:shadow-primary/10"
-                      }`}
-                    >
-                      {/* Preview image */}
-                      <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted">
-                        <Image
-                          src={site.previewImage}
-                          alt={`${site.businessName} preview`}
-                          fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                          className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                        />
-                        {/* Overlay gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        {/* Status badge */}
-                        <span
-                          className={`absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm ${
-                            site.status === "published"
-                              ? "text-emerald-700 bg-emerald-100/90"
-                              : "text-amber-700 bg-amber-100/90"
-                          }`}
-                        >
-                          {site.status === "published" ? "Live" : "Draft"}
-                        </span>
-                        {/* Pages count badge */}
-                        <span className="absolute top-3 left-3 text-[11px] font-medium px-2.5 py-1 rounded-full bg-background/80 text-foreground backdrop-blur-sm">
-                          {site.pages.length} pages
-                        </span>
-                      </div>
+                  ];
 
-                      {/* Card body */}
-                      <div className="flex flex-col flex-1 p-4 gap-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <h3 className="text-sm font-semibold text-foreground truncate">{site.businessName}</h3>
-                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{site.tagline}</p>
-                          </div>
-                        </div>
+                  type DisplaySite = {
+                    id: string;
+                    businessName: string;
+                    tagline: string;
+                    description: string;
+                    pages: string[];
+                    updatedAt: string;
+                    status: "draft" | "published";
+                    previewImage: string;
+                  };
 
-                        <p className="text-xs text-muted-foreground leading-5 line-clamp-2">{site.description}</p>
+                  const allDisplaySites: DisplaySite[] = [
+                    ...dummyWebsites,
+                    ...savedWebsites.map((s) => ({
+                      id: s.id,
+                      businessName: s.businessName,
+                      tagline: s.tagline,
+                      description: s.description,
+                      pages: s.pages,
+                      updatedAt: s.updatedAt,
+                      status: s.status,
+                      previewImage: s.previewImage,
+                    })),
+                  ];
 
-                        {/* Pages chips */}
-                        <div className="flex flex-wrap gap-1.5">
-                          {site.pages.slice(0, 3).map((page) => (
-                            <span key={page} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                              {page}
-                            </span>
-                          ))}
-                          {site.pages.length > 3 && (
-                            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                              +{site.pages.length - 3} more
-                            </span>
-                          )}
-                        </div>
+                  const liveSites = allDisplaySites.filter((s) => s.status === "published");
+                  const pagesLive = liveSites.length;
+                  const allSiteMetrics = allDisplaySites.map((s) => getWebsiteMetrics(s.id, s.status));
+                  const totalViews = allSiteMetrics.reduce((sum, m) => sum + m.views, 0);
+                  const totalLeads = allSiteMetrics.reduce((sum, m) => sum + m.leads, 0);
+                  const avgCvr =
+                    liveSites.length > 0
+                      ? parseFloat(
+                          (
+                            allSiteMetrics
+                              .filter((_, i) => allDisplaySites[i].status === "published")
+                              .reduce((sum, m) => sum + m.cvr, 0) / liveSites.length
+                          ).toFixed(1)
+                        )
+                      : 0;
 
-                        <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/60">
-                          <p className="text-[11px] text-muted-foreground">
-                            {new Date(site.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  const filteredSites = allDisplaySites.filter((s) => {
+                    const matchesFilter =
+                      websiteFilter === "all" ||
+                      (websiteFilter === "live" && s.status === "published") ||
+                      (websiteFilter === "draft" && s.status === "draft");
+                    const matchesSearch =
+                      websiteSearch.trim() === "" ||
+                      s.businessName.toLowerCase().includes(websiteSearch.toLowerCase()) ||
+                      s.tagline.toLowerCase().includes(websiteSearch.toLowerCase());
+                    return matchesFilter && matchesSearch;
+                  });
+
+                  return (
+                    <>
+                      {/* Metrics bar */}
+                      <div className="space-y-3 pb-4 border-b border-border">
+                        {/* Helper text above divider */}
+                        <div className="flex items-start gap-2 px-0.5">
+                          <Info className="w-3.5 h-3.5 text-muted-foreground/60 mt-0.5 shrink-0" />
+                          <p className="text-xs text-muted-foreground/70 leading-relaxed">
+                            Lead capture and avg conversion metrics will be activated only when you select and add lead forms that you have created in our system.
                           </p>
-                          <div className="flex items-center gap-2">
-                            <Link
-                              href={`/website-pages`}
-                              className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:border-primary/50 hover:text-primary transition-colors"
-                            >
-                              <Eye className="w-3 h-3" />
-                              Preview
-                            </Link>
-                            <Link
-                              href={`/website-pages`}
-                              className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                            >
-                              <Edit className="w-3 h-3" />
-                              Edit
-                            </Link>
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                          {/* Pages live */}
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Pages live</p>
+                            <p className="text-3xl font-bold text-foreground">{pagesLive}</p>
+                          </div>
+                          {/* Total views */}
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Total views (30d)</p>
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-3xl font-bold text-foreground">{fmtNum(totalViews)}</p>
+                              <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                                <TrendingUp className="w-3 h-3" />
+                                +8%
+                              </span>
+                            </div>
+                          </div>
+                          {/* Leads captured */}
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Leads captured</p>
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-3xl font-bold text-blue-600">{totalLeads.toLocaleString()}</p>
+                              <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                                <TrendingUp className="w-3 h-3" />
+                                +2%
+                              </span>
+                            </div>
+                          </div>
+                          {/* Avg. conversion */}
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Avg. conversion</p>
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-3xl font-bold text-blue-600">{avgCvr}%</p>
+                              <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-red-50 text-red-600">
+                                <TrendingDown className="w-3 h-3" />
+                                -0.4%
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+
+                      {/* Filter + Search + CTA row */}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        {/* Status tabs — left side */}
+                        <div className="flex items-center gap-0.5 border border-border rounded-lg p-0.5 bg-muted/30 shrink-0">
+                          {(["all", "live", "draft"] as const).map((f) => (
+                            <button
+                              key={f}
+                              onClick={() => setWebsiteFilter(f)}
+                              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize ${
+                                websiteFilter === f
+                                  ? "bg-background shadow-sm text-foreground"
+                                  : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                        {/* Spacer */}
+                        <div className="hidden sm:block flex-1" />
+                        {/* Search + New Website — right side */}
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <div className="relative flex-1 sm:flex-none sm:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                            <input
+                              type="text"
+                              placeholder="Search websites..."
+                              value={websiteSearch}
+                              onChange={(e) => setWebsiteSearch(e.target.value)}
+                              className="w-full h-9 pl-9 pr-3 text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                            />
+                          </div>
+                          <Button
+                            onClick={() => setActiveTab("generate")}
+                            className="gap-2 shrink-0"
+                            size="sm"
+                          >
+                            <Plus className="w-4 h-4" />
+                            New Website
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Cards grid */}
+                      {filteredSites.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-border p-10 text-center">
+                          <p className="text-sm text-muted-foreground">No websites match your search.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                          {filteredSites.map((site) => (
+                            <div
+                              key={site.id}
+                              className={`group relative flex flex-col rounded-2xl border bg-card overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ${
+                                site.status === "published"
+                                  ? "border-emerald-200/60 hover:border-emerald-400/70 hover:shadow-emerald-500/10"
+                                  : "border-border hover:border-primary/50 hover:shadow-primary/10"
+                              }`}
+                            >
+                              {/* Preview image */}
+                              <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted">
+                                <Image
+                                  src={site.previewImage}
+                                  alt={`${site.businessName} preview`}
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                                  className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                                />
+                                {/* Overlay gradient */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                {/* Status badge */}
+                                <span
+                                  className={`absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm border ${
+                                    site.status === "published"
+                                      ? "text-emerald-700 bg-emerald-100/90 border-emerald-200/60"
+                                      : "text-amber-700 bg-amber-100/90 border-amber-200/60"
+                                  }`}
+                                >
+                                  {site.status === "published" ? "Live" : "Draft"}
+                                </span>
+                                {/* Pages count badge */}
+                                <span className="absolute top-3 left-3 text-[11px] font-medium px-2.5 py-1 rounded-full bg-background/80 text-foreground backdrop-blur-sm">
+                                  {site.pages.length} pages
+                                </span>
+                              </div>
+
+                              {/* Card body */}
+                              <div className="flex flex-col flex-1 p-4 gap-3">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <h3 className="text-sm font-semibold text-foreground truncate">{site.businessName}</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{site.tagline}</p>
+                                  </div>
+                                </div>
+
+                                <p className="text-xs text-muted-foreground leading-5 line-clamp-2">{site.description}</p>
+
+                                {/* Pages chips */}
+                                <div className="flex flex-wrap gap-1.5">
+                                  {site.pages.slice(0, 3).map((page) => (
+                                    <span key={page} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                      {page}
+                                    </span>
+                                  ))}
+                                  {site.pages.length > 3 && (
+                                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                      +{site.pages.length - 3} more
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/60">
+                                  <p className="text-[11px] text-muted-foreground">
+                                    {new Date(site.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <Link
+                                      href={`/website-pages`}
+                                      className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                      Preview
+                                    </Link>
+                                    <Link
+                                      href={`/website-pages`}
+                                      className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                    >
+                                      <Edit className="w-3 h-3" />
+                                      Edit
+                                    </Link>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             )}
           </>
