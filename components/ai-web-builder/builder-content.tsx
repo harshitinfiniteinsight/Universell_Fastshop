@@ -32,6 +32,10 @@ import {
   Layers,
   Palette,
   Eye,
+  Search,
+  Plus,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -64,6 +68,30 @@ type SavedWebsiteDraft = {
 };
 
 const SAVED_LANDING_PAGES_KEY = "universell-saved-landing-pages";
+
+/** Format a number as e.g. 12.4k for display in metrics. */
+const fmtNum = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
+
+/**
+ * Compute deterministic mock metrics for a landing page based on its ID.
+ * These are placeholder values used until a real analytics integration is added.
+ */
+const getPageMetrics = (id: string, status: string) => {
+  if (status !== "published") return { views: 0, leads: 0, cvr: 0, cvrTrend: 0 };
+  const hash = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const views = 5000 + (hash % 18000);
+  const leads = Math.round(views * (0.04 + (hash % 8) * 0.006));
+  const cvr = parseFloat(((leads / views) * 100).toFixed(1));
+  const cvrTrend = parseFloat((((hash % 7) - 3) * 0.4).toFixed(1));
+  return { views, leads, cvr, cvrTrend };
+};
+
+/** Convert a business name into a URL-safe slug. */
+const toSlug = (name: string) =>
+  name
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
 const SAVED_WEBSITES_KEY = "universell-saved-websites";
 
 const websitePreviewImages = [
@@ -121,6 +149,8 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
   const [activeTab, setActiveTab] = useState<"generate" | "view-existing">("generate");
   const [savedLandingPages, setSavedLandingPages] = useState<SavedLandingPageDraft[]>([]);
   const [savedWebsites, setSavedWebsites] = useState<SavedWebsiteDraft[]>([]);
+  const [pageFilter, setPageFilter] = useState<"all" | "live" | "draft">("all");
+  const [pageSearch, setPageSearch] = useState("");
 
   const isLandingPageBuilder = builderType === "landing-page";
   const isWebsiteBuilder = builderType === "website";
@@ -815,103 +845,286 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
           </div>
             ) : null}
             {isLandingPageBuilder && activeTab === "view-existing" && (
-              <div className="p-6 lg:p-8">
-                {savedLandingPages.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-border bg-gradient-to-br from-primary/5 to-primary/2 p-12 text-center">
-                    <div className="flex justify-center mb-4">
-                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                        <FileText className="w-8 h-8 text-primary" />
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-bold text-foreground">No landing pages yet</h3>
-                    <p className="text-muted-foreground mt-2">Generate your first landing page to get started.</p>
-                    <button
-                      onClick={() => setActiveTab("generate")}
-                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      Generate your first page
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                    {savedLandingPages.map((page) => (
-                      <div
-                        key={page.id}
-                        className={`group rounded-2xl border bg-background hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col ${
-                          page.status === "published"
-                            ? "border-emerald-200/50 hover:border-emerald-400/60 hover:shadow-emerald-500/10"
-                            : "border-border hover:border-primary/50 hover:shadow-primary/10"
-                        }`}
-                      >
-                        <div
-                          className={`relative h-40 border-b flex items-center justify-center overflow-hidden ${
-                            page.status === "published"
-                              ? "bg-gradient-to-br from-emerald-100/40 via-emerald-50/20 to-background border-emerald-200/30"
-                              : "bg-gradient-to-br from-primary/20 via-primary/5 to-background border-border/50"
-                          }`}
-                        >
-                          <div className="absolute inset-0 opacity-10">
-                            <div className="absolute top-4 left-4 w-12 h-12 rounded-full bg-white/20" />
-                            <div className="absolute bottom-6 right-6 w-16 h-8 rounded bg-white/20" />
+              <div className="p-6 lg:p-8 space-y-6">
+                {/* ── Metrics bar ── */}
+                {(() => {
+                  const livePages = savedLandingPages.filter((p) => p.status === "published");
+                  const pagesLive = livePages.length;
+
+                  const allMetrics = savedLandingPages.map((p) => getPageMetrics(p.id, p.status));
+                  const totalViews = allMetrics.reduce((s, m) => s + m.views, 0);
+                  const totalLeads = allMetrics.reduce((s, m) => s + m.leads, 0);
+                  const avgCvr =
+                    livePages.length > 0
+                      ? parseFloat(
+                          (allMetrics.filter((_, i) => savedLandingPages[i].status === "published")
+                            .reduce((s, m) => s + m.cvr, 0) / livePages.length).toFixed(1)
+                        )
+                      : 0;
+
+                  const filteredPages = savedLandingPages.filter((p) => {
+                    const matchesFilter =
+                      pageFilter === "all" ||
+                      (pageFilter === "live" && p.status === "published") ||
+                      (pageFilter === "draft" && p.status === "draft");
+                    const matchesSearch =
+                      pageSearch.trim() === "" ||
+                      p.businessName.toLowerCase().includes(pageSearch.toLowerCase()) ||
+                      p.tagline.toLowerCase().includes(pageSearch.toLowerCase());
+                    return matchesFilter && matchesSearch;
+                  });
+
+                  return (
+                    <>
+                      {/* Metrics bar — trend badges are placeholder values until analytics integration */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pb-4 border-b border-border">
+                        {/* Pages live */}
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Pages live</p>
+                          <p className="text-3xl font-bold text-foreground">{pagesLive}</p>
+                        </div>
+                        {/* Total views */}
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Total views (30d)</p>
+                          <div className="flex items-baseline gap-2">
+                            <p className="text-3xl font-bold text-foreground">
+                              {savedLandingPages.length > 0 ? fmtNum(totalViews) : "0"}
+                            </p>
+                            {savedLandingPages.length > 0 && (
+                              <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                                <TrendingUp className="w-3 h-3" />
+                                +8%
+                              </span>
+                            )}
                           </div>
-                          <div className="relative text-center space-y-2">
-                            <div
-                              className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center ${
-                                page.status === "published"
-                                  ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
-                                  : "bg-gradient-to-br from-primary to-primary/60"
+                        </div>
+                        {/* Leads captured */}
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Leads captured</p>
+                          <div className="flex items-baseline gap-2">
+                            <p className="text-3xl font-bold text-blue-600">
+                              {savedLandingPages.length > 0 ? totalLeads.toLocaleString() : "0"}
+                            </p>
+                            {savedLandingPages.length > 0 && (
+                              <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                                <TrendingUp className="w-3 h-3" />
+                                +2%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Avg. conversion */}
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Avg. conversion</p>
+                          <div className="flex items-baseline gap-2">
+                            <p className="text-3xl font-bold text-blue-600">
+                              {savedLandingPages.length > 0 ? `${avgCvr}%` : "0%"}
+                            </p>
+                            {savedLandingPages.length > 0 && (
+                              <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-red-50 text-red-600">
+                                <TrendingDown className="w-3 h-3" />
+                                -0.4%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Filter row */}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        {/* Status tabs */}
+                        <div className="flex items-center gap-0.5 border border-border rounded-lg p-0.5 bg-muted/30 shrink-0">
+                          {(["all", "live", "draft"] as const).map((f) => (
+                            <button
+                              key={f}
+                              onClick={() => setPageFilter(f)}
+                              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize ${
+                                pageFilter === f
+                                  ? "bg-background shadow-sm text-foreground"
+                                  : "text-muted-foreground hover:text-foreground"
                               }`}
                             >
-                              <span className="text-white font-bold text-xl">
-                                {page.businessName
-                                  .split(" ")
-                                  .filter((w: string) => w.length > 0)
-                                  .slice(0, 2)
-                                  .map((w: string) => w[0])
-                                  .join("")}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground font-medium">{page.businessName}</p>
-                          </div>
-                          <span
-                            className={`absolute top-3 right-3 text-[10px] font-semibold px-2 py-1 rounded-full ${
-                              page.status === "published"
-                                ? "text-emerald-700 bg-emerald-100"
-                                : "text-primary bg-primary/20"
-                            }`}
-                          >
-                            {page.status === "published" ? "Live" : "Draft"}
-                          </span>
+                              {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
+                            </button>
+                          ))}
                         </div>
-                        <div className="flex-1 p-4 flex flex-col gap-3">
-                          <div className="min-h-0">
-                            <p className="text-sm font-semibold text-foreground line-clamp-1">{page.tagline}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(page.updatedAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex gap-2 mt-auto">
-                            <Link
-                              href={`/landing-pages/edit/${encodeURIComponent(page.id)}`}
-                              className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:border-primary/50 hover:text-primary transition-colors"
-                            >
-                              <Eye className="w-3 h-3" />
-                              Preview
-                            </Link>
-                            <Link
-                              href={`/landing-pages/edit/${encodeURIComponent(page.id)}`}
-                              className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                            >
-                              <Edit className="w-3 h-3" />
-                              Edit
-                            </Link>
-                          </div>
+                        {/* Search */}
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                          <input
+                            type="text"
+                            placeholder="Search pages..."
+                            value={pageSearch}
+                            onChange={(e) => setPageSearch(e.target.value)}
+                            className="w-full h-9 pl-9 pr-3 text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                          />
                         </div>
+                        {/* New page button */}
+                        <Button
+                          onClick={() => setActiveTab("generate")}
+                          className="gap-2 shrink-0"
+                          size="sm"
+                        >
+                          <Plus className="w-4 h-4" />
+                          New page
+                        </Button>
                       </div>
-                    ))}
-                  </div>
-                )}
+
+                      {/* Cards */}
+                      {savedLandingPages.length === 0 ? (
+                        <div className="rounded-3xl border border-dashed border-border bg-gradient-to-br from-primary/5 to-primary/2 p-12 text-center">
+                          <div className="flex justify-center mb-4">
+                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                              <FileText className="w-8 h-8 text-primary" />
+                            </div>
+                          </div>
+                          <h3 className="text-xl font-bold text-foreground">No landing pages yet</h3>
+                          <p className="text-muted-foreground mt-2">Generate your first landing page to get started.</p>
+                          <button
+                            onClick={() => setActiveTab("generate")}
+                            className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                          >
+                            <Sparkles className="w-4 h-4" />
+                            Generate your first page
+                          </button>
+                        </div>
+                      ) : filteredPages.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-border p-10 text-center">
+                          <p className="text-sm text-muted-foreground">No pages match your search.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                          {filteredPages.map((page) => {
+                            const metrics = getPageMetrics(page.id, page.status);
+                            const isLive = page.status === "published";
+                            // Placeholder URL slug — replace with real published URL when available
+                            const slug = toSlug(page.businessName);
+
+                            return (
+                              <div
+                                key={page.id}
+                                className={`group rounded-2xl border bg-background hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col ${
+                                  isLive
+                                    ? "border-emerald-200/50 hover:border-emerald-400/60 hover:shadow-emerald-500/10"
+                                    : "border-border hover:border-primary/50 hover:shadow-primary/10"
+                                }`}
+                              >
+                                {/* Preview area */}
+                                <div
+                                  className={`relative h-36 border-b flex items-center justify-center overflow-hidden ${
+                                    isLive
+                                      ? "bg-gradient-to-br from-emerald-100/40 via-emerald-50/20 to-background border-emerald-200/30"
+                                      : "bg-gradient-to-br from-primary/20 via-primary/5 to-background border-border/50"
+                                  }`}
+                                >
+                                  {/* Decorative shapes */}
+                                  <div className="absolute inset-0 overflow-hidden opacity-20">
+                                    <div className="absolute top-3 left-5 w-10 h-10 rounded-full bg-white/30" />
+                                    <div className="absolute bottom-4 right-8 w-14 h-7 rounded bg-white/30" />
+                                    <div className="absolute top-8 right-12 w-8 h-8 rounded-lg bg-white/20" />
+                                  </div>
+
+                                  {/* Initials avatar */}
+                                  <div className="relative text-center space-y-1.5">
+                                    <div
+                                      className={`w-14 h-14 rounded-full mx-auto flex items-center justify-center shadow-md ${
+                                        isLive
+                                          ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
+                                          : "bg-gradient-to-br from-primary to-primary/70"
+                                      }`}
+                                    >
+                                      <span className="text-white font-bold text-lg">
+                                        {page.businessName
+                                          .split(" ")
+                                          .filter((w: string) => w.length > 0)
+                                          .slice(0, 2)
+                                          .map((w: string) => w[0])
+                                          .join("")}
+                                      </span>
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground font-medium">{page.businessName}</p>
+                                  </div>
+
+                                  {/* Status badge */}
+                                  <span
+                                    className={`absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${
+                                      isLive
+                                        ? "text-emerald-700 bg-emerald-100"
+                                        : "text-amber-700 bg-amber-100"
+                                    }`}
+                                  >
+                                    <span
+                                      className={`w-1.5 h-1.5 rounded-full ${isLive ? "bg-emerald-500" : "bg-amber-500"}`}
+                                    />
+                                    {isLive ? "Live" : "Draft"}
+                                  </span>
+                                </div>
+
+                                {/* Card body */}
+                                <div className="flex-1 p-4 flex flex-col gap-3">
+                                  <div className="min-h-0">
+                                    <p className="text-sm font-semibold text-foreground line-clamp-1">{page.tagline}</p>
+                                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                                      {/* Placeholder URL — replace with real published URL */}
+                                      {isLive ? `${slug}.com/${slug.split("-")[0]}` : `Draft · ${new Date(page.updatedAt).toLocaleDateString()}`}
+                                    </p>
+                                  </div>
+
+                                  {/* Per-card stats (placeholder metrics) */}
+                                  {isLive && (
+                                    <div className="grid grid-cols-3 gap-2 py-2 border-y border-border/60">
+                                      <div>
+                                        <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">Views</p>
+                                        <p className="text-sm font-bold text-foreground">{fmtNum(metrics.views)}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">Leads</p>
+                                        <p className="text-sm font-bold text-foreground">{metrics.leads}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">CVR</p>
+                                        <div className="flex items-baseline gap-1">
+                                          <p className="text-sm font-bold text-foreground">{metrics.cvr}%</p>
+                                          {metrics.cvrTrend !== 0 && (
+                                            <span
+                                              className={`text-[9px] font-medium ${
+                                                metrics.cvrTrend > 0 ? "text-emerald-600" : "text-red-500"
+                                              }`}
+                                            >
+                                              {metrics.cvrTrend > 0 ? `+${metrics.cvrTrend}%` : `${metrics.cvrTrend}%`}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Actions */}
+                                  <div className="flex gap-2 mt-auto">
+                                    <Link
+                                      href={`/landing-pages/edit/${encodeURIComponent(page.id)}`}
+                                      className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                      Preview
+                                    </Link>
+                                    <Link
+                                      href={`/landing-pages/edit/${encodeURIComponent(page.id)}`}
+                                      className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                    >
+                                      <Edit className="w-3 h-3" />
+                                      Edit
+                                    </Link>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             )}
             {isWebsiteBuilder && activeTab === "view-existing" && (
