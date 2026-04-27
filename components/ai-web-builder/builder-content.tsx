@@ -1061,10 +1061,14 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                         width: "960px",
                                         height: "540px",
                                         transformOrigin: "top left",
+                                        // 192px container ÷ 540px iframe height ≈ 0.356
                                         transform: "scale(0.356)",
                                         pointerEvents: "none",
                                       }}
                                     >
+                                      {/* sandbox="" applies all sandbox restrictions (no scripts, no forms,
+                                          no popups, no same-origin access) — this is intentionally the
+                                          most restrictive setting for safe HTML previews. */}
                                       <iframe
                                         srcDoc={page.html}
                                         style={{ width: "960px", height: "540px", border: "none", display: "block" }}
@@ -1084,7 +1088,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                     >
                                       <div className="flex items-center gap-2 mb-1">
                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${isLive ? "bg-emerald-500" : "bg-primary"}`}>
-                                          {initials.charAt(0)}
+                                          {initials}
                                         </div>
                                         <div className="h-2 w-20 rounded-full bg-current opacity-20" />
                                         <div className="ml-auto h-2 w-10 rounded-full bg-current opacity-10" />
