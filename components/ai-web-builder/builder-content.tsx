@@ -96,6 +96,91 @@ const toSlug = (name: string) =>
     .replace(/[^a-z0-9-]/g, "");
 const SAVED_WEBSITES_KEY = "universell-saved-websites";
 
+type DummyLandingPage = {
+  id: string;
+  businessName: string;
+  tagline: string;
+  previewImage: string;
+  status: "draft" | "published";
+  domain: string | null;
+  updatedAt: string;
+};
+
+const DUMMY_LANDING_PAGES: DummyLandingPage[] = [
+  {
+    id: "demo-1",
+    businessName: "Sunrise Cafe & Bakery",
+    tagline: "Where every morning starts with warmth",
+    previewImage: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80",
+    status: "published",
+    domain: "sunrisecafe.com",
+    updatedAt: "2025-04-20T10:30:00Z",
+  },
+  {
+    id: "demo-2",
+    businessName: "Apex Digital Studio",
+    tagline: "Design that drives results",
+    previewImage: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
+    status: "draft",
+    domain: null,
+    updatedAt: "2025-04-18T14:15:00Z",
+  },
+  {
+    id: "demo-3",
+    businessName: "GreenLeaf Wellness",
+    tagline: "Nourish your body, calm your mind",
+    previewImage: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&q=80",
+    status: "published",
+    domain: "greenleaf.io",
+    updatedAt: "2025-04-15T09:00:00Z",
+  },
+  {
+    id: "demo-4",
+    businessName: "NovaSaaS Platform",
+    tagline: "Ship faster. Scale smarter.",
+    previewImage: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
+    status: "published",
+    domain: "novasaas.io",
+    updatedAt: "2025-04-12T11:00:00Z",
+  },
+  {
+    id: "demo-5",
+    businessName: "Luxe Interiors",
+    tagline: "Elevate your living space",
+    previewImage: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80",
+    status: "draft",
+    domain: null,
+    updatedAt: "2025-04-10T08:45:00Z",
+  },
+  {
+    id: "demo-6",
+    businessName: "PulseAI Analytics",
+    tagline: "Turn data into decisions",
+    previewImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
+    status: "published",
+    domain: "pulseai.co",
+    updatedAt: "2025-04-08T16:30:00Z",
+  },
+  {
+    id: "demo-7",
+    businessName: "Bloom Boutique",
+    tagline: "Fashion that tells your story",
+    previewImage: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80",
+    status: "draft",
+    domain: null,
+    updatedAt: "2025-04-05T13:20:00Z",
+  },
+  {
+    id: "demo-8",
+    businessName: "SwiftDeliver Co.",
+    tagline: "Same-day. Every day.",
+    previewImage: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80",
+    status: "published",
+    domain: "swiftdeliver.co",
+    updatedAt: "2025-04-02T10:00:00Z",
+  },
+];
+
 const websitePreviewImages = [
   "https://github.com/user-attachments/assets/e701848f-a446-48c6-b533-c7cfd025c34f",
   "https://github.com/user-attachments/assets/00f4c188-aa4c-4f3b-9a93-28135e087589",
@@ -885,7 +970,40 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                         )
                       : 0;
 
-                  const filteredPages = savedLandingPages.filter((p) => {
+                  // Combine dummy showcase pages + real saved pages into a unified display list
+                  type UnifiedPage = {
+                    id: string;
+                    businessName: string;
+                    tagline: string;
+                    status: "draft" | "published";
+                    updatedAt: string;
+                    domain: string | null;
+                    previewImage?: string;
+                    html?: string;
+                    css?: string;
+                    isDummy: boolean;
+                  };
+                  const allDisplayPages: UnifiedPage[] = [
+                    ...DUMMY_LANDING_PAGES.map((p) => ({
+                      ...p,
+                      isDummy: true,
+                      html: undefined,
+                      css: undefined,
+                    })),
+                    ...savedLandingPages.map((p) => ({
+                      id: p.id,
+                      businessName: p.businessName,
+                      tagline: p.tagline,
+                      status: p.status,
+                      updatedAt: p.updatedAt,
+                      domain: null,
+                      previewImage: undefined,
+                      html: p.html,
+                      css: p.css,
+                      isDummy: false,
+                    })),
+                  ];
+                  const filteredPages = allDisplayPages.filter((p) => {
                     const matchesFilter =
                       pageFilter === "all" ||
                       (pageFilter === "live" && p.status === "published") ||
@@ -900,70 +1018,71 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                   return (
                     <>
                       {/* Metrics bar — trend badges are placeholder values until analytics integration */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pb-4 border-b border-border">
-                        {/* Pages live */}
-                        <div className="space-y-1">
-                          <p className="text-xs text-muted-foreground">Pages live</p>
-                          <p className="text-3xl font-bold text-foreground">{pagesLive}</p>
+                      <div className="space-y-3 pb-4 border-b border-border">
+                        {/* Metrics helper text — shown ABOVE the divider */}
+                        <div className="flex items-start gap-2 px-0.5">
+                          <Info className="w-3.5 h-3.5 text-muted-foreground/60 mt-0.5 shrink-0" />
+                          <p className="text-xs text-muted-foreground/70 leading-relaxed">
+                            Lead capture and avg conversion metrics will be activated only when you select and add lead forms that you have created in our system.
+                          </p>
                         </div>
-                        {/* Total views */}
-                        <div className="space-y-1">
-                          <p className="text-xs text-muted-foreground">Total views (30d)</p>
-                          <div className="flex items-baseline gap-2">
-                            <p className="text-3xl font-bold text-foreground">
-                              {savedLandingPages.length > 0 ? fmtNum(totalViews) : "0"}
-                            </p>
-                            {savedLandingPages.length > 0 && (
-                              <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
-                                <TrendingUp className="w-3 h-3" />
-                                +8%
-                              </span>
-                            )}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                          {/* Pages live */}
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Pages live</p>
+                            <p className="text-3xl font-bold text-foreground">{pagesLive}</p>
                           </div>
-                        </div>
-                        {/* Leads captured */}
-                        <div className="space-y-1">
-                          <p className="text-xs text-muted-foreground">Leads captured</p>
-                          <div className="flex items-baseline gap-2">
-                            <p className="text-3xl font-bold text-blue-600">
-                              {savedLandingPages.length > 0 ? totalLeads.toLocaleString() : "0"}
-                            </p>
-                            {savedLandingPages.length > 0 && (
-                              <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
-                                <TrendingUp className="w-3 h-3" />
-                                +2%
-                              </span>
-                            )}
+                          {/* Total views */}
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Total views (30d)</p>
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-3xl font-bold text-foreground">
+                                {savedLandingPages.length > 0 ? fmtNum(totalViews) : "0"}
+                              </p>
+                              {savedLandingPages.length > 0 && (
+                                <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                                  <TrendingUp className="w-3 h-3" />
+                                  +8%
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        {/* Avg. conversion */}
-                        <div className="space-y-1">
-                          <p className="text-xs text-muted-foreground">Avg. conversion</p>
-                          <div className="flex items-baseline gap-2">
-                            <p className="text-3xl font-bold text-blue-600">
-                              {savedLandingPages.length > 0 ? `${avgCvr}%` : "0%"}
-                            </p>
-                            {savedLandingPages.length > 0 && (
-                              <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-red-50 text-red-600">
-                                <TrendingDown className="w-3 h-3" />
-                                -0.4%
-                              </span>
-                            )}
+                          {/* Leads captured */}
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Leads captured</p>
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-3xl font-bold text-blue-600">
+                                {savedLandingPages.length > 0 ? totalLeads.toLocaleString() : "0"}
+                              </p>
+                              {savedLandingPages.length > 0 && (
+                                <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                                  <TrendingUp className="w-3 h-3" />
+                                  +2%
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {/* Avg. conversion */}
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Avg. conversion</p>
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-3xl font-bold text-blue-600">
+                                {savedLandingPages.length > 0 ? `${avgCvr}%` : "0%"}
+                              </p>
+                              {savedLandingPages.length > 0 && (
+                                <span className="inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded bg-red-50 text-red-600">
+                                  <TrendingDown className="w-3 h-3" />
+                                  -0.4%
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Metrics helper text */}
-                      <div className="flex items-start gap-2 px-1 -mt-2">
-                        <Info className="w-3.5 h-3.5 text-muted-foreground/60 mt-0.5 shrink-0" />
-                        <p className="text-xs text-muted-foreground/70 leading-relaxed">
-                          Lead capture and avg conversion metrics will be activated only when you select and add lead forms that you have created in our system.
-                        </p>
-                      </div>
-
-                      {/* Filter row */}
+                      {/* Filter + Search + CTA row — filters left, search & CTA right */}
                       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                        {/* Status tabs */}
+                        {/* Status tabs — left side */}
                         <div className="flex items-center gap-0.5 border border-border rounded-lg p-0.5 bg-muted/30 shrink-0">
                           {(["all", "live", "draft"] as const).map((f) => (
                             <button
@@ -979,56 +1098,41 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                             </button>
                           ))}
                         </div>
-                        {/* Search — constrained width so it doesn't span the full row */}
-                        <div className="relative w-full sm:w-72 sm:max-w-xs">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                          <input
-                            type="text"
-                            placeholder="Search pages..."
-                            value={pageSearch}
-                            onChange={(e) => setPageSearch(e.target.value)}
-                            className="w-full h-9 pl-9 pr-3 text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                          />
+                        {/* Spacer — pushes search + CTA to the right on larger screens */}
+                        <div className="hidden sm:block flex-1" />
+                        {/* Search + New page — right side */}
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <div className="relative flex-1 sm:flex-none sm:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                            <input
+                              type="text"
+                              placeholder="Search pages..."
+                              value={pageSearch}
+                              onChange={(e) => setPageSearch(e.target.value)}
+                              className="w-full h-9 pl-9 pr-3 text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                            />
+                          </div>
+                          <Button
+                            onClick={() => setActiveTab("generate")}
+                            className="gap-2 shrink-0"
+                            size="sm"
+                          >
+                            <Plus className="w-4 h-4" />
+                            New page
+                          </Button>
                         </div>
-                        {/* New page button */}
-                        <Button
-                          onClick={() => setActiveTab("generate")}
-                          className="gap-2 shrink-0"
-                          size="sm"
-                        >
-                          <Plus className="w-4 h-4" />
-                          New page
-                        </Button>
                       </div>
 
-                      {/* Cards */}
-                      {savedLandingPages.length === 0 ? (
-                        <div className="rounded-3xl border border-dashed border-border bg-gradient-to-br from-primary/5 to-primary/2 p-12 text-center">
-                          <div className="flex justify-center mb-4">
-                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                              <FileText className="w-8 h-8 text-primary" />
-                            </div>
-                          </div>
-                          <h3 className="text-xl font-bold text-foreground">No landing pages yet</h3>
-                          <p className="text-muted-foreground mt-2">Generate your first landing page to get started.</p>
-                          <button
-                            onClick={() => setActiveTab("generate")}
-                            className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-                          >
-                            <Sparkles className="w-4 h-4" />
-                            Generate your first page
-                          </button>
-                        </div>
-                      ) : filteredPages.length === 0 ? (
+                      {/* Cards grid — dummy showcase pages + real user pages */}
+                      {filteredPages.length === 0 ? (
                         <div className="rounded-2xl border border-dashed border-border p-10 text-center">
                           <p className="text-sm text-muted-foreground">No pages match your search.</p>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
                           {filteredPages.map((page) => {
                             const metrics = getPageMetrics(page.id, page.status);
                             const isLive = page.status === "published";
-                            const slug = toSlug(page.businessName);
                             const initials = page.businessName
                               .split(" ")
                               .filter((w: string) => w.length > 0)
@@ -1044,15 +1148,21 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                             return (
                               <div
                                 key={page.id}
-                                className={`group rounded-2xl border bg-card shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${
-                                  isLive
-                                    ? "border-emerald-200/60 hover:border-emerald-400/70 hover:shadow-emerald-500/10"
-                                    : "border-border hover:border-primary/40 hover:shadow-primary/10"
-                                }`}
+                                className="group rounded-xl border bg-card shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex flex-col"
                               >
-                                {/* ── Live preview (iframe) ── */}
-                                <div className="relative overflow-hidden bg-muted" style={{ height: "192px" }}>
-                                  {page.html ? (
+                                {/* ── Preview area (16:9) ── */}
+                                <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted shrink-0">
+                                  {page.previewImage ? (
+                                    /* High-quality image preview */
+                                    <Image
+                                      src={page.previewImage}
+                                      alt={`${page.businessName} preview`}
+                                      fill
+                                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                                      className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                                    />
+                                  ) : page.html ? (
+                                    /* Live iframe preview for user-generated pages */
                                     <div
                                       style={{
                                         position: "absolute",
@@ -1061,14 +1171,11 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                         width: "960px",
                                         height: "540px",
                                         transformOrigin: "top left",
-                                        // 192px container ÷ 540px iframe height ≈ 0.356
-                                        transform: "scale(0.356)",
+                        transform: "scale(0.334)", /* 16:9 container height ≈ aspect-[16/9] ≈ width×0.5625; 960*0.5625=540px. scale=containerWidth/960 ≈ 0.334 for a ~320px wide card */
                                         pointerEvents: "none",
                                       }}
                                     >
-                                      {/* sandbox="" applies all sandbox restrictions (no scripts, no forms,
-                                          no popups, no same-origin access) — this is intentionally the
-                                          most restrictive setting for safe HTML previews. */}
+                                      {/* sandbox="" is intentionally the most restrictive setting — no scripts, no same-origin access */}
                                       <iframe
                                         srcDoc={page.html}
                                         style={{ width: "960px", height: "540px", border: "none", display: "block" }}
@@ -1078,7 +1185,7 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                       />
                                     </div>
                                   ) : (
-                                    /* Fallback placeholder when no HTML is stored */
+                                    /* Skeleton fallback */
                                     <div
                                       className={`absolute inset-0 flex flex-col gap-2 p-4 ${
                                         isLive
@@ -1091,30 +1198,24 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                           {initials}
                                         </div>
                                         <div className="h-2 w-20 rounded-full bg-current opacity-20" />
-                                        <div className="ml-auto h-2 w-10 rounded-full bg-current opacity-10" />
                                       </div>
                                       <div className="flex-1 flex flex-col justify-center gap-2">
                                         <div className="h-3 w-3/4 rounded bg-current opacity-15" />
                                         <div className="h-2 w-1/2 rounded bg-current opacity-10" />
                                         <div className="mt-2 h-6 w-24 rounded-md bg-current opacity-20" />
                                       </div>
-                                      <div className="grid grid-cols-3 gap-1.5">
-                                        {[1, 2, 3].map((i) => (
-                                          <div key={i} className="h-12 rounded-lg bg-current opacity-10" />
-                                        ))}
-                                      </div>
                                     </div>
                                   )}
 
-                                  {/* Subtle gradient overlay at bottom */}
-                                  <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card/60 to-transparent pointer-events-none" />
+                                  {/* Subtle gradient overlay */}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none opacity-60" />
 
-                                  {/* Status badge */}
+                                  {/* Status badge — top-right over image */}
                                   <span
-                                    className={`absolute top-3 left-3 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm ${
+                                    className={`absolute top-2.5 right-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm border ${
                                       isLive
-                                        ? "text-emerald-700 bg-emerald-100/90"
-                                        : "text-amber-700 bg-amber-100/90"
+                                        ? "text-emerald-700 bg-emerald-100/90 border-emerald-200/60"
+                                        : "text-amber-700 bg-amber-100/90 border-amber-200/60"
                                     }`}
                                   >
                                     <span className={`w-1.5 h-1.5 rounded-full ${isLive ? "bg-emerald-500" : "bg-amber-500"}`} />
@@ -1129,15 +1230,15 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                     <h3 className="text-sm font-semibold text-foreground leading-snug line-clamp-1">
                                       {page.tagline}
                                     </h3>
-                                    <p className="text-[12px] text-muted-foreground mt-0.5 font-medium">
+                                    <p className="text-[12px] text-muted-foreground mt-0.5 font-medium truncate">
                                       {page.businessName}
                                     </p>
                                   </div>
 
                                   {/* Metadata row */}
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-[11px] text-muted-foreground/70 font-mono truncate">
-                                      {isLive ? `${slug}.com` : "Not published"}
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-[11px] text-muted-foreground/70 font-mono truncate max-w-[120px]">
+                                      {isLive ? (page.domain ?? `${toSlug(page.businessName)}.com`) : "Not published"}
                                     </span>
                                     <span className="text-muted-foreground/40 text-[11px]">·</span>
                                     <span className="text-[11px] text-muted-foreground/70">
@@ -1186,13 +1287,18 @@ export function AIBuilderContent({ builderType }: AIBuilderContentProps) {
                                       <Edit className="w-3 h-3" />
                                       Edit
                                     </Link>
-                                    <button
-                                      onClick={() => duplicateLandingPage(page)}
-                                      title="Duplicate page"
-                                      className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors shrink-0"
-                                    >
-                                      <Copy className="w-3 h-3" />
-                                    </button>
+                                    {!page.isDummy && (
+                                      <button
+                                        onClick={() => {
+                                          const realPage = savedLandingPages.find((p: SavedLandingPageDraft) => p.id === page.id);
+                                          if (realPage) duplicateLandingPage(realPage);
+                                        }}
+                                        title="Duplicate page"
+                                        className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors shrink-0"
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
                               </div>
