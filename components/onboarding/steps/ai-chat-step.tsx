@@ -60,6 +60,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AIGenerationLoadingOverlay } from "@/components/ai-web-builder/AIGenerationLoadingOverlay";
 
 interface AiChatStepProps {
   businessName: string;
@@ -3093,6 +3094,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
   
   const [isFocused, setIsFocused] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showGenerationOverlay, setShowGenerationOverlay] = useState(false);
   const [generatingMsgIndex, setGeneratingMsgIndex] = useState(0);
   const [generatingMsgVisible, setGeneratingMsgVisible] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -4168,7 +4170,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                       };
                       localStorage.setItem("universell-landing-page-draft", JSON.stringify(landingPageData));
                       setIsGenerating(true);
-                      router.push("/landing-pages/edit/new");
+                      setShowGenerationOverlay(true);
                     } else {
                       onNext();
                     }
@@ -4193,53 +4195,6 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                     </>
                   )}
                 </Button>
-
-                {/* Generation status panel */}
-                {isGenerating && (
-                  <div className="mt-4 rounded-2xl border border-primary/15 bg-gradient-to-br from-white via-primary/5 to-orange-50/60 shadow-lg shadow-primary/10 overflow-hidden">
-                    {/* Header */}
-                    <div className="px-5 pt-5 pb-3 flex items-start gap-3">
-                      <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center shadow-md">
-                        <Sparkles className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground leading-snug">
-                          Estimated time to generate your landing page: 5–7 minutes
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                          Our AI is crafting a high-converting, modern experience for your brand.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Animated progress bar */}
-                    <div className="px-5 py-2">
-                      <div className="h-1.5 w-full rounded-full bg-primary/10 overflow-hidden">
-                        <div className="h-full rounded-full bg-gradient-to-r from-primary to-orange-400 animate-[generating-progress_6s_ease-in-out_infinite]" />
-                      </div>
-                    </div>
-
-                    {/* Rotating status message */}
-                    <div className="px-5 pt-1 pb-4">
-                      <div className="flex items-center gap-2 min-h-[24px]">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
-                        <p
-                          className="text-xs font-medium text-primary/80 transition-opacity duration-500"
-                          style={{ opacity: generatingMsgVisible ? 1 : 0 }}
-                        >
-                          {GENERATING_MESSAGES[generatingMsgIndex]}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Tip */}
-                    <div className="mx-5 mb-5 px-4 py-3 rounded-xl bg-primary/8 border border-primary/10">
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {GENERATING_TIPS[generatingMsgIndex % GENERATING_TIPS.length]}
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
@@ -4311,6 +4266,13 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
           </div>
         </div>
       </div>
+
+      {/* AI Generation Loading Overlay — full-screen staged experience */}
+      {showGenerationOverlay && (
+        <AIGenerationLoadingOverlay
+          onComplete={() => router.push("/landing-pages/edit/new")}
+        />
+      )}
 
       {/* End Chat — Landing Page Type Picker Modal */}
       {showEndChatTypePicker && (
