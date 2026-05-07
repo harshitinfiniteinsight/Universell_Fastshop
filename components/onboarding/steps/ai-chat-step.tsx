@@ -3092,8 +3092,45 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
   });
   
   const [isFocused, setIsFocused] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingMsgIndex, setGeneratingMsgIndex] = useState(0);
+  const [generatingMsgVisible, setGeneratingMsgVisible] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const GENERATING_MESSAGES = [
+    "Analyzing your business and brand identity...",
+    "Gathering product and audience insights...",
+    "Designing a modern and conversion-focused layout...",
+    "Generating compelling copy and visual structure...",
+    "Optimizing sections for mobile responsiveness...",
+    "Crafting a beautiful customer experience...",
+    "Applying your selected style and branding...",
+    "Preparing high-quality landing page assets...",
+    "Fine-tuning colors, spacing, and typography...",
+    "Almost ready — finalizing your landing page...",
+  ];
+
+  const GENERATING_TIPS = [
+    "💡 High-performing landing pages usually include strong social proof.",
+    "💡 Mobile-optimized pages can significantly improve conversions.",
+    "💡 Clear call-to-actions help increase engagement.",
+    "💡 Using consistent brand colors builds trust with visitors.",
+    "💡 Short, benefit-focused headlines outperform generic ones.",
+  ];
+
+  useEffect(() => {
+    if (!isGenerating) return;
+    const interval = setInterval(() => {
+      setGeneratingMsgVisible(false);
+      setTimeout(() => {
+        setGeneratingMsgIndex((i) => (i + 1) % GENERATING_MESSAGES.length);
+        setGeneratingMsgVisible(true);
+      }, 400);
+    }, 4000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGenerating]);
 
   // End-chat landing page type picker modal state
   const [showEndChatTypePicker, setShowEndChatTypePicker] = useState(false);
@@ -4114,6 +4151,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
             ) : (
               <div className="px-6 pb-6 space-y-3 animate-fade-in-up">
                 <Button
+                  disabled={isGenerating}
                   onClick={() => {
                     if (mode === "landing-page") {
                       const landingPageData = {
@@ -4129,17 +4167,79 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                         completedAt: new Date().toISOString(),
                       };
                       localStorage.setItem("universell-landing-page-draft", JSON.stringify(landingPageData));
+                      setIsGenerating(true);
                       router.push("/landing-pages/edit/new");
                     } else {
                       onNext();
                     }
                   }}
                   size="lg"
-                  className="w-full h-14 text-lg font-semibold rounded-2xl shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.02] transition-all duration-300"
+                  className={cn(
+                    "w-full h-14 text-lg font-semibold rounded-2xl shadow-xl shadow-primary/20 transition-all duration-300",
+                    isGenerating
+                      ? "opacity-80 cursor-not-allowed"
+                      : "hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.02]"
+                  )}
                 >
-                  {mode === "landing-page" ? "Generate My Landing Page" : "Generate My Website"}
-                  <Sparkles className="w-5 h-5 ml-2" />
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      {mode === "landing-page" ? "Generating Your Landing Page..." : "Generating Your Website..."}
+                    </>
+                  ) : (
+                    <>
+                      {mode === "landing-page" ? "Generate My Landing Page" : "Generate My Website"}
+                      <Sparkles className="w-5 h-5 ml-2" />
+                    </>
+                  )}
                 </Button>
+
+                {/* Generation status panel */}
+                {isGenerating && (
+                  <div className="mt-4 rounded-2xl border border-primary/15 bg-gradient-to-br from-white via-primary/5 to-orange-50/60 shadow-lg shadow-primary/10 overflow-hidden">
+                    {/* Header */}
+                    <div className="px-5 pt-5 pb-3 flex items-start gap-3">
+                      <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center shadow-md">
+                        <Sparkles className="w-4.5 h-4.5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground leading-snug">
+                          Estimated time to generate your landing page: 5–7 minutes
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                          Our AI is crafting a high-converting, modern experience for your brand.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Animated progress bar */}
+                    <div className="px-5 py-2">
+                      <div className="h-1.5 w-full rounded-full bg-primary/10 overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-primary to-orange-400 animate-[generating-progress_6s_ease-in-out_infinite]" />
+                      </div>
+                    </div>
+
+                    {/* Rotating status message */}
+                    <div className="px-5 pt-1 pb-4">
+                      <div className="flex items-center gap-2 min-h-[24px]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+                        <p
+                          className="text-xs font-medium text-primary/80 transition-opacity duration-400"
+                          style={{ opacity: generatingMsgVisible ? 1 : 0 }}
+                        >
+                          {GENERATING_MESSAGES[generatingMsgIndex]}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Tip */}
+                    <div className="mx-5 mb-5 px-4 py-3 rounded-xl bg-primary/8 border border-primary/10">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {GENERATING_TIPS[generatingMsgIndex % GENERATING_TIPS.length]}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
