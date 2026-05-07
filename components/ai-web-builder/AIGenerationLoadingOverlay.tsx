@@ -228,22 +228,6 @@ export function AIGenerationLoadingOverlay({ onComplete }: Props) {
           </div>
         )}
 
-        {/* Skeleton shimmer preview (only visible in middle stages) */}
-        {!done && progress >= 24 && progress < 92 && (
-          <div className="rounded-2xl border border-border/40 bg-white/70 backdrop-blur-sm shadow overflow-hidden p-4 space-y-3 animate-fade-in-up">
-            <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Page Preview</p>
-            {/* Hero shimmer */}
-            <div className="h-10 rounded-lg bg-gradient-to-r from-primary/10 via-orange-100 to-primary/10 bg-[length:200%_100%] animate-shimmer" />
-            <div className="grid grid-cols-3 gap-2">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="h-6 rounded bg-gradient-to-r from-muted/60 via-muted/30 to-muted/60 bg-[length:200%_100%] animate-shimmer" style={{ animationDelay: `${n * 0.15}s` }} />
-              ))}
-            </div>
-            <div className="h-4 w-3/4 rounded bg-gradient-to-r from-muted/60 via-muted/30 to-muted/60 bg-[length:200%_100%] animate-shimmer [animation-delay:0.3s]" />
-            <div className="h-4 w-1/2 rounded bg-gradient-to-r from-muted/60 via-muted/30 to-muted/60 bg-[length:200%_100%] animate-shimmer [animation-delay:0.45s]" />
-          </div>
-        )}
-
         {/* Bottom tip */}
         {!done && (
           <p className="text-center text-xs text-muted-foreground/70 px-2">
