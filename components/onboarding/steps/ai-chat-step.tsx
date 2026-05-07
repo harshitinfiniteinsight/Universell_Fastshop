@@ -1446,6 +1446,29 @@ function CustomPageInput({
   );
 }
 
+const PAGES_PICKER_PROGRESS_MESSAGES = [
+  "Analyzing your business and selected pages...",
+  "Structuring your website for maximum customer engagement...",
+  "Generating responsive layouts and modern UI sections...",
+  "Creating optimized HTML structure for your website...",
+  "Designing mobile-friendly experiences for all devices...",
+  "Crafting persuasive content and call-to-actions...",
+  "Optimizing navigation and customer journey flow...",
+  "Applying branding, colors, typography, and spacing...",
+  "Building fast-loading and SEO-friendly page structures...",
+  "Finalizing your website experience...",
+];
+
+const PAGES_PICKER_UPSELL_TIPS = [
+  "💡 Well-structured websites can significantly improve customer trust and conversions.",
+  "💡 Capturing customer inquiries helps you build long-term relationships and increase repeat sales.",
+  "💡 Modern mobile-first websites often generate higher engagement and more purchases.",
+  "💡 Strategic call-to-actions can help convert visitors into paying customers.",
+  "💡 SEO-optimized pages improve visibility and help more customers discover your business.",
+  "💡 Personalized landing experiences can increase customer retention and sales performance.",
+  "💡 Integrated customer data collection helps businesses market smarter and grow faster.",
+];
+
 // Suggested Pages Picker Component
 function SuggestedPagesPicker({
   shopType,
@@ -1484,28 +1507,6 @@ function SuggestedPagesPicker({
   const [tipIndex, setTipIndex] = useState(0);
   const [showTip, setShowTip] = useState(false);
 
-  const PROGRESS_MESSAGES = [
-    "Analyzing your business and selected pages...",
-    "Structuring your website for maximum customer engagement...",
-    "Generating responsive layouts and modern UI sections...",
-    "Creating optimized HTML structure for your website...",
-    "Designing mobile-friendly experiences for all devices...",
-    "Crafting persuasive content and call-to-actions...",
-    "Optimizing navigation and customer journey flow...",
-    "Applying branding, colors, typography, and spacing...",
-    "Building fast-loading and SEO-friendly page structures...",
-    "Finalizing your website experience...",
-  ];
-
-  const UPSELL_TIPS = [
-    "💡 Well-structured websites can significantly improve customer trust and conversions.",
-    "💡 Capturing customer inquiries helps you build long-term relationships and increase repeat sales.",
-    "💡 Modern mobile-first websites often generate higher engagement and more purchases.",
-    "💡 Strategic call-to-actions can help convert visitors into paying customers.",
-    "💡 SEO-optimized pages improve visibility and help more customers discover your business.",
-    "💡 Personalized landing experiences can increase customer retention and sales performance.",
-    "💡 Integrated customer data collection helps businesses market smarter and grow faster.",
-  ];
 
   useEffect(() => {
     if (!isConfirming) return;
@@ -1516,16 +1517,15 @@ function SuggestedPagesPicker({
         cycle++;
         if (cycle % 3 === 0) {
           setShowTip(true);
-          setTipIndex((i) => (i + 1) % UPSELL_TIPS.length);
+          setTipIndex((i) => (i + 1) % PAGES_PICKER_UPSELL_TIPS.length);
         } else {
           setShowTip(false);
-          setMsgIndex((i) => (i + 1) % PROGRESS_MESSAGES.length);
+          setMsgIndex((i) => (i + 1) % PAGES_PICKER_PROGRESS_MESSAGES.length);
         }
         setMsgVisible(true);
       }, 400);
     }, 4000);
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConfirming]);
 
   const handleConfirmClick = () => {
@@ -1676,7 +1676,7 @@ function SuggestedPagesPicker({
               </>
             ) : (
               <>
-                Confirm Pages &amp; Continue
+                Confirm Pages & Continue
                 <ArrowRight className="w-4 h-4 ml-1" />
               </>
             )}
@@ -1723,17 +1723,17 @@ function SuggestedPagesPicker({
               {/* Rotating message */}
               <div
                 className={cn(
-                  "flex items-start gap-2 text-xs font-medium transition-all duration-400",
+                  "flex items-start gap-2 text-xs font-medium transition-all duration-300",
                   msgVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
                 )}
               >
                 {showTip ? (
-                  <span className="text-muted-foreground leading-relaxed">{UPSELL_TIPS[tipIndex]}</span>
+                  <span className="text-muted-foreground leading-relaxed">{PAGES_PICKER_UPSELL_TIPS[tipIndex]}</span>
                 ) : (
                   <>
                     <span className="mt-0.5 w-2 h-2 rounded-full bg-primary shrink-0 animate-pulse" />
                     <span className="text-primary/80">
-                      {PROGRESS_MESSAGES[msgIndex]}
+                      {PAGES_PICKER_PROGRESS_MESSAGES[msgIndex]}
                       <span className="inline-flex gap-0.5 ml-1 align-middle">
                         {[0, 1, 2].map((i) => (
                           <span
