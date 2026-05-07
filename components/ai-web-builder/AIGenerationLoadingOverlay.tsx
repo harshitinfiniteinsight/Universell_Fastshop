@@ -126,7 +126,7 @@ export function AIGenerationLoadingOverlay({ onComplete }: Props) {
   const currentMessage = STAGES[stageIndex]?.message ?? "";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-white via-orange-50/40 to-primary/5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-white via-orange-50 to-orange-50/90">
       {/* Background decorative blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/8 blur-3xl animate-pulse" />
