@@ -231,6 +231,24 @@
   }
 }
 
+@keyframes generating-progress {
+  0% {
+    width: 5%;
+  }
+  40% {
+    width: 65%;
+  }
+  70% {
+    width: 80%;
+  }
+  90% {
+    width: 90%;
+  }
+  100% {
+    width: 95%;
+  }
+}
+
 /* Animation utility classes */
 .animate-float {
   animation: float 6s ease-in-out infinite;
