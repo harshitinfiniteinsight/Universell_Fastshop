@@ -3126,7 +3126,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
       setTimeout(() => {
         setGeneratingMsgIndex((i) => (i + 1) % GENERATING_MESSAGES.length);
         setGeneratingMsgVisible(true);
-      }, 400);
+      }, 500);
     }, 4000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -4200,7 +4200,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                     {/* Header */}
                     <div className="px-5 pt-5 pb-3 flex items-start gap-3">
                       <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center shadow-md">
-                        <Sparkles className="w-4.5 h-4.5 text-white" />
+                        <Sparkles className="w-5 h-5 text-white" />
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-foreground leading-snug">
@@ -4224,7 +4224,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                       <div className="flex items-center gap-2 min-h-[24px]">
                         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
                         <p
-                          className="text-xs font-medium text-primary/80 transition-opacity duration-400"
+                          className="text-xs font-medium text-primary/80 transition-opacity duration-500"
                           style={{ opacity: generatingMsgVisible ? 1 : 0 }}
                         >
                           {GENERATING_MESSAGES[generatingMsgIndex]}
