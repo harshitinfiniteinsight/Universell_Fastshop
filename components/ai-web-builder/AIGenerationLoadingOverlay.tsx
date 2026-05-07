@@ -22,7 +22,12 @@ const STAGES: Stage[] = [
   { duration: 8000,  message: "Finalizing your landing page experience...",     targetPct: 100 },
 ];
 
-// Total simulated duration = sum of all stage durations = 48 000 ms (48 s)
+// Total simulated duration = sum of all stage durations = 48 000 ms (48 s).
+// Users will see the overlay for the full 48 s before navigating to the result.
+
+const MAX_LOG_LINES = 6;
+/** How often a new AI activity log entry appears during the 48 s sequence */
+const LOG_INTERVAL_MS = 4400;
 
 const ACTIVITY_LOG = [
   "Generating hero section...",
@@ -51,6 +56,8 @@ export function AIGenerationLoadingOverlay({ onComplete }: Props) {
   const [successVisible, setSuccessVisible] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
   const hasCompleted = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   // Drive the staged progress
   useEffect(() => {
@@ -92,13 +99,12 @@ export function AIGenerationLoadingOverlay({ onComplete }: Props) {
       if (cancelled) return;
       if (!hasCompleted.current) {
         hasCompleted.current = true;
-        onComplete();
+        onCompleteRef.current();
       }
     };
 
     runStages();
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Append activity log lines on a staggered interval
@@ -106,9 +112,9 @@ export function AIGenerationLoadingOverlay({ onComplete }: Props) {
     let idx = 0;
     const interval = setInterval(() => {
       if (idx >= ACTIVITY_LOG.length) { clearInterval(interval); return; }
-      setLogLines((prev: string[]) => [ACTIVITY_LOG[idx], ...prev].slice(0, 6));
+      setLogLines((prev: string[]) => [ACTIVITY_LOG[idx], ...prev].slice(0, MAX_LOG_LINES));
       idx++;
-    }, 4400);
+    }, LOG_INTERVAL_MS);
     return () => clearInterval(interval);
   }, []);
 
