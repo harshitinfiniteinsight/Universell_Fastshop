@@ -58,6 +58,7 @@ import {
   FileUp,
   ChevronDown,
   ChevronUp,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AIGenerationLoadingOverlay } from "@/components/ai-web-builder/AIGenerationLoadingOverlay";
@@ -1446,28 +1447,42 @@ function CustomPageInput({
   );
 }
 
-const PAGES_PICKER_PROGRESS_MESSAGES = [
-  "Analyzing your business and selected pages...",
-  "Structuring your website for maximum customer engagement...",
-  "Generating responsive layouts and modern UI sections...",
-  "Creating optimized HTML structure for your website...",
-  "Designing mobile-friendly experiences for all devices...",
-  "Crafting persuasive content and call-to-actions...",
-  "Optimizing navigation and customer journey flow...",
-  "Applying branding, colors, typography, and spacing...",
-  "Building fast-loading and SEO-friendly page structures...",
-  "Finalizing your website experience...",
-];
-
 const PAGES_PICKER_UPSELL_TIPS = [
-  "💡 Well-structured websites can significantly improve customer trust and conversions.",
-  "💡 Capturing customer inquiries helps you build long-term relationships and increase repeat sales.",
-  "💡 Modern mobile-first websites often generate higher engagement and more purchases.",
-  "💡 Strategic call-to-actions can help convert visitors into paying customers.",
-  "💡 SEO-optimized pages improve visibility and help more customers discover your business.",
-  "💡 Personalized landing experiences can increase customer retention and sales performance.",
+  "💡 Conversion-focused websites help turn more visitors into paying customers.",
+  "💡 Mobile-optimized experiences can significantly improve engagement and sales.",
+  "💡 Collecting customer inquiries helps businesses grow faster and market smarter.",
+  "💡 Strong call-to-actions improve lead generation and customer retention.",
+  "💡 SEO-friendly pages help more customers discover your business online.",
+  "💡 Personalized website experiences increase customer trust and conversions.",
   "💡 Integrated customer data collection helps businesses market smarter and grow faster.",
 ];
+
+interface GenerationStage {
+  duration: number;
+  message: string;
+  targetPct: number;
+  label: string;
+}
+
+const GENERATION_STAGES: GenerationStage[] = [
+  { duration: 5000, message: "Analyzing your business structure and selected pages...",  targetPct: 8,   label: "Business structure analyzed" },
+  { duration: 5000, message: "Understanding your products, audience, and goals...",       targetPct: 19,  label: "Audience profile created" },
+  { duration: 8000, message: "Designing a modern and conversion-focused layout...",       targetPct: 33,  label: "Layout design complete" },
+  { duration: 7000, message: "Generating responsive HTML and UI components...",           targetPct: 47,  label: "HTML components generated" },
+  { duration: 7000, message: "Creating optimized sections and customer journeys...",      targetPct: 61,  label: "Customer journeys mapped" },
+  { duration: 8000, message: "Applying branding, typography, colors, and spacing...",    targetPct: 74,  label: "Branding applied" },
+  { duration: 8000, message: "Optimizing mobile responsiveness and SEO performance...",  targetPct: 89,  label: "Mobile & SEO optimized" },
+  { duration: 2000, message: "Finalizing your website experience...",                     targetPct: 100, label: "Website finalized" },
+];
+
+function waitMs(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+/** How many recently-completed stages to show in the checklist */
+const MAX_VISIBLE_COMPLETED_STAGES = 3;
+/** How long to display the success state before calling onConfirm (ms) */
+const POST_COMPLETION_DELAY_MS = 1800;
 
 // Suggested Pages Picker Component
 function SuggestedPagesPicker({
@@ -1502,36 +1517,79 @@ function SuggestedPagesPicker({
 
   // AI generation loading state
   const [isConfirming, setIsConfirming] = useState(false);
-  const [msgIndex, setMsgIndex] = useState(0);
   const [msgVisible, setMsgVisible] = useState(true);
   const [tipIndex, setTipIndex] = useState(0);
-  const [showTip, setShowTip] = useState(false);
+  const [tipVisible, setTipVisible] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [stageIndex, setStageIndex] = useState(0);
+  const [completedStages, setCompletedStages] = useState<number[]>([]);
+  const [generationDone, setGenerationDone] = useState(false);
+  const onConfirmRef = useRef(onConfirm);
+  onConfirmRef.current = onConfirm;
 
-
+  // Drive staged progress when confirming starts
   useEffect(() => {
     if (!isConfirming) return;
-    let cycle = 0;
-    const interval = setInterval(() => {
-      setMsgVisible(false);
-      setTimeout(() => {
-        cycle++;
-        if (cycle % 3 === 0) {
-          setShowTip(true);
-          setTipIndex((i) => (i + 1) % PAGES_PICKER_UPSELL_TIPS.length);
-        } else {
-          setShowTip(false);
-          setMsgIndex((i) => (i + 1) % PAGES_PICKER_PROGRESS_MESSAGES.length);
+    let cancelled = false;
+    let prevPct = 0;
+
+    const runStages = async () => {
+      for (let i = 0; i < GENERATION_STAGES.length; i++) {
+        if (cancelled) return;
+        const stage = GENERATION_STAGES[i];
+
+        // Fade out message before switching stage
+        if (i > 0) {
+          setMsgVisible(false);
+          await waitMs(300);
+          if (cancelled) return;
         }
+        setStageIndex(i);
         setMsgVisible(true);
-      }, 400);
-    }, 4000);
+
+        // Animate progress from prevPct to stage.targetPct
+        const steps = 30;
+        const stepDelay = stage.duration / steps;
+        const startPct = prevPct;
+        for (let s = 1; s <= steps; s++) {
+          await waitMs(stepDelay);
+          if (cancelled) return;
+          const pct = startPct + Math.round(((stage.targetPct - startPct) * s) / steps);
+          setProgress(pct);
+        }
+
+        prevPct = stage.targetPct;
+        setCompletedStages((prev) => [...prev, i]);
+      }
+
+      if (cancelled) return;
+      setGenerationDone(true);
+      await waitMs(POST_COMPLETION_DELAY_MS);
+      if (cancelled) return;
+      onConfirmRef.current();
+    };
+
+    runStages();
+    return () => { cancelled = true; };
+  }, [isConfirming]);
+
+  // Rotate upsell tips independently on a staggered interval
+  useEffect(() => {
+    if (!isConfirming) return;
+    const interval = setInterval(() => {
+      setTipVisible(false);
+      setTimeout(() => {
+        setTipIndex((i) => (i + 1) % PAGES_PICKER_UPSELL_TIPS.length);
+        setTipVisible(true);
+      }, 500);
+    }, 7000);
     return () => clearInterval(interval);
   }, [isConfirming]);
 
   const handleConfirmClick = () => {
     if (isConfirming) return;
     setIsConfirming(true);
-    onConfirm();
+    // onConfirm() will be called after the staged generation sequence completes
   };
 
   const handleOpenEdit = (page: SuggestedPage) => {
@@ -1693,9 +1751,7 @@ function SuggestedPagesPicker({
 
         {/* AI Generation Status Panel */}
         {isConfirming && (
-          <div
-            className="mt-4 rounded-2xl border border-primary/20 bg-gradient-to-br from-white via-orange-50/60 to-white shadow-lg shadow-primary/10 overflow-hidden animate-fade-in-up"
-          >
+          <div className="mt-4 rounded-2xl border border-primary/20 bg-gradient-to-br from-white via-orange-50/60 to-white shadow-lg shadow-primary/10 overflow-hidden animate-fade-in-up">
             {/* Animated top strip */}
             <div className="h-1 w-full bg-gradient-to-r from-primary via-orange-400 to-primary bg-[length:200%_100%] animate-[gradient-shift_3s_ease_infinite]" />
 
@@ -1703,55 +1759,94 @@ function SuggestedPagesPicker({
               {/* Header row */}
               <div className="flex items-center gap-3">
                 <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center shadow-md shadow-primary/25">
-                  <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                  {generationDone ? (
+                    <CheckCircle2 className="w-5 h-5 text-white" />
+                  ) : (
+                    <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                  )}
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-foreground leading-tight">
-                    Universell AI is building your website
+                    {generationDone ? "Your website is ready!" : "Universell AI is building your website"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Estimated completion time: 4–8 minutes
+                    {generationDone ? "Redirecting you now…" : "Estimated completion time: 4–8 minutes"}
                   </p>
                 </div>
               </div>
 
               {/* Secondary message */}
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Our AI is building a beautiful, high-converting website tailored to your business.
-              </p>
+              {!generationDone && (
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Our AI is designing and building a high-converting website tailored to your business.
+                </p>
+              )}
 
-              {/* Rotating message */}
-              <div
-                className={cn(
-                  "flex items-start gap-2 text-xs font-medium transition-all duration-300",
-                  msgVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
-                )}
-              >
-                {showTip ? (
-                  <span className="text-muted-foreground leading-relaxed">{PAGES_PICKER_UPSELL_TIPS[tipIndex]}</span>
-                ) : (
-                  <>
-                    <span className="mt-0.5 w-2 h-2 rounded-full bg-primary shrink-0 animate-pulse" />
-                    <span className="text-primary/80">
-                      {PAGES_PICKER_PROGRESS_MESSAGES[msgIndex]}
-                      <span className="inline-flex gap-0.5 ml-1 align-middle">
-                        {[0, 1, 2].map((i) => (
-                          <span
-                            key={i}
-                            className="inline-block w-1 h-1 rounded-full bg-primary/70 animate-bounce"
-                            style={{ animationDelay: `${i * 0.18}s`, animationDuration: "0.9s" }}
-                          />
-                        ))}
+              {/* Progress percentage + bar */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center gap-2">
+                  <span
+                    className={cn(
+                      "flex items-center gap-1.5 text-xs font-medium transition-all duration-300 flex-1 min-w-0",
+                      msgVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
+                    )}
+                  >
+                    {generationDone ? (
+                      <span className="text-primary font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                        Website generation complete!
                       </span>
-                    </span>
-                  </>
-                )}
+                    ) : (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 animate-pulse" />
+                        <span className="text-primary/80 truncate">
+                          {GENERATION_STAGES[stageIndex]?.message}
+                          <span className="inline-flex gap-0.5 ml-1 align-middle">
+                            {[0, 1, 2].map((i) => (
+                              <span
+                                key={i}
+                                className="inline-block w-1 h-1 rounded-full bg-primary/70 animate-bounce"
+                                style={{ animationDelay: `${i * 0.18}s`, animationDuration: "0.9s" }}
+                              />
+                            ))}
+                          </span>
+                        </span>
+                      </>
+                    )}
+                  </span>
+                  <span className="text-sm font-bold text-primary tabular-nums shrink-0">{progress}%</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-primary/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-orange-400 transition-all duration-700 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </div>
 
-              {/* Animated progress indicator */}
-              <div className="h-1.5 w-full rounded-full bg-primary/10 overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-primary to-orange-400 animate-[indeterminate-progress_2s_ease-in-out_infinite]" />
-              </div>
+              {/* Completed stages checklist */}
+              {completedStages.length > 0 && (
+                <div className="space-y-1 pt-1">
+                  {completedStages.slice(-MAX_VISIBLE_COMPLETED_STAGES).map((si) => (
+                    <div key={si} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                      <span>{GENERATION_STAGES[si]?.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Rotating upsell tip */}
+              {!generationDone && (
+                <p
+                  className={cn(
+                    "text-xs text-muted-foreground pt-2 border-t border-border/30 transition-all duration-500",
+                    tipVisible ? "opacity-100" : "opacity-0"
+                  )}
+                >
+                  {PAGES_PICKER_UPSELL_TIPS[tipIndex]}
+                </p>
+              )}
             </div>
           </div>
         )}
