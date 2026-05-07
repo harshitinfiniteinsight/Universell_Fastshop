@@ -1477,6 +1477,63 @@ function SuggestedPagesPicker({
   const [editingPage, setEditingPage] = useState<SuggestedPage | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // AI generation loading state
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [msgIndex, setMsgIndex] = useState(0);
+  const [msgVisible, setMsgVisible] = useState(true);
+  const [tipIndex, setTipIndex] = useState(0);
+  const [showTip, setShowTip] = useState(false);
+
+  const PROGRESS_MESSAGES = [
+    "Analyzing your business and selected pages...",
+    "Structuring your website for maximum customer engagement...",
+    "Generating responsive layouts and modern UI sections...",
+    "Creating optimized HTML structure for your website...",
+    "Designing mobile-friendly experiences for all devices...",
+    "Crafting persuasive content and call-to-actions...",
+    "Optimizing navigation and customer journey flow...",
+    "Applying branding, colors, typography, and spacing...",
+    "Building fast-loading and SEO-friendly page structures...",
+    "Finalizing your website experience...",
+  ];
+
+  const UPSELL_TIPS = [
+    "💡 Well-structured websites can significantly improve customer trust and conversions.",
+    "💡 Capturing customer inquiries helps you build long-term relationships and increase repeat sales.",
+    "💡 Modern mobile-first websites often generate higher engagement and more purchases.",
+    "💡 Strategic call-to-actions can help convert visitors into paying customers.",
+    "💡 SEO-optimized pages improve visibility and help more customers discover your business.",
+    "💡 Personalized landing experiences can increase customer retention and sales performance.",
+    "💡 Integrated customer data collection helps businesses market smarter and grow faster.",
+  ];
+
+  useEffect(() => {
+    if (!isConfirming) return;
+    let cycle = 0;
+    const interval = setInterval(() => {
+      setMsgVisible(false);
+      setTimeout(() => {
+        cycle++;
+        if (cycle % 3 === 0) {
+          setShowTip(true);
+          setTipIndex((i) => (i + 1) % UPSELL_TIPS.length);
+        } else {
+          setShowTip(false);
+          setMsgIndex((i) => (i + 1) % PROGRESS_MESSAGES.length);
+        }
+        setMsgVisible(true);
+      }, 400);
+    }, 4000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConfirming]);
+
+  const handleConfirmClick = () => {
+    if (isConfirming) return;
+    setIsConfirming(true);
+    onConfirm();
+  };
+
   const handleOpenEdit = (page: SuggestedPage) => {
     setEditingPage(page);
     setIsModalOpen(true);
@@ -1505,7 +1562,7 @@ function SuggestedPagesPicker({
       </div>
 
       {/* Pages checklist */}
-      <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+      <div className={cn("space-y-2 max-h-[280px] overflow-y-auto pr-1", isConfirming && "pointer-events-none opacity-60")}>
         {suggestedPages.map((page) => (
           <SuggestedPageCard
             key={page.id}
@@ -1540,18 +1597,20 @@ function SuggestedPagesPicker({
             </div>
 
             {/* Remove button */}
-            <button
-              onClick={() => onRemoveCustomPage(pageName)}
-              className="flex-shrink-0 w-6 h-6 rounded-md hover:bg-destructive/10 flex items-center justify-center transition-colors"
-              aria-label={`Remove ${pageName}`}
-            >
-              <X className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
-            </button>
+            {!isConfirming && (
+              <button
+                onClick={() => onRemoveCustomPage(pageName)}
+                className="flex-shrink-0 w-6 h-6 rounded-md hover:bg-destructive/10 flex items-center justify-center transition-colors"
+                aria-label={`Remove ${pageName}`}
+              >
+                <X className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+              </button>
+            )}
           </div>
         ))}
 
         {/* Add custom page input */}
-        <CustomPageInput onAdd={onAddCustomPage} />
+        {!isConfirming && <CustomPageInput onAdd={onAddCustomPage} />}
       </div>
 
       {/* Helper text about reordering */}
@@ -1603,20 +1662,99 @@ function SuggestedPagesPicker({
         {/* Action buttons */}
         <div className="flex items-center gap-3 pt-2">
           <Button
-            onClick={onConfirm}
-            disabled={totalSelected === 0}
-            className="flex-1 rounded-xl shadow-md"
+            onClick={handleConfirmClick}
+            disabled={totalSelected === 0 || isConfirming}
+            className={cn(
+              "rounded-xl shadow-md transition-all duration-300",
+              isConfirming ? "flex-[2] opacity-90 cursor-not-allowed" : "flex-1"
+            )}
           >
-            Confirm Pages & Continue
-            <ArrowRight className="w-4 h-4 ml-1" />
+            {isConfirming ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating Website...
+              </>
+            ) : (
+              <>
+                Confirm Pages &amp; Continue
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </>
+            )}
           </Button>
-          <button
-            onClick={onSkip}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
-          >
-            Skip (use recommended)
-          </button>
+          {!isConfirming && (
+            <button
+              onClick={onSkip}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
+            >
+              Skip (use recommended)
+            </button>
+          )}
         </div>
+
+        {/* AI Generation Status Panel */}
+        {isConfirming && (
+          <div
+            className="mt-4 rounded-2xl border border-primary/20 bg-gradient-to-br from-white via-orange-50/60 to-white shadow-lg shadow-primary/10 overflow-hidden animate-fade-in-up"
+          >
+            {/* Animated top strip */}
+            <div className="h-1 w-full bg-gradient-to-r from-primary via-orange-400 to-primary bg-[length:200%_100%] animate-[gradient-shift_3s_ease_infinite]" />
+
+            <div className="p-4 space-y-4">
+              {/* Header row */}
+              <div className="flex items-center gap-3">
+                <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center shadow-md shadow-primary/25">
+                  <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground leading-tight">
+                    Universell AI is building your website
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Estimated completion time: 4–8 minutes
+                  </p>
+                </div>
+              </div>
+
+              {/* Secondary message */}
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Our AI is building a beautiful, high-converting website tailored to your business.
+              </p>
+
+              {/* Rotating message */}
+              <div
+                className={cn(
+                  "flex items-start gap-2 text-xs font-medium transition-all duration-400",
+                  msgVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
+                )}
+              >
+                {showTip ? (
+                  <span className="text-muted-foreground leading-relaxed">{UPSELL_TIPS[tipIndex]}</span>
+                ) : (
+                  <>
+                    <span className="mt-0.5 w-2 h-2 rounded-full bg-primary shrink-0 animate-pulse" />
+                    <span className="text-primary/80">
+                      {PROGRESS_MESSAGES[msgIndex]}
+                      <span className="inline-flex gap-0.5 ml-1 align-middle">
+                        {[0, 1, 2].map((i) => (
+                          <span
+                            key={i}
+                            className="inline-block w-1 h-1 rounded-full bg-primary/70 animate-bounce"
+                            style={{ animationDelay: `${i * 0.18}s`, animationDuration: "0.9s" }}
+                          />
+                        ))}
+                      </span>
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Animated progress indicator */}
+              <div className="h-1.5 w-full rounded-full bg-primary/10 overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-primary to-orange-400 animate-[indeterminate-progress_2s_ease-in-out_infinite]" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Page Modal */}
