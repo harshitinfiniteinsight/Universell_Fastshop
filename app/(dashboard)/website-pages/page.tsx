@@ -148,11 +148,13 @@ const demoBookingForms = [
   { id: "3", name: "Catering Request" },
 ];
 
+// Prompt examples shown as quick-fill chips in the page creation modal.
+// Full prompt specs (schema, design system, cookie consent) live in lib/ai-prompts.ts.
 const promptExamples = [
-  "Create a landing page for a new product launch.",
-  "Design a user-friendly onboarding flow for mobile app users.",
-  "Develop a responsive website layout for a non-profit organization.",
-  "Revamp the existing e-commerce checkout process to improve conversion rates.",
+  "Create a product launch page with a countdown timer, feature highlights, and a pre-order CTA. Auto-inject Product + Offer JSON-LD schema.",
+  "Design a lead capture landing page with an above-the-fold email form, benefit bullets, and a privacy assurance note. Inject WebPage + Offer schema.",
+  "Build a local services page with pricing tiers, an FAQ accordion, and a 'Book a Free Consultation' CTA. Inject Service + LocalBusiness schema.",
+  "Redesign the checkout flow with a progress stepper, trust badges, and an order summary sidebar. Include GDPR cookie consent banner.",
 ];
 
 const websiteTemplates = [

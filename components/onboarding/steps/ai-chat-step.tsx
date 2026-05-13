@@ -281,12 +281,36 @@ const SHOP_TYPE_OPTIONS: ShopTypeOption[] = [
 ];
 
 // Suggested pages based on shop type
+// Full prompt specs (including schema, design system, and cookie consent directives)
+// live in lib/ai-prompts.ts. The prompt strings here are the base content layer;
+// at generation time they are composed with buildPagePrompt() from that module.
 const SUGGESTED_PAGES: SuggestedPage[] = [
   {
     id: "homepage",
     title: "Homepage",
     description: "First impression and key highlights",
-    prompt: "Create a welcoming homepage highlighting our brand, featured products, and customer trust. Include a hero section, featured items, and call-to-action buttons.",
+    prompt: `Generate a welcoming, conversion-focused Homepage for the business.
+
+CONTENT STRUCTURE:
+1. Hero Section — Bold H1 value proposition, supporting sub-heading, primary CTA ("Shop Now" / "Book a Table" / "Get Started" based on business type), hero image or gradient illustration.
+2. Social Proof Bar — Logo strip or star-rating strip to build immediate trust.
+3. Featured Products / Services — 3–4 spotlight cards with image, name, short description, price (if applicable), and CTA.
+4. Brand Story Snippet — 2–3 sentence mission with a CTA linking to the About page.
+5. Testimonials Carousel — 3 customer reviews with avatar, name, star rating, and quote.
+6. Newsletter / Lead Capture — Email opt-in strip with incentive copy.
+7. Footer — Navigation, social icons, legal links, and business contact details.
+
+SCHEMA (auto-inject <script type="application/ld+json">):
+- Primary: WebSite + LocalBusiness
+- Populate: name, url, description, address, telephone, sameAs (social profiles)
+
+DESIGN SYSTEM:
+- Sticky frosted-glass header, smooth-scroll, fade-in-up section animations
+- Gradient-accent hero band using brand primary colour CSS variable (--brand-primary)
+- Rounded-2xl cards, soft box-shadow, hover lift (translateY(-4px))
+- Mobile-first grid; WCAG AA contrast
+
+COOKIE CONSENT: Inject GDPR banner on first load — Essential / Non-Essential toggles, Accept All / Reject / Manage actions. On consent, POST to /api/cookie-consent with choice, categories, sessionId, page, and timestamp.`,
     icon: Home,
     showFor: ["all"],
   },
@@ -294,7 +318,24 @@ const SUGGESTED_PAGES: SuggestedPage[] = [
     id: "about",
     title: "About Us",
     description: "Your story, mission, and brand",
-    prompt: "Design an About Us page that tells our brand story, showcases our mission and values, and introduces our team. Make it personal and authentic.",
+    prompt: `Generate a story-driven About Us page for the business.
+
+CONTENT STRUCTURE:
+1. Hero Banner — "Our Story" headline with a full-width brand image or illustration.
+2. Founding Story — 3–4 paragraph narrative: why the business was started and the journey so far.
+3. Mission & Values — 3–4 icon-card blocks with value title and 1–2 sentence description each.
+4. Team Section — Grid of team member cards (photo, name, role, short bio).
+5. Milestones Timeline — Key business milestones (founding year, first product, expansion, awards).
+6. Community / Social Impact — Optional CSR or sustainability block.
+7. CTA Strip — "Work with us" or "Visit our shop" linking to Contact or Shop page.
+
+SCHEMA (auto-inject <script type="application/ld+json">):
+- Primary: AboutPage + Organization
+- Populate: name, url, description, foundingDate, founders, sameAs
+
+DESIGN SYSTEM: Same as global spec — sticky header, scroll animations, gradient accents, mobile-first grid.
+
+COOKIE CONSENT: Same GDPR banner spec — POST consent data to /api/cookie-consent.`,
     icon: Users,
     showFor: ["all"],
   },
@@ -302,7 +343,24 @@ const SUGGESTED_PAGES: SuggestedPage[] = [
     id: "shop",
     title: "Shop / Products",
     description: "Browse and purchase products",
-    prompt: "Create a product catalog page with filters, search functionality, and product cards. Include categories, pricing, and add-to-cart buttons.",
+    prompt: `Generate a high-converting product catalogue page for the business.
+
+CONTENT STRUCTURE:
+1. Page Header — H1 "Shop" with filter bar (category chips, sort dropdown, search input).
+2. Product Grid — Responsive grid (1→2→3–4 col). Each card: image, name, price, star rating, "Add to Cart" / "View Details" CTA.
+3. Featured Collection Banner — Full-width promotional banner for a featured collection or sale.
+4. Category Navigation — Icon-based category tabs or horizontal scroll chips above the grid.
+5. Pagination / Load More — Progressive loading pattern.
+6. Recently Viewed — Horizontal scroll strip (client-side state).
+7. Trust Badges — Free shipping threshold, secure checkout, returns policy icons.
+
+SCHEMA (auto-inject <script type="application/ld+json">):
+- Primary: CollectionPage; nested ItemList with ListItem entries for each product
+- Each product: Product @type with name, description, image, offers (Offer with price, priceCurrency, availability)
+
+DESIGN SYSTEM: Global spec applies. Product cards use rounded-2xl, soft shadow, hover lift.
+
+COOKIE CONSENT: Same GDPR banner spec — POST to /api/cookie-consent.`,
     icon: ShoppingBag,
     showFor: ["products", "hybrid"],
   },
@@ -310,7 +368,24 @@ const SUGGESTED_PAGES: SuggestedPage[] = [
     id: "services",
     title: "Services",
     description: "Showcase your service offerings",
-    prompt: "Design a services page that showcases our offerings with descriptions, pricing tiers, and benefits. Include testimonials and a contact form.",
+    prompt: `Generate a professional, lead-generating Services page for the business.
+
+CONTENT STRUCTURE:
+1. Hero — "What We Offer" headline, supporting paragraph, "Book a Free Consultation" CTA.
+2. Services Grid — 3–6 cards: icon, service name, 2–3 sentence description, pricing indicator, "Learn More" / "Book Now" CTA.
+3. Process — "How It Works" 3-step numbered visual (Enquire → Consult → Deliver).
+4. Pricing Tiers (optional) — 3-column table (Starter / Professional / Enterprise) with feature checklist.
+5. Testimonials — 3 client quotes specific to service quality.
+6. FAQs Accordion — 5–7 common questions about the services.
+7. Final CTA — "Ready to get started?" with contact form or booking link.
+
+SCHEMA (auto-inject <script type="application/ld+json">):
+- Primary: Service + ProfessionalService
+- Each service: Service @type with name, description, provider (the business), offers
+
+DESIGN SYSTEM: Global spec — gradient accents, hover lift cards, mobile-first grid.
+
+COOKIE CONSENT: Same GDPR banner spec — POST to /api/cookie-consent.`,
     icon: Briefcase,
     showFor: ["services", "hybrid"],
   },
@@ -318,7 +393,24 @@ const SUGGESTED_PAGES: SuggestedPage[] = [
     id: "bookings",
     title: "Bookings",
     description: "Schedule appointments or reservations",
-    prompt: "Create a booking page with a calendar view, available time slots, and easy reservation flow. Include service selection and confirmation details.",
+    prompt: `Generate a frictionless Bookings / Reservations page for the business.
+
+CONTENT STRUCTURE:
+1. Hero — "Book Your Experience" headline, expectation-setting sub-heading, direct "Book Now" CTA.
+2. Booking Widget — Calendar date-picker, time-slot selector, party-size / service selector, multi-step form (Contact Info → Confirm → Pay/Deposit).
+3. What to Expect — 3-step visual guide (Select → Confirm → Enjoy) with icons.
+4. Available Services / Packages — Cards with description, duration, and price.
+5. Cancellation Policy — Clear icon-based policy block.
+6. Testimonials — 2–3 booking-specific reviews.
+7. FAQ Accordion — Booking changes, deposits, group bookings, accessibility.
+
+SCHEMA (auto-inject <script type="application/ld+json">):
+- Primary: Event (for event-based bookings) or Service with potentialAction: ReserveAction
+- Include: availableChannel, bookingAgent, startDate, endDate where applicable
+
+DESIGN SYSTEM: Global spec — frosted header, scroll animations, brand accent CTA buttons.
+
+COOKIE CONSENT: Same GDPR banner spec — POST to /api/cookie-consent.`,
     icon: CalendarDays,
     showFor: ["booking"],
   },
@@ -326,7 +418,23 @@ const SUGGESTED_PAGES: SuggestedPage[] = [
     id: "contact",
     title: "Contact Us",
     description: "Email, phone, location, and form",
-    prompt: "Design a contact page with a contact form, business hours, location map, and multiple ways to reach us (email, phone, social media).",
+    prompt: `Generate a welcoming, multi-channel Contact page for the business.
+
+CONTENT STRUCTURE:
+1. Hero — "Get in Touch" headline with a warm encouraging sub-heading.
+2. Contact Form — Name, Email, Phone (optional), Subject (dropdown), Message, GDPR consent checkbox.
+3. Contact Details Cards — Phone (click-to-call), Email (mailto), Physical Address with Google Maps embed.
+4. Business Hours Table — Opening hours clearly formatted per day.
+5. Social Media Links — Icon-button row for all active social profiles.
+6. Live Chat Prompt — Optional "Chat with us" CTA.
+
+SCHEMA (auto-inject <script type="application/ld+json">):
+- Primary: ContactPage + LocalBusiness
+- Populate: name, url, telephone, email, address (PostalAddress), openingHoursSpecification, sameAs
+
+DESIGN SYSTEM: Global spec — gradient accent map frame border, hover lift on contact cards.
+
+COOKIE CONSENT: Same GDPR banner spec — POST to /api/cookie-consent.`,
     icon: Phone,
     showFor: ["all"],
   },
@@ -334,7 +442,26 @@ const SUGGESTED_PAGES: SuggestedPage[] = [
     id: "terms",
     title: "Terms & Conditions",
     description: "Legal information for customers",
-    prompt: "Generate a Terms & Conditions page covering user agreements, purchase terms, returns policy, and legal disclaimers for our business.",
+    prompt: `Generate a clear, legally sound Terms & Conditions page for the business.
+
+CONTENT STRUCTURE:
+1. Introduction — Effective date, parties to the agreement, and scope.
+2. Use of Service — Acceptable use, prohibited activities, account responsibilities.
+3. Products & Orders — Ordering process, pricing, payment terms, cancellation.
+4. Shipping & Delivery — Timeframes, international shipping, risk of loss.
+5. Returns & Refunds — Return window, conditions, refund processing.
+6. Intellectual Property — Content ownership, trademarks, user-generated content.
+7. Limitation of Liability — Disclaimer and liability cap.
+8. Governing Law — Jurisdiction and dispute resolution.
+9. Changes to Terms — Update process and notification.
+10. Contact — Legal queries contact details.
+
+SCHEMA (auto-inject <script type="application/ld+json">):
+- @type: WebPage with name "Terms and Conditions", publisher (the business Organization)
+
+DESIGN SYSTEM: Clean readable typography — max-width prose container, anchored section headings with smooth-scroll nav, muted background section separators.
+
+COOKIE CONSENT: Same GDPR banner spec — POST to /api/cookie-consent.`,
     icon: FileText,
     showFor: ["all"],
     isLegal: true,
@@ -343,7 +470,28 @@ const SUGGESTED_PAGES: SuggestedPage[] = [
     id: "privacy",
     title: "Privacy Policy",
     description: "Data usage and compliance",
-    prompt: "Create a Privacy Policy page explaining how we collect, use, and protect customer data. Include cookie policy and GDPR compliance information.",
+    prompt: `Generate a transparent, GDPR-compliant Privacy Policy page for the business.
+
+CONTENT STRUCTURE:
+1. Introduction — Who we are, what this policy covers, effective date.
+2. Data We Collect — Explicit list: name, email, address, payment info, usage data, cookies.
+3. How We Collect Data — Forms, cookies, third-party integrations.
+4. How We Use Data — Fulfilment, marketing (opt-in), analytics, legal obligations.
+5. Legal Basis (GDPR) — Consent, contract, legitimate interest, legal obligation.
+6. Data Sharing — Third parties listed by name with purpose.
+7. Data Retention — Retention periods per category.
+8. Your Rights (GDPR) — Access, rectification, erasure, portability, objection, withdraw consent.
+9. Cookie Policy — Cookie categories; reference to the consent banner on the site.
+10. Data Security — Encryption, access controls, breach notification.
+11. Children's Privacy — No collection from under-13s.
+12. Contact / DPO — Privacy queries email and DPO details where required.
+
+SCHEMA (auto-inject <script type="application/ld+json">):
+- @type: WebPage with name "Privacy Policy", publisher (the business Organization)
+
+DESIGN SYSTEM: Same as Terms page — readable prose, anchored nav, muted separators.
+
+COOKIE CONSENT: Same GDPR banner spec — POST to /api/cookie-consent.`,
     icon: Shield,
     showFor: ["all"],
     isLegal: true,
