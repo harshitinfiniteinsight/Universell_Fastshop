@@ -249,6 +249,7 @@ interface ConversationData {
   shopType: ShopType | null;
   style: string;
   landingPageType: string | null;
+  hasLeadForm: boolean | null;
   lpDetails: Record<string, string>;
   selectedLeadFormId: string | null;
   isCreatingNewLeadForm: boolean;
@@ -266,7 +267,8 @@ interface LeadFormOption {
   name: string;
 }
 
-type LeadGenerationFlowStep = "select-form" | "create-form" | "placement";
+type LeadGenerationFlowStep = "lead-capture-setup" | "select-form" | "create-form" | "placement";
+type LeadCaptureDecision = "yes" | "no";
 
 const LEAD_FORMS_STORAGE_KEYS = [
   "universell-lead-forms",
@@ -3524,6 +3526,67 @@ function LandingPageTypePicker({
   );
 }
 
+function LeadCaptureSetupStep({
+  onSelect,
+  onBack,
+}: {
+  onSelect: (decision: LeadCaptureDecision) => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="animate-fade-in-up space-y-4 rounded-2xl border border-border/60 bg-background p-4">
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        onClick={onBack}
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Back to Landing Page Types
+      </button>
+
+      <div className="space-y-1.5">
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+          📋 Lead Capture Setup
+        </div>
+        <h3 className="text-sm font-semibold text-foreground">Do you want to add a lead form to capture leads?</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          You can capture visitor information directly on your landing page using a lead form. If you don&apos;t need one right now, you can always add it later.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-2.5">
+        <button
+          type="button"
+          onClick={() => onSelect("yes")}
+          className="w-full rounded-xl border border-border/70 bg-background px-3.5 py-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+        >
+          <div className="flex items-start gap-2.5">
+            <span className="mt-0.5 h-4 w-4 rounded-full border border-primary/40" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Yes, add a lead form</p>
+              <p className="text-xs text-muted-foreground">Set up form selection and placement now.</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelect("no")}
+          className="w-full rounded-xl border border-border/70 bg-background px-3.5 py-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+        >
+          <div className="flex items-start gap-2.5">
+            <span className="mt-0.5 h-4 w-4 rounded-full border border-primary/40" />
+            <div>
+              <p className="text-sm font-medium text-foreground">No, continue without a lead form</p>
+              <p className="text-xs text-muted-foreground">You can always add one later from the landing page editor.</p>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function LeadFormPlacementStep({
   displayMode,
   targetSection,
@@ -3687,6 +3750,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     shopType: null,
     style: "",
     landingPageType: null,
+    hasLeadForm: null,
     lpDetails: {},
     selectedLeadFormId: null,
     isCreatingNewLeadForm: false,
@@ -3711,7 +3775,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
   const [selectedLandingPageType, setSelectedLandingPageType] = useState<string | null>(null);
   const [selectedLeadForm, setSelectedLeadForm] = useState<string | null>(null);
   const [isCreatingNewLeadForm, setIsCreatingNewLeadForm] = useState(false);
-  const [leadGenerationFlowStep, setLeadGenerationFlowStep] = useState<LeadGenerationFlowStep>("select-form");
+  const [leadGenerationFlowStep, setLeadGenerationFlowStep] = useState<LeadGenerationFlowStep>("lead-capture-setup");
   const [availableLeadForms, setAvailableLeadForms] = useState<LeadFormOption[]>(DEFAULT_LEAD_FORMS);
   const leadFormSectionOptions = useMemo(() => deriveLeadFormSections(conversationData), [conversationData]);
   
@@ -4268,10 +4332,10 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
       }
 
       if (conversationData.landingPageType === "lead-generation") {
-        if (currentStep === "complete") {
+        if (conversationData.hasLeadForm === false || currentStep === "complete") {
           return;
         }
-        addAiMessage("Please complete Lead Form Placement before continuing.", 500);
+        addAiMessage("Please complete Lead Capture Setup before continuing.", 500);
         return;
       }
 
@@ -4292,6 +4356,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
   const redirectAfterEndChat = (landingPageType?: string) => {
     if (mode === "landing-page") {
       // Save collected data for editor to use
+      const hasLeadForm = conversationData.hasLeadForm;
       const landingPageData = {
         businessName,
         inspiration: conversationData.inspiration,
@@ -4302,18 +4367,20 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
         style: conversationData.style,
         landingPageType: landingPageType ?? conversationData.landingPageType,
         selectedLandingPageType,
-        selectedLeadFormId: conversationData.selectedLeadFormId,
-        isCreatingNewLeadForm,
-        leadFormDisplayMode: conversationData.leadFormDisplayMode,
-        leadFormTargetSection: conversationData.leadFormTargetSection,
-        leadFormCTAButtonText: conversationData.leadFormCTAButtonText,
+        hasLeadForm,
+        selectedLeadFormId: hasLeadForm ? conversationData.selectedLeadFormId : null,
+        isCreatingNewLeadForm: hasLeadForm ? isCreatingNewLeadForm : false,
+        leadFormDisplayMode: hasLeadForm ? conversationData.leadFormDisplayMode : null,
+        leadFormTargetSection: hasLeadForm ? conversationData.leadFormTargetSection : "",
+        leadFormCTAButtonText: hasLeadForm ? conversationData.leadFormCTAButtonText : "",
         lpDetails: {
           ...conversationData.lpDetails,
-          selectedLeadFormId: conversationData.selectedLeadFormId ?? "",
-          isCreatingNewLeadForm: String(isCreatingNewLeadForm),
-          leadFormDisplayMode: conversationData.leadFormDisplayMode ?? "",
-          leadFormTargetSection: conversationData.leadFormTargetSection,
-          leadFormCTAButtonText: conversationData.leadFormCTAButtonText,
+          hasLeadForm: hasLeadForm === null ? "" : String(hasLeadForm),
+          selectedLeadFormId: hasLeadForm ? (conversationData.selectedLeadFormId ?? "") : "",
+          isCreatingNewLeadForm: hasLeadForm ? String(isCreatingNewLeadForm) : "false",
+          leadFormDisplayMode: hasLeadForm ? (conversationData.leadFormDisplayMode ?? "") : "",
+          leadFormTargetSection: hasLeadForm ? conversationData.leadFormTargetSection : "",
+          leadFormCTAButtonText: hasLeadForm ? conversationData.leadFormCTAButtonText : "",
         },
         completedAt: new Date().toISOString(),
       };
@@ -4363,10 +4430,11 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     if (typeId === "lead-generation") {
       setSelectedLeadForm(null);
       setIsCreatingNewLeadForm(false);
-      setLeadGenerationFlowStep("select-form");
+      setLeadGenerationFlowStep("lead-capture-setup");
       setConversationData((prev) => ({
         ...prev,
         landingPageType: typeId,
+        hasLeadForm: null,
         selectedLeadFormId: null,
         isCreatingNewLeadForm: false,
         leadFormDisplayMode: null,
@@ -4377,7 +4445,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
       if (shouldAddUserMessage) {
         addUserMessage(type.title);
       }
-      addAiMessage("Great pick. Select an existing lead form or click Add New to create one.");
+      addAiMessage("Great pick. Let's quickly decide your lead capture setup.");
       setTimeout(() => setCurrentStep("landing-page-type"), 900);
       return;
     }
@@ -4387,6 +4455,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     setConversationData((prev) => ({
       ...prev,
       landingPageType: typeId,
+      hasLeadForm: null,
       selectedLeadFormId: null,
       isCreatingNewLeadForm: false,
     }));
@@ -4408,6 +4477,42 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     setTimeout(() => setCurrentStep("lp-details"), 900);
   };
 
+  const handleLeadCaptureSetupSelect = (decision: LeadCaptureDecision) => {
+    const hasLeadForm = decision === "yes";
+
+    setConversationData((prev) => ({
+      ...prev,
+      landingPageType: "lead-generation",
+      hasLeadForm,
+      selectedLeadFormId: hasLeadForm ? prev.selectedLeadFormId : null,
+      isCreatingNewLeadForm: hasLeadForm ? prev.isCreatingNewLeadForm : false,
+      leadFormDisplayMode: hasLeadForm ? prev.leadFormDisplayMode : null,
+      leadFormTargetSection: hasLeadForm ? prev.leadFormTargetSection : "",
+      leadFormCTAButtonText: hasLeadForm ? prev.leadFormCTAButtonText : "",
+      lpDetails: {
+        ...prev.lpDetails,
+        hasLeadForm: String(hasLeadForm),
+      },
+    }));
+
+    if (hasLeadForm) {
+      setIsCreatingNewLeadForm(false);
+      addUserMessage("Yes, add a lead form");
+      addAiMessage("Great! Select an existing lead form or click Add New to create one.", 500);
+      setLeadGenerationFlowStep("select-form");
+      return;
+    }
+
+    setSelectedLeadForm(null);
+    setIsCreatingNewLeadForm(false);
+    addUserMessage("No, continue without a lead form");
+    addAiMessage("No problem. We'll generate your lead generation landing page without a lead form. You can add one later from the page editor.", 500);
+    setTimeout(() => {
+      addAiMessage("Click 'Generate My Landing Page' when you're ready!", 2200);
+      setCurrentStep("complete");
+    }, 100);
+  };
+
   const handleLeadFormSelect = (formId: string) => {
     const selectedForm = availableLeadForms.find((form) => form.id === formId);
     setSelectedLeadForm(formId);
@@ -4417,10 +4522,12 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     setConversationData((prev) => ({
       ...prev,
       landingPageType: "lead-generation",
+      hasLeadForm: true,
       selectedLeadFormId: formId,
       isCreatingNewLeadForm: false,
       lpDetails: {
         ...prev.lpDetails,
+        hasLeadForm: "true",
         selectedLeadFormId: formId,
         selectedLeadFormName: selectedForm?.name ?? "",
         isCreatingNewLeadForm: "false",
@@ -4442,8 +4549,13 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     setConversationData((prev) => ({
       ...prev,
       landingPageType: "lead-generation",
+      hasLeadForm: true,
       selectedLeadFormId: null,
       isCreatingNewLeadForm: true,
+      lpDetails: {
+        ...prev.lpDetails,
+        hasLeadForm: "true",
+      },
     }));
   };
 
@@ -4453,10 +4565,11 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     setSelectedLandingPageType(normalizedType);
 
     if (typeId === "lead-generation") {
-      setLeadGenerationFlowStep("select-form");
+      setLeadGenerationFlowStep("lead-capture-setup");
       setConversationData((prev) => ({
         ...prev,
         landingPageType: typeId,
+        hasLeadForm: null,
         selectedLeadFormId: null,
         isCreatingNewLeadForm: false,
         leadFormDisplayMode: null,
@@ -4476,8 +4589,10 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     if (conversationData.landingPageType === "lead-generation" && isCreatingNewLeadForm) {
       setConversationData((prev) => ({
         ...prev,
+        hasLeadForm: true,
         lpDetails: {
           ...details,
+          hasLeadForm: "true",
           selectedLeadFormId: "",
           isCreatingNewLeadForm: "true",
         },
@@ -4807,6 +4922,28 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                       {/* Step B: Lead Generation selected — dedicated flow */}
                       {selectedLandingPageType === "lead_generation" && (
                         <div className="rounded-2xl border border-border/60 bg-background overflow-hidden animate-fade-in-up">
+                          {/* Lead Capture Setup screen */}
+                          {leadGenerationFlowStep === "lead-capture-setup" && (
+                            <div className="p-4">
+                              <LeadCaptureSetupStep
+                                onSelect={handleLeadCaptureSetupSelect}
+                                onBack={() => {
+                                  setSelectedLandingPageType(null);
+                                  setLeadGenerationFlowStep("lead-capture-setup");
+                                  setConversationData((prev) => ({
+                                    ...prev,
+                                    landingPageType: null,
+                                    hasLeadForm: null,
+                                    selectedLeadFormId: null,
+                                    isCreatingNewLeadForm: false,
+                                  }));
+                                  setSelectedLeadForm(null);
+                                  setIsCreatingNewLeadForm(false);
+                                }}
+                              />
+                            </div>
+                          )}
+
                           {/* Lead Form Selection screen */}
                           {leadGenerationFlowStep === "select-form" && (
                             <>
@@ -4816,13 +4953,15 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                                   type="button"
                                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                                   onClick={() => {
-                                    setSelectedLandingPageType(null);
-                                    setLeadGenerationFlowStep("select-form");
+                                    setLeadGenerationFlowStep("lead-capture-setup");
                                     setConversationData((prev) => ({
                                       ...prev,
-                                      landingPageType: null,
+                                      hasLeadForm: null,
                                       selectedLeadFormId: null,
                                       isCreatingNewLeadForm: false,
+                                      leadFormDisplayMode: null,
+                                      leadFormTargetSection: "",
+                                      leadFormCTAButtonText: "",
                                     }));
                                     setSelectedLeadForm(null);
                                     setIsCreatingNewLeadForm(false);
@@ -4862,6 +5001,15 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                                     Add New
                                   </Button>
                                 </div>
+                                <button
+                                  type="button"
+                                  className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 pt-1"
+                                  onClick={() => {
+                                    handleLeadCaptureSetupSelect("no");
+                                  }}
+                                >
+                                  Skip — generate without a lead form
+                                </button>
                               </div>
                             </>
                           )}
@@ -5114,6 +5262,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                   disabled={isGenerating}
                   onClick={() => {
                     if (mode === "landing-page") {
+                      const hasLeadForm = conversationData.hasLeadForm;
                       const landingPageData = {
                         businessName,
                         inspiration: conversationData.inspiration,
@@ -5124,18 +5273,20 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                         style: conversationData.style,
                         landingPageType: conversationData.landingPageType,
                         selectedLandingPageType,
-                        selectedLeadFormId: conversationData.selectedLeadFormId,
-                        isCreatingNewLeadForm,
-                        leadFormDisplayMode: conversationData.leadFormDisplayMode,
-                        leadFormTargetSection: conversationData.leadFormTargetSection,
-                        leadFormCTAButtonText: conversationData.leadFormCTAButtonText,
+                        hasLeadForm,
+                        selectedLeadFormId: hasLeadForm ? conversationData.selectedLeadFormId : null,
+                        isCreatingNewLeadForm: hasLeadForm ? isCreatingNewLeadForm : false,
+                        leadFormDisplayMode: hasLeadForm ? conversationData.leadFormDisplayMode : null,
+                        leadFormTargetSection: hasLeadForm ? conversationData.leadFormTargetSection : "",
+                        leadFormCTAButtonText: hasLeadForm ? conversationData.leadFormCTAButtonText : "",
                         lpDetails: {
                           ...conversationData.lpDetails,
-                          selectedLeadFormId: conversationData.selectedLeadFormId ?? "",
-                          isCreatingNewLeadForm: String(isCreatingNewLeadForm),
-                          leadFormDisplayMode: conversationData.leadFormDisplayMode ?? "",
-                          leadFormTargetSection: conversationData.leadFormTargetSection,
-                          leadFormCTAButtonText: conversationData.leadFormCTAButtonText,
+                          hasLeadForm: hasLeadForm === null ? "" : String(hasLeadForm),
+                          selectedLeadFormId: hasLeadForm ? (conversationData.selectedLeadFormId ?? "") : "",
+                          isCreatingNewLeadForm: hasLeadForm ? String(isCreatingNewLeadForm) : "false",
+                          leadFormDisplayMode: hasLeadForm ? (conversationData.leadFormDisplayMode ?? "") : "",
+                          leadFormTargetSection: hasLeadForm ? conversationData.leadFormTargetSection : "",
+                          leadFormCTAButtonText: hasLeadForm ? conversationData.leadFormCTAButtonText : "",
                         },
                         completedAt: new Date().toISOString(),
                       };
