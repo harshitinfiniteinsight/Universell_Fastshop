@@ -4575,41 +4575,113 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                   </div>
                 )}
 
-                {/* Landing Page Type Picker — single select, landing-page mode only */}
+                {/* Landing Page Type Picker / Lead Generation flow */}
                 {currentStep === "landing-page-type" && mode === "landing-page" && (
-                  <div className="mb-4">
-                    <LandingPageTypePicker
-                      selectedType={conversationData.landingPageType}
-                      onSelect={handleLandingPageTypeSelect}
-                    />
-                    <LeadFormSelectionSection
-                      leadForms={availableLeadForms}
-                      selectedLeadForm={selectedLeadForm}
-                      onLeadFormChange={handleLeadFormSelect}
-                      onAddNew={handleCreateNewLeadForm}
-                      isVisible={
-                        selectedLandingPageType === "lead_generation" && !isCreatingNewLeadForm
-                      }
-                    />
-
-                    <div
-                      className={cn(
-                        "overflow-hidden transition-all duration-300 ease-in-out",
-                        selectedLandingPageType === "lead_generation" && isCreatingNewLeadForm
-                          ? "max-h-[800px] opacity-100 translate-y-0 mt-3"
-                          : "max-h-0 opacity-0 -translate-y-2 pointer-events-none"
-                      )}
-                    >
-                      <div className="rounded-2xl border border-border/60 bg-background p-4">
-                        <LandingPageDetailsForm
-                          landingPageType="lead-generation"
-                          onConfirm={handleLandingPageDetailsConfirm}
+                    <div className="mb-4">
+                      {/* Step A: No lead generation selected — show the type picker */}
+                      {selectedLandingPageType !== "lead_generation" && (
+                        <LandingPageTypePicker
+                          selectedType={conversationData.landingPageType}
+                          onSelect={handleLandingPageTypeSelect}
                         />
-                      </div>
-                    </div>
-                  </div>
-                )}
+                      )}
 
+                      {/* Step B: Lead Generation selected — dedicated flow */}
+                      {selectedLandingPageType === "lead_generation" && (
+                        <div className="rounded-2xl border border-border/60 bg-background overflow-hidden animate-fade-in-up">
+                          {/* Lead Form Selection screen */}
+                          <div
+                            className={cn(
+                              "transition-all duration-300 ease-in-out",
+                              !isCreatingNewLeadForm
+                                ? "block"
+                                : "hidden"
+                            )}
+                          >
+                            {/* Header with back navigation */}
+                            <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-border/40">
+                              <button
+                                type="button"
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                onClick={() => {
+                                  setSelectedLandingPageType(null);
+                                  setConversationData((prev) => ({ ...prev, landingPageType: null, selectedLeadFormId: null, isCreatingNewLeadForm: false }));
+                                  setSelectedLeadForm(null);
+                                }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                Back
+                              </button>
+                              <h3 className="text-sm font-semibold text-foreground">Lead Generation</h3>
+                            </div>
+
+                            {/* Form selection body */}
+                            <div className="p-4 space-y-3">
+                              <p className="text-xs text-muted-foreground">Choose an existing lead form to link with this landing page, or create a new one.</p>
+                              <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs font-medium text-foreground">Lead Form</Label>
+                                  <Select value={selectedLeadForm ?? ""} onValueChange={handleLeadFormSelect}>
+                                    <SelectTrigger className="h-10 w-full rounded-xl">
+                                      <SelectValue placeholder="Select an existing lead form" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {availableLeadForms.map((form) => (
+                                        <SelectItem key={form.id} value={form.id}>
+                                          {form.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  type="button"
+                                  className="h-10 rounded-xl"
+                                  onClick={handleCreateNewLeadForm}
+                                >
+                                  Add New
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* New Lead Form Creation screen */}
+                          <div
+                            className={cn(
+                              "transition-all duration-300 ease-in-out",
+                              isCreatingNewLeadForm
+                                ? "block"
+                                : "hidden"
+                            )}
+                          >
+                            {/* Header with back navigation */}
+                            <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-border/40">
+                              <button
+                                type="button"
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                onClick={() => {
+                                  setIsCreatingNewLeadForm(false);
+                                  setConversationData((prev) => ({ ...prev, isCreatingNewLeadForm: false }));
+                                }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                Back to Lead Forms
+                              </button>
+                            </div>
+
+                            {/* New form body */}
+                            <div className="p-4">
+                              <LandingPageDetailsForm
+                                landingPageType="lead-generation"
+                                onConfirm={handleLandingPageDetailsConfirm}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 {/* Landing Page Details Form — shown after type selection */}
                 {currentStep === "lp-details" &&
                   mode === "landing-page" &&
