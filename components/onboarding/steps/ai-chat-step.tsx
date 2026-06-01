@@ -3465,54 +3465,6 @@ function LandingPageTypePicker({
   );
 }
 
-function LeadFormSelectionSection({
-  leadForms,
-  selectedLeadForm,
-  onLeadFormChange,
-  onAddNew,
-  isVisible,
-}: {
-  leadForms: LeadFormOption[];
-  selectedLeadForm: string | null;
-  onLeadFormChange: (formId: string) => void;
-  onAddNew: () => void;
-  isVisible: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "overflow-hidden transition-all duration-300 ease-in-out",
-        isVisible ? "max-h-80 opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-2 pointer-events-none"
-      )}
-      aria-hidden={!isVisible}
-    >
-      <div className="mt-3 rounded-2xl border border-border/60 bg-background p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Select a Lead Form</h3>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-foreground">Lead Form</Label>
-            <Select value={selectedLeadForm ?? ""} onValueChange={onLeadFormChange}>
-              <SelectTrigger className="h-10 w-full rounded-xl">
-                <SelectValue placeholder="Select an existing lead form" />
-              </SelectTrigger>
-              <SelectContent>
-                {leadForms.map((form) => (
-                  <SelectItem key={form.id} value={form.id}>
-                    {form.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button variant="outline" type="button" className="h-10 rounded-xl" onClick={onAddNew}>
-            Add New
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Key for storing onboarding data
 const ONBOARDING_DATA_KEY = "universell-onboarding-data";
 
