@@ -118,6 +118,7 @@ const EXISTING_FORMS: Record<string, { id: string; name: string }[]> = {
     { id: "lf-1", name: "Newsletter Signup" },
     { id: "lf-2", name: "Free Trial Request" },
     { id: "lf-3", name: "Demo Request" },
+    { id: "lf-4", name: "Furniture Interest" },
   ],
   "Ticket Form": [
     { id: "tf-1", name: "Support Ticket" },
@@ -145,6 +146,51 @@ const LEAD_FORM_FIELD_OPTIONS: { id: string; label: string }[] = [
   { id: "job_title", label: "Job Title" },
   { id: "location", label: "Location" },
 ];
+
+type LeadFormSchema = {
+  id: string;
+  name: string;
+  fields: string[];
+  submitButtonLabel: string;
+};
+
+const LEAD_FIELD_LABEL_MAP: Record<string, string> = {
+  full_name: "Full Name",
+  first_name: "First Name",
+  last_name: "Last Name",
+  email: "Email",
+  phone: "Phone",
+  company: "Company",
+  job_title: "Job Title",
+  location: "Location",
+};
+
+const LEAD_FORM_SCHEMAS: Record<string, LeadFormSchema> = {
+  "lf-1": {
+    id: "lf-1",
+    name: "Newsletter Signup",
+    fields: ["full_name", "email"],
+    submitButtonLabel: "Subscribe",
+  },
+  "lf-2": {
+    id: "lf-2",
+    name: "Free Trial Request",
+    fields: ["full_name", "email", "phone", "company"],
+    submitButtonLabel: "Start Free Trial",
+  },
+  "lf-3": {
+    id: "lf-3",
+    name: "Demo Request",
+    fields: ["full_name", "email", "phone", "company", "job_title"],
+    submitButtonLabel: "Book Demo",
+  },
+  "lf-4": {
+    id: "lf-4",
+    name: "Furniture Interest",
+    fields: ["first_name", "last_name", "email", "phone"],
+    submitButtonLabel: "Submit Request",
+  },
+};
 
 const LEAD_FORM_BUILDER_INIT_KEY = "universell-lead-form-builder-init";
 
@@ -210,10 +256,28 @@ const discoverLandingSections = (markup: string): LandingSectionOption[] => {
   }
 };
 
+const fieldLabel = (fieldId: string) => LEAD_FIELD_LABEL_MAP[fieldId] || fieldId.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+const resolveLeadFormSchema = (
+  selectedLeadFormId: string,
+  selectedLeadFields: string[]
+): LeadFormSchema => {
+  const mapped = LEAD_FORM_SCHEMAS[selectedLeadFormId];
+  if (mapped) return mapped;
+
+  return {
+    id: selectedLeadFormId || "lf-new",
+    name: "New Lead Form",
+    fields: selectedLeadFields.length ? selectedLeadFields : ["full_name", "email"],
+    submitButtonLabel: "Submit Request",
+  };
+};
+
 function LeadFormPlacementStep({
   placementType,
   targetSectionId,
   ctaButtonText,
+  selectedForm,
   sectionOptions,
   validation,
   onPlacementTypeChange,
@@ -225,6 +289,7 @@ function LeadFormPlacementStep({
   placementType: LeadPlacementType | null;
   targetSectionId: string;
   ctaButtonText: string;
+  selectedForm: LeadFormSchema;
   sectionOptions: LandingSectionOption[];
   validation: {
     placementType?: string;
@@ -237,6 +302,13 @@ function LeadFormPlacementStep({
   onBack: () => void;
   onContinue: () => void;
 }) {
+  const activeSection =
+    sectionOptions.find((section) => section.id === targetSectionId) ||
+    sectionOptions[0] ||
+    { id: "hero", label: "Hero" };
+
+  const activeCta = ctaButtonText.trim() || "Get Started";
+
   return (
     <div className="space-y-4 pt-1 animate-fade-in-up">
       <div className="space-y-1">
@@ -244,65 +316,120 @@ function LeadFormPlacementStep({
         <p className="text-xs text-muted-foreground">Choose how visitors will interact with this form.</p>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-xs font-medium text-foreground">How would you like to use this form?</p>
-        <div className="grid grid-cols-1 gap-2">
-          {[
-            { id: "embed" as const, label: "Embed the form directly on the page" },
-            { id: "cta" as const, label: "Open the form from a CTA button" },
-          ].map((option) => {
-            const isSelected = placementType === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => onPlacementTypeChange(option.id)}
-                className={cn(
-                  "flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm text-left transition-colors",
-                  isSelected
-                    ? "border-orange-400 bg-orange-50 text-orange-700"
-                    : "border-border bg-muted hover:bg-orange-50 hover:border-orange-300"
-                )}
-              >
-                <span className={cn("h-4 w-4 rounded-full border flex items-center justify-center", isSelected ? "border-orange-500" : "border-muted-foreground/40")}>
-                  {isSelected && <span className="h-2 w-2 rounded-full bg-orange-500" />}
-                </span>
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
-        {validation.placementType && <p className="text-xs text-destructive">{validation.placementType}</p>}
-      </div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_1.08fr]">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-foreground">How would you like to use this form?</p>
+            <div className="grid grid-cols-1 gap-2">
+              {[
+                { id: "embed" as const, label: "Embed the form directly on the page" },
+                { id: "cta" as const, label: "Open the form from a CTA button" },
+              ].map((option) => {
+                const isSelected = placementType === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => onPlacementTypeChange(option.id)}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm text-left transition-colors",
+                      isSelected
+                        ? "border-orange-400 bg-orange-50 text-orange-700"
+                        : "border-border bg-muted hover:bg-orange-50 hover:border-orange-300"
+                    )}
+                  >
+                    <span className={cn("h-4 w-4 rounded-full border flex items-center justify-center", isSelected ? "border-orange-500" : "border-muted-foreground/40")}>
+                      {isSelected && <span className="h-2 w-2 rounded-full bg-orange-500" />}
+                    </span>
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            {validation.placementType && <p className="text-xs text-destructive">{validation.placementType}</p>}
+          </div>
 
-      <div className="space-y-1.5">
-        <p className="text-xs font-medium text-foreground">Landing Page Section</p>
-        <Select value={targetSectionId} onValueChange={onTargetSectionChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Choose a section..." />
-          </SelectTrigger>
-          <SelectContent>
-            {sectionOptions.map((section) => (
-              <SelectItem key={section.id} value={section.id}>
-                {section.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {validation.targetSectionId && <p className="text-xs text-destructive">{validation.targetSectionId}</p>}
-      </div>
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-foreground">Landing Page Section</p>
+            <Select value={targetSectionId} onValueChange={onTargetSectionChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose a section..." />
+              </SelectTrigger>
+              <SelectContent>
+                {sectionOptions.map((section) => (
+                  <SelectItem key={section.id} value={section.id}>
+                    {section.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {validation.targetSectionId && <p className="text-xs text-destructive">{validation.targetSectionId}</p>}
+          </div>
 
-      {placementType === "cta" && (
-        <div className="space-y-1.5">
-          <p className="text-xs font-medium text-foreground">CTA Button Text</p>
-          <Input
-            value={ctaButtonText}
-            onChange={(e) => onCtaButtonTextChange(e.target.value)}
-            placeholder="Get Started"
-          />
-          {validation.ctaButtonText && <p className="text-xs text-destructive">{validation.ctaButtonText}</p>}
+          {placementType === "cta" && (
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-foreground">CTA Button Text</p>
+              <Input
+                value={ctaButtonText}
+                onChange={(e) => onCtaButtonTextChange(e.target.value)}
+                placeholder="Get Started"
+              />
+              {validation.ctaButtonText && <p className="text-xs text-destructive">{validation.ctaButtonText}</p>}
+            </div>
+          )}
         </div>
-      )}
+
+        <div className="rounded-xl border border-border/70 bg-muted/30 p-3 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold text-foreground">Live Preview</p>
+            <span className="text-[11px] rounded-full border border-border/70 bg-background px-2 py-0.5 text-muted-foreground">
+              Section: {activeSection.label}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-border bg-background p-3 shadow-sm space-y-2">
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{activeSection.label} Section</p>
+            <p className="text-sm font-semibold text-foreground">Headline</p>
+            <p className="text-xs text-muted-foreground">Subheadline</p>
+
+            {placementType !== "cta" ? (
+              <div className="mt-2 rounded-lg border border-orange-200 bg-orange-50/60 p-2.5 space-y-2">
+                <p className="text-xs font-semibold text-foreground">{selectedForm.name}</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {selectedForm.fields.map((fieldId) => (
+                    <div key={fieldId} className="rounded-md border border-border/70 bg-background px-2 py-1 text-[11px] text-muted-foreground">
+                      {fieldLabel(fieldId)}
+                    </div>
+                  ))}
+                </div>
+                <div className="inline-flex rounded-md bg-orange-500 px-3 py-1.5 text-[11px] font-semibold text-white">
+                  {selectedForm.submitButtonLabel}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-2 space-y-2">
+                <button type="button" className="rounded-md bg-orange-500 px-3 py-1.5 text-[11px] font-semibold text-white">
+                  {activeCta}
+                </button>
+                <div className="text-[11px] text-muted-foreground">User clicks button ↓</div>
+                <div className="rounded-lg border border-border bg-background p-2.5 space-y-2">
+                  <p className="text-[11px] font-semibold text-foreground">Modal Opens · {selectedForm.name}</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {selectedForm.fields.map((fieldId) => (
+                      <div key={fieldId} className="rounded-md border border-border/70 bg-muted/40 px-2 py-1 text-[11px] text-muted-foreground">
+                        {fieldLabel(fieldId)}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="inline-flex rounded-md bg-orange-500 px-3 py-1.5 text-[11px] font-semibold text-white">
+                    {selectedForm.submitButtonLabel}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       <div className="flex gap-2 justify-end pt-1">
         <Button variant="outline" size="sm" onClick={onBack}>
@@ -1356,6 +1483,7 @@ export default function GeneratedLandingPageEditor() {
                       placementType={placementType}
                       targetSectionId={targetSectionId}
                       ctaButtonText={ctaButtonText}
+                      selectedForm={resolveLeadFormSchema(selectedLeadFormId, selectedLeadFields)}
                       sectionOptions={landingSectionOptions}
                       validation={placementValidation}
                       onPlacementTypeChange={(value) => {
