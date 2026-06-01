@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import {
 import {
   Sparkles,
   Send,
+  ArrowLeft,
   ArrowRight,
   ShoppingBag,
   Globe,
@@ -251,6 +252,9 @@ interface ConversationData {
   lpDetails: Record<string, string>;
   selectedLeadFormId: string | null;
   isCreatingNewLeadForm: boolean;
+  leadFormDisplayMode: "embed" | "cta" | null;
+  leadFormTargetSection: string;
+  leadFormCTAButtonText: string;
   selectedPages: string[];
   customPages: string[];
   pageCustomizations: Record<string, PageCustomization>;
@@ -261,6 +265,8 @@ interface LeadFormOption {
   id: string;
   name: string;
 }
+
+type LeadGenerationFlowStep = "select-form" | "create-form" | "placement";
 
 const LEAD_FORMS_STORAGE_KEYS = [
   "universell-lead-forms",
@@ -273,6 +279,59 @@ const DEFAULT_LEAD_FORMS: LeadFormOption[] = [
   { id: "lf-2", name: "Free Trial Request" },
   { id: "lf-3", name: "Demo Request" },
 ];
+
+const DEFAULT_LEAD_FORM_SECTIONS = [
+  "Hero Section",
+  "Benefits Section",
+  "Features Section",
+  "About Section",
+  "Testimonials",
+  "Pricing",
+  "FAQ",
+  "Contact Section",
+];
+
+const formatSectionLabel = (value: string) =>
+  value
+    .replace(/[-_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const deriveLeadFormSections = (data: ConversationData): string[] => {
+  const sections = new Set(DEFAULT_LEAD_FORM_SECTIONS);
+
+  data.selectedPages.forEach((page) => sections.add(formatSectionLabel(page)));
+  data.customPages.forEach((page) => sections.add(formatSectionLabel(page)));
+
+  Object.entries(data.pageCustomizations).forEach(([pageId, config]) => {
+    sections.add(formatSectionLabel(pageId));
+    if (config.name?.trim()) {
+      sections.add(formatSectionLabel(config.name));
+    }
+  });
+
+  Object.entries(data.lpDetails).forEach(([key, rawValue]) => {
+    const keyLabel = formatSectionLabel(key);
+    if (/section|hero|benefit|feature|about|testimonial|pricing|faq|contact/i.test(key)) {
+      sections.add(keyLabel.endsWith("Section") ? keyLabel : `${keyLabel} Section`);
+    }
+
+    if (!rawValue?.trim()) return;
+    rawValue
+      .split(/[,\n]/)
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .forEach((part) => {
+        if (/section|hero|benefit|feature|about|testimonial|pricing|faq|contact/i.test(part)) {
+          const label = formatSectionLabel(part);
+          sections.add(label.endsWith("Section") ? label : `${label} Section`);
+        }
+      });
+  });
+
+  return Array.from(sections);
+};
 
 const normalizeLandingPageType = (typeId: string | null) =>
   typeId ? typeId.replace(/-/g, "_") : null;
@@ -3465,6 +3524,148 @@ function LandingPageTypePicker({
   );
 }
 
+function LeadFormPlacementStep({
+  displayMode,
+  targetSection,
+  ctaButtonText,
+  sectionOptions,
+  onDisplayModeChange,
+  onTargetSectionChange,
+  onCTAButtonTextChange,
+  onBack,
+  onContinue,
+  backLabel,
+}: {
+  displayMode: "embed" | "cta" | null;
+  targetSection: string;
+  ctaButtonText: string;
+  sectionOptions: string[];
+  onDisplayModeChange: (mode: "embed" | "cta") => void;
+  onTargetSectionChange: (section: string) => void;
+  onCTAButtonTextChange: (value: string) => void;
+  onBack: () => void;
+  onContinue: () => void;
+  backLabel: string;
+}) {
+  const [showErrors, setShowErrors] = useState(false);
+
+  const missingDisplayMode = showErrors && !displayMode;
+  const missingSection = showErrors && !targetSection;
+  const missingCTA = showErrors && displayMode === "cta" && !ctaButtonText.trim();
+
+  const handleContinue = () => {
+    setShowErrors(true);
+    if (!displayMode || !targetSection || (displayMode === "cta" && !ctaButtonText.trim())) {
+      return;
+    }
+    onContinue();
+  };
+
+  return (
+    <div className="animate-fade-in-up space-y-4 rounded-2xl border border-border/60 bg-background p-4">
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        onClick={onBack}
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        {backLabel}
+      </button>
+
+      <div className="space-y-1">
+        <h3 className="text-sm font-semibold text-foreground">Lead Form Placement</h3>
+        <p className="text-xs text-muted-foreground">How would you like visitors to access this lead form?</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-medium text-foreground">How do you want to use this lead form?</Label>
+        <div className="grid grid-cols-1 gap-2">
+          {[
+            { id: "embed" as const, label: "Embed the form directly on the page" },
+            { id: "cta" as const, label: "Link the form to a CTA button" },
+          ].map((option) => {
+            const isActive = displayMode === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => onDisplayModeChange(option.id)}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition-colors",
+                  isActive
+                    ? "border-primary bg-primary/5 text-foreground"
+                    : "border-border/60 bg-background text-muted-foreground hover:border-primary/40"
+                )}
+              >
+                <span
+                  className={cn(
+                    "h-4 w-4 rounded-full border flex items-center justify-center",
+                    isActive ? "border-primary" : "border-muted-foreground/40"
+                  )}
+                >
+                  {isActive && <span className="h-2 w-2 rounded-full bg-primary" />}
+                </span>
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+        {missingDisplayMode && <p className="text-xs text-destructive">Please select how to use this lead form.</p>}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-medium text-foreground">Select Landing Page Section</Label>
+        <Select value={targetSection} onValueChange={onTargetSectionChange}>
+          <SelectTrigger className="h-10 w-full rounded-xl">
+            <SelectValue placeholder="Choose where this form should be connected" />
+          </SelectTrigger>
+          <SelectContent>
+            {sectionOptions.map((section) => (
+              <SelectItem key={section} value={section}>
+                {section}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {missingSection && <p className="text-xs text-destructive">Please select a landing page section.</p>}
+      </div>
+
+      {displayMode === "embed" && (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1">
+          <p className="font-medium text-foreground">The form will be embedded directly inside the selected section.</p>
+          <p>Examples: Hero Section with embedded form, Contact Section with embedded form, Sidebar form block.</p>
+        </div>
+      )}
+
+      {displayMode === "cta" && (
+        <div className="space-y-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-foreground">CTA Button Text</Label>
+            <Input
+              className="h-10 rounded-xl"
+              value={ctaButtonText}
+              onChange={(e) => onCTAButtonTextChange(e.target.value)}
+              placeholder="Get Free Quote"
+            />
+            {missingCTA && <p className="text-xs text-destructive">CTA button text is required for CTA mode.</p>}
+          </div>
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+            A CTA button will be added to the selected section and will open the lead form when clicked.
+          </div>
+        </div>
+      )}
+
+      <Button
+        type="button"
+        onClick={handleContinue}
+        className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-sm font-medium"
+      >
+        Confirm Placement & Continue →
+      </Button>
+    </div>
+  );
+}
+
 // Key for storing onboarding data
 const ONBOARDING_DATA_KEY = "universell-onboarding-data";
 
@@ -3489,6 +3690,9 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     lpDetails: {},
     selectedLeadFormId: null,
     isCreatingNewLeadForm: false,
+    leadFormDisplayMode: null,
+    leadFormTargetSection: "",
+    leadFormCTAButtonText: "",
     selectedPages: [],
     customPages: [],
     pageCustomizations: {},
@@ -3507,7 +3711,9 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
   const [selectedLandingPageType, setSelectedLandingPageType] = useState<string | null>(null);
   const [selectedLeadForm, setSelectedLeadForm] = useState<string | null>(null);
   const [isCreatingNewLeadForm, setIsCreatingNewLeadForm] = useState(false);
+  const [leadGenerationFlowStep, setLeadGenerationFlowStep] = useState<LeadGenerationFlowStep>("select-form");
   const [availableLeadForms, setAvailableLeadForms] = useState<LeadFormOption[]>(DEFAULT_LEAD_FORMS);
+  const leadFormSectionOptions = useMemo(() => deriveLeadFormSections(conversationData), [conversationData]);
   
   const [isFocused, setIsFocused] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -4062,10 +4268,10 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
       }
 
       if (conversationData.landingPageType === "lead-generation") {
-        if (selectedLeadForm || isCreatingNewLeadForm || currentStep === "complete") {
+        if (currentStep === "complete") {
           return;
         }
-        addAiMessage("Please select a lead form or click Add New to continue.", 500);
+        addAiMessage("Please complete Lead Form Placement before continuing.", 500);
         return;
       }
 
@@ -4096,12 +4302,18 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
         style: conversationData.style,
         landingPageType: landingPageType ?? conversationData.landingPageType,
         selectedLandingPageType,
-        selectedLeadFormId: selectedLeadForm,
+        selectedLeadFormId: conversationData.selectedLeadFormId,
         isCreatingNewLeadForm,
+        leadFormDisplayMode: conversationData.leadFormDisplayMode,
+        leadFormTargetSection: conversationData.leadFormTargetSection,
+        leadFormCTAButtonText: conversationData.leadFormCTAButtonText,
         lpDetails: {
           ...conversationData.lpDetails,
-          selectedLeadFormId: selectedLeadForm ?? "",
+          selectedLeadFormId: conversationData.selectedLeadFormId ?? "",
           isCreatingNewLeadForm: String(isCreatingNewLeadForm),
+          leadFormDisplayMode: conversationData.leadFormDisplayMode ?? "",
+          leadFormTargetSection: conversationData.leadFormTargetSection,
+          leadFormCTAButtonText: conversationData.leadFormCTAButtonText,
         },
         completedAt: new Date().toISOString(),
       };
@@ -4151,11 +4363,15 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     if (typeId === "lead-generation") {
       setSelectedLeadForm(null);
       setIsCreatingNewLeadForm(false);
+      setLeadGenerationFlowStep("select-form");
       setConversationData((prev) => ({
         ...prev,
         landingPageType: typeId,
         selectedLeadFormId: null,
         isCreatingNewLeadForm: false,
+        leadFormDisplayMode: null,
+        leadFormTargetSection: "",
+        leadFormCTAButtonText: "",
       }));
 
       if (shouldAddUserMessage) {
@@ -4196,6 +4412,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     const selectedForm = availableLeadForms.find((form) => form.id === formId);
     setSelectedLeadForm(formId);
     setIsCreatingNewLeadForm(false);
+    setLeadGenerationFlowStep("placement");
 
     setConversationData((prev) => ({
       ...prev,
@@ -4214,15 +4431,14 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
       addUserMessage(`Lead Form: ${selectedForm.name}`);
       addAiMessage(`Perfect — I'll use ${selectedForm.name} for this landing page. 📩`, 500);
       setTimeout(() => {
-        addAiMessage("Click 'Generate My Landing Page' when you're ready!", 2200);
-        setCurrentStep("complete");
+        addAiMessage("Next, configure where this lead form should appear on your page.", 1800);
       }, 100);
     }
   };
 
   const handleCreateNewLeadForm = () => {
-    setSelectedLeadForm(null);
     setIsCreatingNewLeadForm(true);
+    setLeadGenerationFlowStep("create-form");
     setConversationData((prev) => ({
       ...prev,
       landingPageType: "lead-generation",
@@ -4237,11 +4453,15 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     setSelectedLandingPageType(normalizedType);
 
     if (typeId === "lead-generation") {
+      setLeadGenerationFlowStep("select-form");
       setConversationData((prev) => ({
         ...prev,
         landingPageType: typeId,
         selectedLeadFormId: null,
         isCreatingNewLeadForm: false,
+        leadFormDisplayMode: null,
+        leadFormTargetSection: "",
+        leadFormCTAButtonText: "",
       }));
       setSelectedLeadForm(null);
       setIsCreatingNewLeadForm(false);
@@ -4253,6 +4473,26 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
 
   // Handle landing page details confirmation
   const handleLandingPageDetailsConfirm = (summary: string, details: Record<string, string>) => {
+    if (conversationData.landingPageType === "lead-generation" && isCreatingNewLeadForm) {
+      setConversationData((prev) => ({
+        ...prev,
+        lpDetails: {
+          ...details,
+          selectedLeadFormId: "",
+          isCreatingNewLeadForm: "true",
+        },
+        selectedLeadFormId: null,
+        isCreatingNewLeadForm: true,
+      }));
+      addUserMessage(summary);
+      addAiMessage("Great — your new lead form setup is captured. ⚡", 500);
+      setTimeout(() => {
+        addAiMessage("Now choose how this lead form should be placed on your landing page.", 1800);
+        setLeadGenerationFlowStep("placement");
+      }, 120);
+      return;
+    }
+
     setConversationData((prev) => ({
       ...prev,
       lpDetails: {
@@ -4267,6 +4507,32 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     addAiMessage("Perfect — I have everything I need to generate your landing page! 🚀");
     setTimeout(() => {
       addAiMessage("Click 'Generate My Landing Page' when you're ready!", 2400);
+      setCurrentStep("complete");
+    }, 100);
+  };
+
+  const handleLeadFormPlacementContinue = () => {
+    const displayModeLabel = conversationData.leadFormDisplayMode === "embed" ? "Embed" : "CTA";
+    const sectionLabel = conversationData.leadFormTargetSection;
+    const ctaLabel =
+      conversationData.leadFormDisplayMode === "cta" && conversationData.leadFormCTAButtonText.trim()
+        ? `, CTA: \"${conversationData.leadFormCTAButtonText.trim()}\"`
+        : "";
+
+    addUserMessage(`Lead Form Placement: ${displayModeLabel} in ${sectionLabel}${ctaLabel}`);
+    addAiMessage("Perfect — I have everything I need to generate your landing page! 🚀", 500);
+    setConversationData((prev) => ({
+      ...prev,
+      lpDetails: {
+        ...prev.lpDetails,
+        leadFormDisplayMode: prev.leadFormDisplayMode ?? "",
+        leadFormTargetSection: prev.leadFormTargetSection,
+        leadFormCTAButtonText: prev.leadFormCTAButtonText,
+      },
+    }));
+
+    setTimeout(() => {
+      addAiMessage("Click 'Generate My Landing Page' when you're ready!", 2200);
       setCurrentStep("complete");
     }, 100);
   };
@@ -4542,94 +4808,127 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                       {selectedLandingPageType === "lead_generation" && (
                         <div className="rounded-2xl border border-border/60 bg-background overflow-hidden animate-fade-in-up">
                           {/* Lead Form Selection screen */}
-                          <div
-                            className={cn(
-                              "transition-all duration-300 ease-in-out",
-                              !isCreatingNewLeadForm
-                                ? "block"
-                                : "hidden"
-                            )}
-                          >
-                            {/* Header with back navigation */}
-                            <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-border/40">
-                              <button
-                                type="button"
-                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                                onClick={() => {
-                                  setSelectedLandingPageType(null);
-                                  setConversationData((prev) => ({ ...prev, landingPageType: null, selectedLeadFormId: null, isCreatingNewLeadForm: false }));
-                                  setSelectedLeadForm(null);
-                                }}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                                Back
-                              </button>
-                              <h3 className="text-sm font-semibold text-foreground">Lead Generation</h3>
-                            </div>
-
-                            {/* Form selection body */}
-                            <div className="p-4 space-y-3">
-                              <p className="text-xs text-muted-foreground">Choose an existing lead form to link with this landing page, or create a new one.</p>
-                              <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
-                                <div className="space-y-1.5">
-                                  <Label className="text-xs font-medium text-foreground">Lead Form</Label>
-                                  <Select value={selectedLeadForm ?? ""} onValueChange={handleLeadFormSelect}>
-                                    <SelectTrigger className="h-10 w-full rounded-xl">
-                                      <SelectValue placeholder="Select an existing lead form" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {availableLeadForms.map((form) => (
-                                        <SelectItem key={form.id} value={form.id}>
-                                          {form.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <Button
-                                  variant="outline"
+                          {leadGenerationFlowStep === "select-form" && (
+                            <>
+                              {/* Header with back navigation */}
+                              <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-border/40">
+                                <button
                                   type="button"
-                                  className="h-10 rounded-xl"
-                                  onClick={handleCreateNewLeadForm}
+                                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                  onClick={() => {
+                                    setSelectedLandingPageType(null);
+                                    setLeadGenerationFlowStep("select-form");
+                                    setConversationData((prev) => ({
+                                      ...prev,
+                                      landingPageType: null,
+                                      selectedLeadFormId: null,
+                                      isCreatingNewLeadForm: false,
+                                    }));
+                                    setSelectedLeadForm(null);
+                                    setIsCreatingNewLeadForm(false);
+                                  }}
                                 >
-                                  Add New
-                                </Button>
+                                  <ArrowLeft className="w-3.5 h-3.5" />
+                                  Back
+                                </button>
+                                <h3 className="text-sm font-semibold text-foreground">Lead Generation</h3>
                               </div>
-                            </div>
-                          </div>
+
+                              {/* Form selection body */}
+                              <div className="p-4 space-y-3">
+                                <p className="text-xs text-muted-foreground">Choose an existing lead form to link with this landing page, or create a new one.</p>
+                                <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium text-foreground">Lead Form</Label>
+                                    <Select value={selectedLeadForm ?? ""} onValueChange={handleLeadFormSelect}>
+                                      <SelectTrigger className="h-10 w-full rounded-xl">
+                                        <SelectValue placeholder="Select an existing lead form" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {availableLeadForms.map((form) => (
+                                          <SelectItem key={form.id} value={form.id}>
+                                            {form.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    type="button"
+                                    className="h-10 rounded-xl"
+                                    onClick={handleCreateNewLeadForm}
+                                  >
+                                    Add New
+                                  </Button>
+                                </div>
+                              </div>
+                            </>
+                          )}
 
                           {/* New Lead Form Creation screen */}
-                          <div
-                            className={cn(
-                              "transition-all duration-300 ease-in-out",
-                              isCreatingNewLeadForm
-                                ? "block"
-                                : "hidden"
-                            )}
-                          >
-                            {/* Header with back navigation */}
-                            <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-border/40">
-                              <button
-                                type="button"
-                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                                onClick={() => {
-                                  setIsCreatingNewLeadForm(false);
-                                  setConversationData((prev) => ({ ...prev, isCreatingNewLeadForm: false }));
-                                }}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                                Back to Lead Forms
-                              </button>
-                            </div>
+                          {leadGenerationFlowStep === "create-form" && (
+                            <>
+                              {/* Header with back navigation */}
+                              <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-border/40">
+                                <button
+                                  type="button"
+                                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                  onClick={() => {
+                                    setIsCreatingNewLeadForm(false);
+                                    setConversationData((prev) => ({ ...prev, isCreatingNewLeadForm: false }));
+                                    setLeadGenerationFlowStep("select-form");
+                                  }}
+                                >
+                                  <ArrowLeft className="w-3.5 h-3.5" />
+                                  Back to Lead Forms
+                                </button>
+                              </div>
 
-                            {/* New form body */}
+                              {/* New form body */}
+                              <div className="p-4">
+                                <LandingPageDetailsForm
+                                  landingPageType="lead-generation"
+                                  onConfirm={handleLandingPageDetailsConfirm}
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* Lead Form Placement screen */}
+                          {leadGenerationFlowStep === "placement" && (
                             <div className="p-4">
-                              <LandingPageDetailsForm
-                                landingPageType="lead-generation"
-                                onConfirm={handleLandingPageDetailsConfirm}
+                              <LeadFormPlacementStep
+                                displayMode={conversationData.leadFormDisplayMode}
+                                targetSection={conversationData.leadFormTargetSection}
+                                ctaButtonText={conversationData.leadFormCTAButtonText}
+                                sectionOptions={leadFormSectionOptions}
+                                onDisplayModeChange={(modeValue) => {
+                                  setConversationData((prev) => ({
+                                    ...prev,
+                                    leadFormDisplayMode: modeValue,
+                                  }));
+                                }}
+                                onTargetSectionChange={(sectionValue) => {
+                                  setConversationData((prev) => ({
+                                    ...prev,
+                                    leadFormTargetSection: sectionValue,
+                                  }));
+                                }}
+                                onCTAButtonTextChange={(ctaValue) => {
+                                  setConversationData((prev) => ({
+                                    ...prev,
+                                    leadFormCTAButtonText: ctaValue,
+                                  }));
+                                }}
+                                onBack={() => {
+                                  setLeadGenerationFlowStep(isCreatingNewLeadForm ? "create-form" : "select-form");
+                                }}
+                                onContinue={handleLeadFormPlacementContinue}
+                                backLabel={isCreatingNewLeadForm ? "Back to Lead Form Setup" : "Back to Lead Forms"}
                               />
                             </div>
-                          </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -4825,12 +5124,18 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                         style: conversationData.style,
                         landingPageType: conversationData.landingPageType,
                         selectedLandingPageType,
-                        selectedLeadFormId: selectedLeadForm,
+                        selectedLeadFormId: conversationData.selectedLeadFormId,
                         isCreatingNewLeadForm,
+                        leadFormDisplayMode: conversationData.leadFormDisplayMode,
+                        leadFormTargetSection: conversationData.leadFormTargetSection,
+                        leadFormCTAButtonText: conversationData.leadFormCTAButtonText,
                         lpDetails: {
                           ...conversationData.lpDetails,
-                          selectedLeadFormId: selectedLeadForm ?? "",
+                          selectedLeadFormId: conversationData.selectedLeadFormId ?? "",
                           isCreatingNewLeadForm: String(isCreatingNewLeadForm),
+                          leadFormDisplayMode: conversationData.leadFormDisplayMode ?? "",
+                          leadFormTargetSection: conversationData.leadFormTargetSection,
+                          leadFormCTAButtonText: conversationData.leadFormCTAButtonText,
                         },
                         completedAt: new Date().toISOString(),
                       };
