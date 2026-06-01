@@ -133,6 +133,19 @@ const EXISTING_FORMS: Record<string, { id: string; name: string }[]> = {
   ],
 };
 
+type LeadFormModalStep = "form-selection" | "field-selection" | "form-builder";
+
+const LEAD_FORM_FIELD_OPTIONS: { id: string; label: string }[] = [
+  { id: "full_name", label: "Full Name" },
+  { id: "email", label: "Email Address" },
+  { id: "phone", label: "Phone Number" },
+  { id: "company", label: "Company" },
+  { id: "job_title", label: "Job Title" },
+  { id: "location", label: "Location" },
+];
+
+const LEAD_FORM_BUILDER_INIT_KEY = "universell-lead-form-builder-init";
+
 // ─── Connect Domain feature ───────────────────────────────────────────────────
 
 type DomainFlowStep =
@@ -469,6 +482,9 @@ export default function GeneratedLandingPageEditor() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [selectedFormType, setSelectedFormType] = useState<string | null>(null);
   const [selectedExistingForm, setSelectedExistingForm] = useState<string>("");
+  const [leadFormModalStep, setLeadFormModalStep] = useState<LeadFormModalStep>("form-selection");
+  const [selectedLeadFields, setSelectedLeadFields] = useState<string[]>([]);
+  const [leadFieldValidationError, setLeadFieldValidationError] = useState<string>("");
 
   // Connect Domain modal state
   const [showDomainModal, setShowDomainModal] = useState(false);
@@ -817,6 +833,52 @@ export default function GeneratedLandingPageEditor() {
     persistLandingPage("published");
   };
 
+  const toggleLeadField = (fieldId: string) => {
+    setLeadFieldValidationError("");
+    setSelectedLeadFields((prev) =>
+      prev.includes(fieldId) ? prev.filter((id) => id !== fieldId) : [...prev, fieldId]
+    );
+  };
+
+  const startLeadFormBuilder = (fields: string[]) => {
+    localStorage.setItem(
+      LEAD_FORM_BUILDER_INIT_KEY,
+      JSON.stringify({
+        selectedLeadFields: fields,
+        createdAt: new Date().toISOString(),
+      })
+    );
+
+    const humanLabels = LEAD_FORM_FIELD_OPTIONS
+      .filter((field) => fields.includes(field.id))
+      .map((field) => field.label)
+      .join(", ");
+
+    setInputMessage(
+      `Add a lead form with the following fields: ${humanLabels}. Use this schema keys: ${fields.join(", ")}.`
+    );
+    setLeadFormModalStep("form-builder");
+
+    setTimeout(() => {
+      setShowFormModal(false);
+      setSelectedFormType(null);
+      setSelectedExistingForm("");
+      setLeadFormModalStep("form-selection");
+      setSelectedLeadFields([]);
+      setLeadFieldValidationError("");
+    }, 220);
+  };
+
+  const handleLeadFieldSelectionContinue = () => {
+    if (!selectedLeadFields.length) {
+      setLeadFieldValidationError("Select at least one field to include in your lead form.");
+      return;
+    }
+
+    setLeadFieldValidationError("");
+    setLeadFormModalStep("form-builder");
+  };
+
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col -m-6">
       {/* Top header */}
@@ -919,7 +981,14 @@ export default function GeneratedLandingPageEditor() {
                 </button>
               ))}
               <button
-                onClick={() => setShowFormModal(true)}
+                onClick={() => {
+                  setShowFormModal(true);
+                  setSelectedFormType(null);
+                  setSelectedExistingForm("");
+                  setLeadFormModalStep("form-selection");
+                  setSelectedLeadFields([]);
+                  setLeadFieldValidationError("");
+                }}
                 className="text-[11px] px-2 py-1 rounded-full bg-orange-500 text-white hover:bg-orange-600 flex items-center gap-1"
               >
                 <ClipboardList className="w-3 h-3" />
@@ -941,6 +1010,9 @@ export default function GeneratedLandingPageEditor() {
                 if (!open) {
                   setSelectedFormType(null);
                   setSelectedExistingForm("");
+                  setLeadFormModalStep("form-selection");
+                  setSelectedLeadFields([]);
+                  setLeadFieldValidationError("");
                 }
               }}
             >
@@ -948,16 +1020,38 @@ export default function GeneratedLandingPageEditor() {
                 <DialogHeader>
                   <DialogTitle>
                     {selectedFormType ? (
-                      <button
-                        onClick={() => {
-                          setSelectedFormType(null);
-                          setSelectedExistingForm("");
-                        }}
-                        className="flex items-center gap-1.5 text-sm font-semibold hover:text-orange-600 transition-colors"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                        {selectedFormType}
-                      </button>
+                      selectedFormType === "Lead Form" && leadFormModalStep !== "form-selection" ? (
+                        <button
+                          onClick={() => {
+                            if (leadFormModalStep === "field-selection") {
+                              setLeadFormModalStep("form-selection");
+                              setLeadFieldValidationError("");
+                              return;
+                            }
+                            setLeadFormModalStep("field-selection");
+                          }}
+                          className="flex items-center gap-1.5 text-sm font-semibold hover:text-orange-600 transition-colors"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          {leadFormModalStep === "field-selection"
+                            ? "Lead Form"
+                            : "What information would you like to collect?"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setSelectedFormType(null);
+                            setSelectedExistingForm("");
+                            setLeadFormModalStep("form-selection");
+                            setSelectedLeadFields([]);
+                            setLeadFieldValidationError("");
+                          }}
+                          className="flex items-center gap-1.5 text-sm font-semibold hover:text-orange-600 transition-colors"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          {selectedFormType}
+                        </button>
+                      )
                     ) : (
                       "Insert a Form"
                     )}
@@ -965,63 +1059,169 @@ export default function GeneratedLandingPageEditor() {
                 </DialogHeader>
 
                 {selectedFormType ? (
-                  <div className="space-y-4 pt-1">
-                    <p className="text-xs text-muted-foreground">
-                      Select an existing form to embed, or create a new one.
-                    </p>
-                    <Select
-                      value={selectedExistingForm}
-                      onValueChange={setSelectedExistingForm}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose a form…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(EXISTING_FORMS[selectedFormType] ?? []).map((form) => (
-                          <SelectItem key={form.id} value={form.id}>
-                            {form.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const formType = FORM_TYPES.find(
-                            (f) => f.label === selectedFormType
+                  selectedFormType === "Lead Form" && leadFormModalStep === "field-selection" ? (
+                    <div className="space-y-4 pt-1 animate-fade-in-up">
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-semibold text-foreground">What information would you like to collect?</h3>
+                        <p className="text-xs text-muted-foreground">Select one or more fields for your new lead form.</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {LEAD_FORM_FIELD_OPTIONS.map((field) => {
+                          const isSelected = selectedLeadFields.includes(field.id);
+                          return (
+                            <button
+                              key={field.id}
+                              type="button"
+                              onClick={() => toggleLeadField(field.id)}
+                              className={cn(
+                                "flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm text-left transition-colors",
+                                isSelected
+                                  ? "border-orange-400 bg-orange-50 text-orange-700"
+                                  : "border-border bg-muted hover:bg-orange-50 hover:border-orange-300"
+                              )}
+                            >
+                              <span className={cn("h-4 w-4 rounded border flex items-center justify-center", isSelected ? "border-orange-500 bg-orange-500" : "border-muted-foreground/40 bg-background")}>
+                                {isSelected && <Check className="w-3 h-3 text-white" />}
+                              </span>
+                              <span className="leading-tight">{field.label}</span>
+                            </button>
                           );
-                          if (formType) setInputMessage(formType.value);
-                          setShowFormModal(false);
-                          setSelectedFormType(null);
-                          setSelectedExistingForm("");
-                        }}
-                      >
-                        Create new
-                      </Button>
-                      <Button
-                        size="sm"
-                        disabled={!selectedExistingForm}
-                        onClick={() => {
-                          const form = (
-                            EXISTING_FORMS[selectedFormType] ?? []
-                          ).find((f) => f.id === selectedExistingForm);
-                          if (form) {
-                            setInputMessage(
-                              `Embed the existing "${form.name}" form`
-                            );
-                          }
-                          setShowFormModal(false);
-                          setSelectedFormType(null);
-                          setSelectedExistingForm("");
-                        }}
-                        className="bg-orange-500 hover:bg-orange-600 text-white"
-                      >
-                        Use this form
-                      </Button>
+                        })}
+                      </div>
+
+                      {leadFieldValidationError && (
+                        <p className="text-xs text-destructive">{leadFieldValidationError}</p>
+                      )}
+
+                      <div className="flex gap-2 justify-end pt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setLeadFormModalStep("form-selection");
+                            setLeadFieldValidationError("");
+                          }}
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleLeadFieldSelectionContinue}
+                          className="bg-orange-500 hover:bg-orange-600 text-white"
+                        >
+                          Continue
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  ) : selectedFormType === "Lead Form" && leadFormModalStep === "form-builder" ? (
+                    <div className="space-y-4 pt-1 animate-fade-in-up">
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-semibold text-foreground">Lead Form Builder</h3>
+                        <p className="text-xs text-muted-foreground">
+                          We&apos;ll initialize your lead form with the selected fields.
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-1">
+                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Selected fields</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedLeadFields.map((fieldId) => {
+                            const fieldLabel = LEAD_FORM_FIELD_OPTIONS.find((field) => field.id === fieldId)?.label ?? fieldId;
+                            return (
+                              <span key={fieldId} className="inline-flex items-center rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-[11px] font-medium">
+                                {fieldLabel}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setLeadFormModalStep("field-selection")}
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => startLeadFormBuilder(selectedLeadFields)}
+                          className="bg-orange-500 hover:bg-orange-600 text-white"
+                        >
+                          Open Form Builder
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 pt-1 animate-fade-in-up">
+                      <p className="text-xs text-muted-foreground">
+                        Select an existing form to embed, or add a new one.
+                      </p>
+                      <Select
+                        value={selectedExistingForm}
+                        onValueChange={setSelectedExistingForm}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Choose a form…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(EXISTING_FORMS[selectedFormType] ?? []).map((form) => (
+                            <SelectItem key={form.id} value={form.id}>
+                              {form.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (selectedFormType === "Lead Form") {
+                              setLeadFormModalStep("field-selection");
+                              setLeadFieldValidationError("");
+                              return;
+                            }
+
+                            const formType = FORM_TYPES.find(
+                              (f) => f.label === selectedFormType
+                            );
+                            if (formType) setInputMessage(formType.value);
+                            setShowFormModal(false);
+                            setSelectedFormType(null);
+                            setSelectedExistingForm("");
+                          }}
+                        >
+                          Add New
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={!selectedExistingForm}
+                          onClick={() => {
+                            const form = (
+                              EXISTING_FORMS[selectedFormType] ?? []
+                            ).find((f) => f.id === selectedExistingForm);
+                            if (form) {
+                              setInputMessage(
+                                `Embed the existing "${form.name}" form`
+                              );
+                            }
+                            setShowFormModal(false);
+                            setSelectedFormType(null);
+                            setSelectedExistingForm("");
+                            setLeadFormModalStep("form-selection");
+                            setSelectedLeadFields([]);
+                            setLeadFieldValidationError("");
+                          }}
+                          className="bg-orange-500 hover:bg-orange-600 text-white"
+                        >
+                          Use this form
+                        </Button>
+                      </div>
+                    </div>
+                  )
                 ) : (
                   <div className="grid grid-cols-2 gap-2 pt-2">
                     {FORM_TYPES.map(({ label, value, icon: Icon, instant }) => (
@@ -1033,9 +1233,15 @@ export default function GeneratedLandingPageEditor() {
                             setShowFormModal(false);
                             setSelectedFormType(null);
                             setSelectedExistingForm("");
+                            setLeadFormModalStep("form-selection");
+                            setSelectedLeadFields([]);
+                            setLeadFieldValidationError("");
                           } else {
                             setSelectedFormType(label);
                             setSelectedExistingForm("");
+                            setLeadFormModalStep("form-selection");
+                            setSelectedLeadFields([]);
+                            setLeadFieldValidationError("");
                           }
                         }}
                         className="flex items-center gap-2 text-sm px-3 py-2.5 rounded-lg border border-border bg-muted hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600 text-left transition-colors"
