@@ -137,11 +137,16 @@ function DashboardLayoutInner({
 }: {
   children: React.ReactNode;
 }) {
+  const [hasMounted, setHasMounted] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isEditPage = pathname.includes("/edit/") || pathname.endsWith("/edit");
   const shouldCollapseSidebar = isEditPage || pathname === "/ecommerce-fastshop";
   const [sidebarOpen, setSidebarOpen] = useState(!shouldCollapseSidebar);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     if (pathname.includes("/edit/") || pathname.endsWith("/edit") || pathname === "/ecommerce-fastshop") {
@@ -369,6 +374,14 @@ function DashboardLayoutInner({
       </LinkComponent>
     );
   };
+
+  if (!hasMounted) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
