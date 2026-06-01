@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -242,11 +249,33 @@ interface ConversationData {
   style: string;
   landingPageType: string | null;
   lpDetails: Record<string, string>;
+  selectedLeadFormId: string | null;
+  isCreatingNewLeadForm: boolean;
   selectedPages: string[];
   customPages: string[];
   pageCustomizations: Record<string, PageCustomization>;
   products: string;
 }
+
+interface LeadFormOption {
+  id: string;
+  name: string;
+}
+
+const LEAD_FORMS_STORAGE_KEYS = [
+  "universell-lead-forms",
+  "universell-saved-lead-forms",
+  "universell-crm-lead-forms",
+];
+
+const DEFAULT_LEAD_FORMS: LeadFormOption[] = [
+  { id: "lf-1", name: "Newsletter Signup" },
+  { id: "lf-2", name: "Free Trial Request" },
+  { id: "lf-3", name: "Demo Request" },
+];
+
+const normalizeLandingPageType = (typeId: string | null) =>
+  typeId ? typeId.replace(/-/g, "_") : null;
 
 // Shop type options for card-based selection
 const SHOP_TYPE_OPTIONS: ShopTypeOption[] = [
@@ -3436,6 +3465,54 @@ function LandingPageTypePicker({
   );
 }
 
+function LeadFormSelectionSection({
+  leadForms,
+  selectedLeadForm,
+  onLeadFormChange,
+  onAddNew,
+  isVisible,
+}: {
+  leadForms: LeadFormOption[];
+  selectedLeadForm: string | null;
+  onLeadFormChange: (formId: string) => void;
+  onAddNew: () => void;
+  isVisible: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "overflow-hidden transition-all duration-300 ease-in-out",
+        isVisible ? "max-h-80 opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-2 pointer-events-none"
+      )}
+      aria-hidden={!isVisible}
+    >
+      <div className="mt-3 rounded-2xl border border-border/60 bg-background p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-foreground">Select a Lead Form</h3>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-foreground">Lead Form</Label>
+            <Select value={selectedLeadForm ?? ""} onValueChange={onLeadFormChange}>
+              <SelectTrigger className="h-10 w-full rounded-xl">
+                <SelectValue placeholder="Select an existing lead form" />
+              </SelectTrigger>
+              <SelectContent>
+                {leadForms.map((form) => (
+                  <SelectItem key={form.id} value={form.id}>
+                    {form.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button variant="outline" type="button" className="h-10 rounded-xl" onClick={onAddNew}>
+            Add New
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Key for storing onboarding data
 const ONBOARDING_DATA_KEY = "universell-onboarding-data";
 
@@ -3458,6 +3535,8 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     style: "",
     landingPageType: null,
     lpDetails: {},
+    selectedLeadFormId: null,
+    isCreatingNewLeadForm: false,
     selectedPages: [],
     customPages: [],
     pageCustomizations: {},
@@ -3472,6 +3551,11 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     secondaryShade: null,
     isAutoSuggested: false,
   });
+
+  const [selectedLandingPageType, setSelectedLandingPageType] = useState<string | null>(null);
+  const [selectedLeadForm, setSelectedLeadForm] = useState<string | null>(null);
+  const [isCreatingNewLeadForm, setIsCreatingNewLeadForm] = useState(false);
+  const [availableLeadForms, setAvailableLeadForms] = useState<LeadFormOption[]>(DEFAULT_LEAD_FORMS);
   
   const [isFocused, setIsFocused] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -3501,6 +3585,43 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     "💡 Using consistent brand colors builds trust with visitors.",
     "💡 Short, benefit-focused headlines outperform generic ones.",
   ];
+
+  useEffect(() => {
+    if (mode !== "landing-page") return;
+
+    const normalizeLeadForms = (value: unknown): LeadFormOption[] => {
+      if (!Array.isArray(value)) return [];
+      return value
+        .map((item, index) => {
+          if (!item || typeof item !== "object") return null;
+          const form = item as Record<string, unknown>;
+          const rawId = form.id;
+          const rawName = form.name ?? form.title ?? form.label;
+          const id = typeof rawId === "string" && rawId.trim() ? rawId : `lf-${index + 1}`;
+          const name = typeof rawName === "string" && rawName.trim() ? rawName : null;
+          if (!name) return null;
+          return { id, name };
+        })
+        .filter((form): form is LeadFormOption => form !== null);
+    };
+
+    for (const key of LEAD_FORMS_STORAGE_KEYS) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const parsed = JSON.parse(raw);
+        const normalized = normalizeLeadForms(parsed);
+        if (normalized.length > 0) {
+          setAvailableLeadForms(normalized);
+          return;
+        }
+      } catch {
+        // ignore and fall back to defaults
+      }
+    }
+
+    setAvailableLeadForms(DEFAULT_LEAD_FORMS);
+  }, [mode]);
 
   useEffect(() => {
     if (!isGenerating) return;
@@ -3988,6 +4109,14 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
         return;
       }
 
+      if (conversationData.landingPageType === "lead-generation") {
+        if (selectedLeadForm || isCreatingNewLeadForm || currentStep === "complete") {
+          return;
+        }
+        addAiMessage("Please select a lead form or click Add New to continue.", 500);
+        return;
+      }
+
       if (currentStep !== "lp-details" && currentStep !== "complete") {
         triggerLandingPageFollowUpFlow(conversationData.landingPageType, false);
       }
@@ -4014,7 +4143,14 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
         secondaryShade: colorSelection.secondaryShade,
         style: conversationData.style,
         landingPageType: landingPageType ?? conversationData.landingPageType,
-        lpDetails: conversationData.lpDetails,
+        selectedLandingPageType,
+        selectedLeadFormId: selectedLeadForm,
+        isCreatingNewLeadForm,
+        lpDetails: {
+          ...conversationData.lpDetails,
+          selectedLeadFormId: selectedLeadForm ?? "",
+          isCreatingNewLeadForm: String(isCreatingNewLeadForm),
+        },
         completedAt: new Date().toISOString(),
       };
       localStorage.setItem("universell-landing-page-draft", JSON.stringify(landingPageData));
@@ -4057,14 +4193,41 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     const type = LANDING_PAGE_TYPES.find((t) => t.id === typeId);
     if (!type) return;
 
-    setConversationData((prev) => ({ ...prev, landingPageType: typeId }));
+    const normalizedType = normalizeLandingPageType(typeId);
+    setSelectedLandingPageType(normalizedType);
+
+    if (typeId === "lead-generation") {
+      setSelectedLeadForm(null);
+      setIsCreatingNewLeadForm(false);
+      setConversationData((prev) => ({
+        ...prev,
+        landingPageType: typeId,
+        selectedLeadFormId: null,
+        isCreatingNewLeadForm: false,
+      }));
+
+      if (shouldAddUserMessage) {
+        addUserMessage(type.title);
+      }
+      addAiMessage("Great pick. Select an existing lead form or click Add New to create one.");
+      setTimeout(() => setCurrentStep("landing-page-type"), 900);
+      return;
+    }
+
+    setSelectedLeadForm(null);
+    setIsCreatingNewLeadForm(false);
+    setConversationData((prev) => ({
+      ...prev,
+      landingPageType: typeId,
+      selectedLeadFormId: null,
+      isCreatingNewLeadForm: false,
+    }));
     if (shouldAddUserMessage) {
       addUserMessage(type.title);
     }
 
     const typeResponses: Record<string, string> = {
       "product-launch": "Great choice! Now let me ask a few quick questions about the product. 🚀",
-      "lead-generation": "Perfect! Let's set up your lead form and page content. 📧",
       "event-webinar": "Awesome! Tell me a bit about your event. 🎤",
       "portfolio": "Love it! Let's gather some details about your work. 💼",
       "service-showcase": "Nice! A few quick questions about your service. ⚡",
@@ -4077,14 +4240,77 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     setTimeout(() => setCurrentStep("lp-details"), 900);
   };
 
+  const handleLeadFormSelect = (formId: string) => {
+    const selectedForm = availableLeadForms.find((form) => form.id === formId);
+    setSelectedLeadForm(formId);
+    setIsCreatingNewLeadForm(false);
+
+    setConversationData((prev) => ({
+      ...prev,
+      landingPageType: "lead-generation",
+      selectedLeadFormId: formId,
+      isCreatingNewLeadForm: false,
+      lpDetails: {
+        ...prev.lpDetails,
+        selectedLeadFormId: formId,
+        selectedLeadFormName: selectedForm?.name ?? "",
+        isCreatingNewLeadForm: "false",
+      },
+    }));
+
+    if (selectedForm) {
+      addUserMessage(`Lead Form: ${selectedForm.name}`);
+      addAiMessage(`Perfect — I'll use ${selectedForm.name} for this landing page. 📩`, 500);
+      setTimeout(() => {
+        addAiMessage("Click 'Generate My Landing Page' when you're ready!", 2200);
+        setCurrentStep("complete");
+      }, 100);
+    }
+  };
+
+  const handleCreateNewLeadForm = () => {
+    setSelectedLeadForm(null);
+    setIsCreatingNewLeadForm(true);
+    setConversationData((prev) => ({
+      ...prev,
+      landingPageType: "lead-generation",
+      selectedLeadFormId: null,
+      isCreatingNewLeadForm: true,
+    }));
+  };
+
   // Handle landing page type selection (single select, landing-page mode only)
   const handleLandingPageTypeSelect = (typeId: string) => {
+    const normalizedType = normalizeLandingPageType(typeId);
+    setSelectedLandingPageType(normalizedType);
+
+    if (typeId === "lead-generation") {
+      setConversationData((prev) => ({
+        ...prev,
+        landingPageType: typeId,
+        selectedLeadFormId: null,
+        isCreatingNewLeadForm: false,
+      }));
+      setSelectedLeadForm(null);
+      setIsCreatingNewLeadForm(false);
+      return;
+    }
+
     triggerLandingPageFollowUpFlow(typeId);
   };
 
   // Handle landing page details confirmation
   const handleLandingPageDetailsConfirm = (summary: string, details: Record<string, string>) => {
-    setConversationData((prev) => ({ ...prev, lpDetails: details }));
+    setConversationData((prev) => ({
+      ...prev,
+      lpDetails: {
+        ...details,
+        selectedLeadFormId: selectedLeadForm ?? "",
+        isCreatingNewLeadForm: String(isCreatingNewLeadForm),
+      },
+      selectedLeadFormId: selectedLeadForm,
+      isCreatingNewLeadForm,
+    }));
     addUserMessage(summary);
     addAiMessage("Perfect — I have everything I need to generate your landing page! 🚀");
     setTimeout(() => {
@@ -4356,18 +4582,46 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                       selectedType={conversationData.landingPageType}
                       onSelect={handleLandingPageTypeSelect}
                     />
+                    <LeadFormSelectionSection
+                      leadForms={availableLeadForms}
+                      selectedLeadForm={selectedLeadForm}
+                      onLeadFormChange={handleLeadFormSelect}
+                      onAddNew={handleCreateNewLeadForm}
+                      isVisible={
+                        selectedLandingPageType === "lead_generation" && !isCreatingNewLeadForm
+                      }
+                    />
+
+                    <div
+                      className={cn(
+                        "overflow-hidden transition-all duration-300 ease-in-out",
+                        selectedLandingPageType === "lead_generation" && isCreatingNewLeadForm
+                          ? "max-h-[800px] opacity-100 translate-y-0 mt-3"
+                          : "max-h-0 opacity-0 -translate-y-2 pointer-events-none"
+                      )}
+                    >
+                      <div className="rounded-2xl border border-border/60 bg-background p-4">
+                        <LandingPageDetailsForm
+                          landingPageType="lead-generation"
+                          onConfirm={handleLandingPageDetailsConfirm}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {/* Landing Page Details Form — shown after type selection */}
-                {currentStep === "lp-details" && mode === "landing-page" && conversationData.landingPageType && (
-                  <div className="mb-4">
-                    <LandingPageDetailsForm
-                      landingPageType={conversationData.landingPageType}
-                      onConfirm={handleLandingPageDetailsConfirm}
-                    />
-                  </div>
-                )}
+                {currentStep === "lp-details" &&
+                  mode === "landing-page" &&
+                  conversationData.landingPageType &&
+                  conversationData.landingPageType !== "lead-generation" && (
+                    <div className="mb-4">
+                      <LandingPageDetailsForm
+                        landingPageType={conversationData.landingPageType}
+                        onConfirm={handleLandingPageDetailsConfirm}
+                      />
+                    </div>
+                  )}
 
                 {/* Suggested Pages Picker */}
                 {currentStep === "pages" && (
@@ -4546,7 +4800,14 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                         secondaryShade: colorSelection.secondaryShade,
                         style: conversationData.style,
                         landingPageType: conversationData.landingPageType,
-                        lpDetails: conversationData.lpDetails,
+                        selectedLandingPageType,
+                        selectedLeadFormId: selectedLeadForm,
+                        isCreatingNewLeadForm,
+                        lpDetails: {
+                          ...conversationData.lpDetails,
+                          selectedLeadFormId: selectedLeadForm ?? "",
+                          isCreatingNewLeadForm: String(isCreatingNewLeadForm),
+                        },
                         completedAt: new Date().toISOString(),
                       };
                       localStorage.setItem("universell-landing-page-draft", JSON.stringify(landingPageData));
