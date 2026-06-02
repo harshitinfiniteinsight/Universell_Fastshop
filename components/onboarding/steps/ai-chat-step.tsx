@@ -3013,25 +3013,11 @@ interface LandingPageTypeOption {
 
 const LANDING_PAGE_TYPES: LandingPageTypeOption[] = [
   {
-    id: "product-launch",
-    title: "Product Launch",
-    description: "Showcase a new product with highlights and a clear buy CTA",
-    icon: Package,
-    example: "New sneaker drop, app release",
-  },
-  {
     id: "lead-generation",
     title: "Lead Generation",
     description: "Capture emails and leads with an irresistible offer",
     icon: Target,
     example: "Free guide, newsletter signup",
-  },
-  {
-    id: "event-webinar",
-    title: "Event / Webinar",
-    description: "Promote an upcoming event or online session",
-    icon: CalendarDays,
-    example: "Conference, workshop, live stream",
   },
   {
     id: "portfolio",
@@ -3041,11 +3027,32 @@ const LANDING_PAGE_TYPES: LandingPageTypeOption[] = [
     example: "Design portfolio, agency work",
   },
   {
+    id: "product-launch",
+    title: "Product Launch",
+    description: "Showcase a new product with highlights and a clear buy CTA",
+    icon: Package,
+    example: "New sneaker drop, app release",
+  },
+  {
     id: "service-showcase",
     title: "Service Showcase",
     description: "Highlight a specific service and drive bookings",
     icon: Zap,
     example: "Coaching, consulting, freelance",
+  },
+  {
+    id: "discount-promo",
+    title: "Discounts/Promo",
+    description: "Drive urgency with a limited-time offer or sale",
+    icon: Sparkles,
+    example: "Black Friday, flash sale",
+  },
+  {
+    id: "event-webinar",
+    title: "Events/Webinars",
+    description: "Promote an upcoming event or online session",
+    icon: CalendarDays,
+    example: "Conference, workshop, live stream",
   },
   {
     id: "coming-soon",
@@ -3055,15 +3062,8 @@ const LANDING_PAGE_TYPES: LandingPageTypeOption[] = [
     example: "App launch, new collection",
   },
   {
-    id: "discount-promo",
-    title: "Discount / Promo",
-    description: "Drive urgency with a limited-time offer or sale",
-    icon: Sparkles,
-    example: "Black Friday, flash sale",
-  },
-  {
     id: "about-brand",
-    title: "About / Brand Story",
+    title: "About Your Brand",
     description: "Tell your story and connect emotionally with visitors",
     icon: Heart,
     example: "Founder story, brand mission",
