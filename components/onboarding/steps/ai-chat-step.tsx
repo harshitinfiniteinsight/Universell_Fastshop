@@ -3082,6 +3082,15 @@ const MOCK_INVENTORY = [
   { id: "inv-6", name: "Yoga Mat Premium", sku: "YM-P1", price: "$65", image: "🧘" },
 ];
 
+const CATCHER_FIELD_OPTIONS = [
+  "Full Name",
+  "Email Address",
+  "Phone Number",
+  "Company",
+  "Job Title",
+  "Location",
+];
+
 function LandingPageDetailsForm({
   landingPageType,
   onConfirm,
@@ -3092,6 +3101,27 @@ function LandingPageDetailsForm({
   const [fields, setFields] = useState<Record<string, string>>({});
   const [selectedInventory, setSelectedInventory] = useState<string[]>([]);
   const [checkedFields, setCheckedFields] = useState<Record<string, boolean>>({});
+  const [selectedCatcherFields, setSelectedCatcherFields] = useState<string[]>([]);
+  const [showCatcherDropdown, setShowCatcherDropdown] = useState(false);
+  const [leadFormNameError, setLeadFormNameError] = useState("");
+  const catcherDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!catcherDropdownRef.current) return;
+      if (!catcherDropdownRef.current.contains(event.target as Node)) {
+        setShowCatcherDropdown(false);
+      }
+    };
+
+    if (showCatcherDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showCatcherDropdown]);
 
   const set = (key: string, value: string) =>
     setFields((prev) => ({ ...prev, [key]: value }));
@@ -3104,8 +3134,25 @@ function LandingPageDetailsForm({
   const toggleCheck = (key: string) =>
     setCheckedFields((prev) => ({ ...prev, [key]: !prev[key] }));
 
+  const toggleCatcherField = (label: string) =>
+    setSelectedCatcherFields((prev) =>
+      prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
+    );
+
   const handleConfirm = () => {
+    if (landingPageType === "lead-generation" && !(fields.leadFormName ?? "").trim()) {
+      setLeadFormNameError("Lead Form Name is required.");
+      return;
+    }
+
     const details: Record<string, string> = { ...fields };
+
+    if (landingPageType === "lead-generation") {
+      details["leadFormName"] = (fields.leadFormName ?? "").trim();
+      details["leadFormDescription"] = fields.leadFormDescription ?? "";
+      details["catcherFields"] = selectedCatcherFields.join(", ");
+      setLeadFormNameError("");
+    }
 
     // Augment with structured data
     if (selectedInventory.length > 0) {
@@ -3189,39 +3236,139 @@ function LandingPageDetailsForm({
         return (
           <div className={sectionClass}>
             <div>
-              <label className={labelClass}>What information do you want to collect?</label>
-              <div className="grid grid-cols-2 gap-1.5 mt-1">
-                {["Full Name", "Email Address", "Phone Number", "Company", "Job Title", "Location"].map((f) => (
-                  <label key={f} className="flex items-center gap-2 text-xs cursor-pointer p-2 rounded-lg border border-border/40 hover:bg-muted/30">
-                    <input
-                      type="checkbox"
-                      className="accent-primary"
-                      checked={!!checkedFields[f]}
-                      onChange={() => toggleCheck(f)}
-                    />
-                    {f}
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className={labelClass}>What offer / incentive are you giving visitors?</label>
+              <label className={labelClass}>Lead Form Name</label>
               <Input
                 className={inputClass}
-                placeholder="e.g. Free eBook, 20% discount, webinar access…"
-                value={fields.offer ?? ""}
-                onChange={(e) => set("offer", e.target.value)}
+                placeholder="e.g. Summer Trial Signup"
+                value={fields.leadFormName ?? ""}
+                onChange={(e) => {
+                  set("leadFormName", e.target.value);
+                  if (leadFormNameError) setLeadFormNameError("");
+                }}
               />
+              {leadFormNameError && <p className="text-xs text-destructive mt-1">{leadFormNameError}</p>}
             </div>
+
             <div>
-              <label className={labelClass}>What information do you want to show on the page?</label>
+              <label className={labelClass}>Lead Form Description</label>
               <Textarea
                 className={cn(inputClass, "resize-none")}
                 rows={3}
-                placeholder="e.g. Intro about your brand, benefits list, testimonials…"
-                value={fields.pageInfo ?? ""}
-                onChange={(e) => set("pageInfo", e.target.value)}
+                placeholder="Optional context shown with your lead form."
+                value={fields.leadFormDescription ?? ""}
+                onChange={(e) => set("leadFormDescription", e.target.value)}
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className={labelClass}>Catcher Fields</label>
+              <div className="relative" ref={catcherDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowCatcherDropdown((prev) => !prev)}
+                  className="w-full h-10 rounded-lg border border-border/60 bg-background px-3 text-sm flex items-center justify-between hover:border-primary/40 transition-colors"
+                >
+                  <span className="text-muted-foreground">
+                    {selectedCatcherFields.length
+                      ? `${selectedCatcherFields.length} catcher field${selectedCatcherFields.length > 1 ? "s" : ""} selected`
+                      : "Select catcher fields"}
+                  </span>
+                  {showCatcherDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                </button>
+
+                {showCatcherDropdown && (
+                  <div className="absolute z-20 mt-1 w-full rounded-lg border border-border/60 bg-popover p-2 shadow-md space-y-1">
+                    {CATCHER_FIELD_OPTIONS.map((fieldLabel) => {
+                      const isSelected = selectedCatcherFields.includes(fieldLabel);
+                      return (
+                        <button
+                          key={fieldLabel}
+                          type="button"
+                          onClick={() => toggleCatcherField(fieldLabel)}
+                          className={cn(
+                            "w-full text-left text-xs rounded-md px-2.5 py-2 border transition-colors flex items-center gap-2",
+                            isSelected
+                              ? "border-primary/50 bg-primary/10 text-foreground"
+                              : "border-border/40 hover:border-primary/30 hover:bg-muted/40"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "h-3.5 w-3.5 rounded border inline-flex items-center justify-center",
+                              isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                            )}
+                          >
+                            {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                          </span>
+                          {fieldLabel}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {selectedCatcherFields.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedCatcherFields.map((fieldLabel) => (
+                    <span
+                      key={fieldLabel}
+                      className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] text-foreground"
+                    >
+                      {fieldLabel}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-3">
+              <div className="flex items-center gap-2">
+                <FileText className="w-3.5 h-3.5 text-primary" />
+                <p className="text-xs font-medium text-foreground">Lead Form Preview</p>
+              </div>
+
+              <div className="rounded-lg border border-border/60 bg-background p-3 space-y-2.5">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-semibold text-foreground">
+                    {(fields.leadFormName ?? "").trim() || "New Lead Form"}
+                  </p>
+                  {(fields.leadFormDescription ?? "").trim() && (
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      {fields.leadFormDescription?.trim()}
+                    </p>
+                  )}
+                </div>
+
+                {selectedCatcherFields.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-border/70 bg-muted/30 px-3 py-4 text-center text-xs text-muted-foreground">
+                    Select catcher fields to preview your lead form.
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {selectedCatcherFields.map((fieldLabel) => (
+                      <div key={fieldLabel} className="space-y-1">
+                        <label className="text-[11px] font-medium text-foreground">{fieldLabel}</label>
+                        <Input
+                          className="h-8 text-xs"
+                          value=""
+                          readOnly
+                          placeholder={fieldLabel}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-1">
+                  <Button type="button" disabled size="sm" className="h-8 px-3 text-xs bg-primary/80 text-white hover:bg-primary/80">
+                    Submit Request
+                  </Button>
+                  <Button type="button" disabled size="sm" variant="outline" className="h-8 px-3 text-xs">
+                    Clear Form
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -3591,7 +3738,6 @@ function LeadFormPlacementStep({
   displayMode,
   targetSection,
   ctaButtonText,
-  sectionOptions,
   onDisplayModeChange,
   onTargetSectionChange,
   onCTAButtonTextChange,
@@ -3602,7 +3748,6 @@ function LeadFormPlacementStep({
   displayMode: "embed" | "cta" | null;
   targetSection: string;
   ctaButtonText: string;
-  sectionOptions: string[];
   onDisplayModeChange: (mode: "embed" | "cta") => void;
   onTargetSectionChange: (section: string) => void;
   onCTAButtonTextChange: (value: string) => void;
@@ -3611,10 +3756,25 @@ function LeadFormPlacementStep({
   backLabel: string;
 }) {
   const [showErrors, setShowErrors] = useState(false);
+  const [sectionSearch, setSectionSearch] = useState("");
 
   const missingDisplayMode = showErrors && !displayMode;
   const missingSection = showErrors && !targetSection;
   const missingCTA = showErrors && displayMode === "cta" && !ctaButtonText.trim();
+
+  const placementBlocks = [
+    { id: "header", label: "Header", fullWidth: true },
+    { id: "section_1", label: "Section 1", fullWidth: false },
+    { id: "section_2", label: "Section 2", fullWidth: false },
+    { id: "section_3", label: "Section 3", fullWidth: false },
+    { id: "section_4", label: "Section 4", fullWidth: false },
+    { id: "section_5", label: "Section 5", fullWidth: true },
+    { id: "footer", label: "Footer", fullWidth: true },
+  ];
+
+  const filteredPlacementBlocks = placementBlocks.filter((block) =>
+    block.label.toLowerCase().includes(sectionSearch.trim().toLowerCase())
+  );
 
   const handleContinue = () => {
     setShowErrors(true);
@@ -3649,74 +3809,101 @@ function LeadFormPlacementStep({
           ].map((option) => {
             const isActive = displayMode === option.id;
             return (
-              <button
+              <div
                 key={option.id}
-                type="button"
-                onClick={() => onDisplayModeChange(option.id)}
                 className={cn(
-                  "flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition-colors",
+                  "rounded-xl border px-3 py-2.5 transition-colors",
                   isActive
-                    ? "border-primary bg-primary/5 text-foreground"
-                    : "border-border/60 bg-background text-muted-foreground hover:border-primary/40"
+                    ? "border-primary bg-primary/5"
+                    : "border-border/60 bg-background hover:border-primary/40"
                 )}
               >
-                <span
-                  className={cn(
-                    "h-4 w-4 rounded-full border flex items-center justify-center",
-                    isActive ? "border-primary" : "border-muted-foreground/40"
-                  )}
+                <button
+                  type="button"
+                  onClick={() => onDisplayModeChange(option.id)}
+                  className="w-full flex items-center gap-2 text-left text-sm"
                 >
-                  {isActive && <span className="h-2 w-2 rounded-full bg-primary" />}
-                </span>
-                {option.label}
-              </button>
+                  <span
+                    className={cn(
+                      "h-4 w-4 rounded-full border flex items-center justify-center",
+                      isActive ? "border-primary" : "border-muted-foreground/40"
+                    )}
+                  >
+                    {isActive && <span className="h-2 w-2 rounded-full bg-primary" />}
+                  </span>
+                  <span className={cn(isActive ? "text-foreground" : "text-muted-foreground")}>{option.label}</span>
+                </button>
+
+                {option.id === "cta" && isActive && (
+                  <div className="mt-3 border-t border-border/40 pt-3 space-y-1.5">
+                    <Label className="text-xs font-medium text-foreground">CTA Button Title</Label>
+                    <Input
+                      className="h-10 rounded-xl"
+                      value={ctaButtonText}
+                      onChange={(e) => onCTAButtonTextChange(e.target.value)}
+                      placeholder="Enter CTA button text"
+                    />
+                    {missingCTA && <p className="text-xs text-destructive">CTA Button Title is required.</p>}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
         {missingDisplayMode && <p className="text-xs text-destructive">Please select how to use this lead form.</p>}
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-xs font-medium text-foreground">Select Landing Page Section</Label>
-        <Select value={targetSection} onValueChange={onTargetSectionChange}>
-          <SelectTrigger className="h-10 w-full rounded-xl">
-            <SelectValue placeholder="Choose where this form should be connected" />
-          </SelectTrigger>
-          <SelectContent>
-            {sectionOptions.map((section) => (
-              <SelectItem key={section} value={section}>
-                {section}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {missingSection && <p className="text-xs text-destructive">Please select a landing page section.</p>}
+      <div className="space-y-2">
+        <div className="space-y-0.5">
+          <Label className="text-xs font-medium text-foreground">Header</Label>
+          <p className="text-xs text-muted-foreground">Choose where the lead form should appear on the landing page.</p>
+        </div>
+
+        <div className="rounded-2xl border border-border/60 bg-muted/20 p-3 space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            {placementBlocks.map((block) => {
+              const isActive = targetSection === block.id;
+              return (
+                <button
+                  key={block.id}
+                  type="button"
+                  onClick={() => onTargetSectionChange(block.id)}
+                  className={cn(
+                    "relative rounded-xl border bg-background p-3 text-left transition-all duration-200",
+                    "hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm",
+                    isActive
+                      ? "border-primary bg-primary/10 shadow-sm"
+                      : "border-border/60",
+                    block.fullWidth ? "col-span-2" : ""
+                  )}
+                >
+                  {isActive && (
+                    <span className="absolute right-2 top-2">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                    </span>
+                  )}
+                  <div className="mb-2 inline-grid grid-cols-3 gap-1">
+                    {Array.from({ length: 9 }).map((_, idx) => (
+                      <span
+                        key={`${block.id}-${idx}`}
+                        className={cn(
+                          "h-2.5 w-2.5 rounded-[2px] border",
+                          isActive ? "border-primary/50 bg-primary/20" : "border-muted-foreground/30 bg-muted/30"
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <p className={cn("text-sm font-medium", isActive ? "text-foreground" : "text-muted-foreground")}>
+                    {block.label}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+
+          {missingSection && <p className="text-xs text-destructive">Please select a placement location.</p>}
+        </div>
       </div>
-
-      {displayMode === "embed" && (
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1">
-          <p className="font-medium text-foreground">The form will be embedded directly inside the selected section.</p>
-          <p>Examples: Hero Section with embedded form, Contact Section with embedded form, Sidebar form block.</p>
-        </div>
-      )}
-
-      {displayMode === "cta" && (
-        <div className="space-y-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-foreground">CTA Button Text</Label>
-            <Input
-              className="h-10 rounded-xl"
-              value={ctaButtonText}
-              onChange={(e) => onCTAButtonTextChange(e.target.value)}
-              placeholder="Get Free Quote"
-            />
-            {missingCTA && <p className="text-xs text-destructive">CTA button text is required for CTA mode.</p>}
-          </div>
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
-            A CTA button will be added to the selected section and will open the lead form when clicked.
-          </div>
-        </div>
-      )}
 
       <Button
         type="button"
@@ -3777,7 +3964,6 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
   const [isCreatingNewLeadForm, setIsCreatingNewLeadForm] = useState(false);
   const [leadGenerationFlowStep, setLeadGenerationFlowStep] = useState<LeadGenerationFlowStep>("lead-capture-setup");
   const [availableLeadForms, setAvailableLeadForms] = useState<LeadFormOption[]>(DEFAULT_LEAD_FORMS);
-  const leadFormSectionOptions = useMemo(() => deriveLeadFormSections(conversationData), [conversationData]);
   
   const [isFocused, setIsFocused] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -5050,7 +5236,6 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
                                 displayMode={conversationData.leadFormDisplayMode}
                                 targetSection={conversationData.leadFormTargetSection}
                                 ctaButtonText={conversationData.leadFormCTAButtonText}
-                                sectionOptions={leadFormSectionOptions}
                                 onDisplayModeChange={(modeValue) => {
                                   setConversationData((prev) => ({
                                     ...prev,

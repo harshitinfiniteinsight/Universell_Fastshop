@@ -1,0 +1,328 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Support Request</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+        <style type="text/css">.mybmr-support-form-2025 {
+      all: initial;
+      display: block;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+
+    .mybmr-support-form-2025 * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+
+    .mybmr-support-form-2025 {
+      background: #f9fafb;
+      color: #111827;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+
+    .mybmr-support-form-2025 .container {
+      max-width: 560px;
+      width: 100%;
+    }
+
+
+    .mybmr-support-form-2025 .card {
+      background: white;
+      border-radius: 1rem;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e5e7eb;
+    }
+
+
+    .mybmr-support-form-2025 h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 1.75rem;
+      color: #111827;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+
+    .mybmr-support-form-2025 .row {
+      display: flex;
+      flex-wrap: wrap;
+      margin: -10px;
+    }
+
+
+    .mybmr-support-form-2025 .col-md-6,
+    .mybmr-support-form-2025 .col-12 {
+      padding: 10px;
+    }
+
+
+    .mybmr-support-form-2025 .col-md-6 {
+      flex: 0 0 auto;
+      width: 50%;
+    }
+
+
+    .mybmr-support-form-2025 .col-12 {
+      flex: 0 0 auto;
+      width: 100%;
+    }
+
+
+    .mybmr-support-form-2025 label {
+      display: block;
+      font-size: .925rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: .5rem;
+    }
+
+
+    .mybmr-support-form-2025 input,
+    .mybmr-support-form-2025 select,
+    .mybmr-support-form-2025 textarea {
+      width: 100%;
+      padding: .75rem 1rem;
+      font-size: 1rem;
+      background: white;
+      border: 1.5px solid #d1d5db;
+      border-radius: .75rem;
+      transition: all .2s ease;
+    }
+
+
+    .mybmr-support-form-2025 input::placeholder,
+    .mybmr-support-form-2025 textarea::placeholder {
+      color: #9ca3af;
+    }
+
+
+    .mybmr-support-form-2025 input:focus,
+    .mybmr-support-form-2025 select:focus,
+    .mybmr-support-form-2025 textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .3);
+    }
+
+
+    .mybmr-support-form-2025 select {
+      appearance: none;
+      background-image: url("data:image/svg xml,<svg xmlns='http://www.w3.org/2000/svg' fill='#6b7280' width='16' height='16' viewBox='0 0 16 16'><path d='M4.5 6.5l3.5 3.5 3.5-3.5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      cursor: pointer;
+    }
+
+
+    .mybmr-support-form-2025 textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+
+    .mybmr-support-form-2025 .file-label {
+      display: block;
+      padding: 1.5rem;
+      text-align: center;
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: .75rem;
+      color: #64748b;
+      font-size: .95rem;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+
+    .mybmr-support-form-2025 .file-label:hover {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+
+    .mybmr-support-form-2025 .file-wrapper input[type="file"] {
+      position: absolute;
+      left: -9999px;
+    }
+
+
+    .mybmr-support-form-2025 .file-name {
+      margin-top: .75rem;
+      font-size: .9rem;
+      font-weight: 500;
+      text-align: center;
+      padding: .5rem 1rem;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #059669;
+      border-radius: .5rem;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+    }
+
+
+    .mybmr-support-form-2025 .file-name.show {
+      display: flex;
+    }
+
+
+    .mybmr-support-form-2025 .btn-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+
+    .mybmr-support-form-2025 .btn {
+      padding: .75rem 2rem;
+      font-weight: 600;
+      font-size: .95rem;
+      text-transform: uppercase;
+      border-radius: 9999px;
+      border: none;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+
+    .mybmr-support-form-2025 .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+
+    .mybmr-support-form-2025 .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(59, 130, 246, .3);
+    }
+
+
+    .mybmr-support-form-2025 .btn-secondary {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+
+    .mybmr-support-form-2025 .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+
+
+    @media (max-width: 768px) {
+      .mybmr-support-form-2025 .col-md-6 {
+        width: 100%;
+      }
+
+
+      .mybmr-support-form-2025 .btn-group {
+        flex-direction: column;
+      }
+
+
+      .mybmr-support-form-2025 .btn {
+        width: 100%;
+      }
+
+
+      .mybmr-support-form-2025 .card {
+        padding: 2rem 1.5rem;
+      }
+    }
+        </style>
+</head>
+<body>
+<div class="mybmr-support-form-2025">
+<div class="container">
+<div class="card">
+<h3><strong>Furniture Interest</strong></h3>
+
+
+<form action="https://dev.mybmr.com/addcustomer/1613079155756" enctype="multipart/form-data" method="post">
+<div class="row">
+<div class="col-md-6"><label>First Name</label><input name="cus_fname" placeholder="First Name" required="" type="text" /></div>
+
+
+<div class="col-md-6"><label>Last Name</label><input name="cus_lname" placeholder="Last Name" required="" type="text" /></div>
+
+
+<div class="col-md-6"><label>Email</label><input name="email" placeholder="Email" required="required" type="email" /></div>
+
+
+<div class="col-md-6"><label>Phone</label><input name="cus_phone" placeholder="Phone" required="" type="number" /></div>
+</div>
+
+
+<div class="btn-group"><button class="btn btn-primary" type="submit">Submit Request</button><button class="btn btn-secondary" type="reset">Clear Form</button></div>
+<!-- Hidden fields --><input name="leadSourceName" type="hidden" value="Custom Form" /> <input name="redirectUrl" type="hidden" value="https://" /> <input name="registrationMsg" type="hidden" value="" /> <input name="assign_to" type="hidden" value="" /> <input name="lead_access_id" type="hidden" value="3adf3a3f0138ed6858a37c28f08cc28d84cdfcac558a009a9d756cb856498e46235071c180399658c1a1844ebf7bd7cf23a41e56b562ff82f064bf718b34854d3mwXLoR3hT1+97jfFv3Lgsxe7wte7VsDsC5fkO8nNcs=" /> <input name="website_id" type="hidden" value="{{website_id}}" /></form>
+</div>
+</div>
+</div>
+<script>
+    const fileInput = document.getElementById('real-input');
+    const fileNameDisplay = document.getElementById('file-name');
+    const form = document.getElementById('supportForm');
+
+
+    // Only attach if elements exist
+    if (fileInput && fileNameDisplay) {
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files[0]) {
+        fileNameDisplay.textContent = fileInput.files[0].name;
+        fileNameDisplay.classList.add('show');
+        } else {
+        fileNameDisplay.classList.remove('show');
+        }
+    });
+    }
+    if (form && fileInput && fileNameDisplay) {
+    form.addEventListener('reset', () => {
+        setTimeout(() => {
+        fileInput.value = '';
+        fileNameDisplay.classList.remove('show');
+        }, 10);
+    });
+    }
+
+
+    // For real-input2 (this one exists in your HTML)
+    const fileInput2 = document.getElementById('real-input2');
+    const fileNameDisplay2 = document.getElementById('file-name1');
+    const form2 = document.getElementById('supportForm'); // if present
+
+
+    if (fileInput2 && fileNameDisplay2) {
+    fileInput2.addEventListener('change', () => {
+        if (fileInput2.files && fileInput2.files[0]) {
+        fileNameDisplay2.textContent = fileInput2.files[0].name;
+        fileNameDisplay2.classList.add('show');
+        } else {
+        fileNameDisplay2.classList.remove('show');
+        }
+    });
+    }
+    if (form2 && fileInput2 && fileNameDisplay2) {
+    form2.addEventListener('reset', () => {
+        setTimeout(() => {
+        fileInput2.value = '';
+        fileNameDisplay2.classList.remove('show');
+        }, 10);
+    });
+    }
+  </script></body>
+</html>
