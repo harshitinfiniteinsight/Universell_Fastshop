@@ -7,6 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -67,6 +73,7 @@ import {
   ChevronDown,
   ChevronUp,
   CheckCircle2,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AIGenerationLoadingOverlay } from "@/components/ai-web-builder/AIGenerationLoadingOverlay";
@@ -3579,6 +3586,24 @@ function LandingPageDetailsForm({
       <div className="flex items-center gap-2">
         <FileText className="w-4 h-4 text-primary" />
         <span className="text-sm font-medium">Tell us about your {typeLabels[landingPageType] ?? "landing page"}</span>
+        {landingPageType === "lead-generation" && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Lead generation information"
+                  className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-[260px] text-xs">
+                Create a lead form to collect visitor information. You can view submitted leads and update this form anytime from the Lead Catcher module.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
       <div className="max-h-[380px] overflow-y-auto pr-1 space-y-3">
         {renderForm()}

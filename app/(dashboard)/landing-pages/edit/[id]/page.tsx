@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
@@ -31,6 +32,8 @@ import {
   Check,
   CheckCircle2,
   ExternalLink,
+  Pencil,
+  Info,
 } from "lucide-react";
 import {
   Dialog,
@@ -210,6 +213,21 @@ const LEAD_FORM_SCHEMAS: Record<string, LeadFormSchema> = {
 };
 
 const LEAD_FORM_BUILDER_INIT_KEY = "universell-lead-form-builder-init";
+const LEAD_FORM_INSERTION_CONFIG_KEY = "universell-lead-form-insertion-config";
+
+type AttachedLeadFormConfig = {
+  landingPageId?: string;
+  selectedLeadFormId: string;
+  name: string;
+  description?: string;
+  fieldIds: string[];
+  fieldLabels: string[];
+  placementType: LeadPlacementType;
+  targetSectionId: string;
+  targetSectionLabel: string;
+  ctaButtonText: string;
+  updatedAt: string;
+};
 
 type LandingSectionOption = {
   id: string;
@@ -372,6 +390,7 @@ function LeadFormPlacementStep({
   onCtaButtonTextChange,
   onBack,
   onContinue,
+  isEditMode = false,
 }: {
   placementType: LeadPlacementType | null;
   targetSectionId: string;
@@ -388,6 +407,7 @@ function LeadFormPlacementStep({
   onCtaButtonTextChange: (value: string) => void;
   onBack: () => void;
   onContinue: () => void;
+  isEditMode?: boolean;
 }) {
   const activeSection =
     sectionOptions.find((section) => section.id === targetSectionId) ||
@@ -494,7 +514,7 @@ function LeadFormPlacementStep({
           Back
         </Button>
         <Button size="sm" onClick={onContinue} className="bg-orange-500 hover:bg-orange-600 text-white">
-          Insert Form
+          {isEditMode ? "Save Changes" : "Insert Form"}
         </Button>
       </div>
     </div>
@@ -827,6 +847,7 @@ const baseCss = `
 export default function GeneratedLandingPageEditor() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const currentLandingPageId = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const [messages, setMessages] = useState<EditorMessage[]>(initialMessages);
   const [inputMessage, setInputMessage] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -839,6 +860,8 @@ export default function GeneratedLandingPageEditor() {
   const [selectedExistingForm, setSelectedExistingForm] = useState<string>("");
   const [leadFormModalStep, setLeadFormModalStep] = useState<LeadFormModalStep>("form-selection");
   const [selectedLeadFields, setSelectedLeadFields] = useState<string[]>([]);
+  const [leadFormName, setLeadFormName] = useState<string>("");
+  const [leadFormDescription, setLeadFormDescription] = useState<string>("");
   const [leadFieldValidationError, setLeadFieldValidationError] = useState<string>("");
   const [selectedLeadFormId, setSelectedLeadFormId] = useState<string>("");
   const [placementType, setPlacementType] = useState<LeadPlacementType | null>(null);
@@ -850,6 +873,7 @@ export default function GeneratedLandingPageEditor() {
     targetSectionId?: string;
     ctaButtonText?: string;
   }>({});
+  const [attachedLeadForm, setAttachedLeadForm] = useState<AttachedLeadFormConfig | null>(null);
 
   // Connect Domain modal state
   const [showDomainModal, setShowDomainModal] = useState(false);
@@ -870,20 +894,24 @@ export default function GeneratedLandingPageEditor() {
 
   const landingSectionOptions = useMemo(() => discoverLandingSections(html), [html]);
   const placementPreviewForm = useMemo(
-    () => resolveLeadFormSchema(selectedLeadFormId, selectedLeadFields),
-    [selectedLeadFormId, selectedLeadFields]
+    () => {
+      const resolved = resolveLeadFormSchema(selectedLeadFormId, selectedLeadFields);
+      return {
+        ...resolved,
+        name: leadFormName.trim() || resolved.name,
+      };
+    },
+    [selectedLeadFormId, selectedLeadFields, leadFormName]
   );
 
   useEffect(() => {
-    const currentId = Array.isArray(params?.id) ? params.id[0] : params?.id;
-
-    if (currentId && currentId !== "new") {
+    if (currentLandingPageId && currentLandingPageId !== "new") {
       const rawSavedDrafts = localStorage.getItem(SAVED_LANDING_PAGES_KEY);
       if (!rawSavedDrafts) return;
 
       try {
         const savedDrafts = JSON.parse(rawSavedDrafts) as SavedLandingPageDraft[];
-        const existingDraft = savedDrafts.find((item) => item.id === currentId);
+        const existingDraft = savedDrafts.find((item) => item.id === currentLandingPageId);
         if (!existingDraft) return;
 
         const merged = {
@@ -914,7 +942,50 @@ export default function GeneratedLandingPageEditor() {
     } catch {
       // no-op fallback
     }
-  }, [params?.id]);
+  }, [currentLandingPageId]);
+
+  useEffect(() => {
+    const rawLeadFormConfig = localStorage.getItem(LEAD_FORM_INSERTION_CONFIG_KEY);
+    if (!rawLeadFormConfig) {
+      setAttachedLeadForm(null);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(rawLeadFormConfig) as Partial<AttachedLeadFormConfig>;
+      if (
+        parsed?.landingPageId &&
+        currentLandingPageId &&
+        parsed.landingPageId !== currentLandingPageId
+      ) {
+        setAttachedLeadForm(null);
+        return;
+      }
+
+      const fallbackSchema = resolveLeadFormSchema(parsed.selectedLeadFormId || "", parsed.fieldIds || []);
+      const normalizedFields = (parsed.fieldIds?.length ? parsed.fieldIds : fallbackSchema.fields.map((field) => field.id)) || [];
+      const normalized: AttachedLeadFormConfig = {
+        landingPageId: parsed.landingPageId,
+        selectedLeadFormId: parsed.selectedLeadFormId || "",
+        name: parsed.name || fallbackSchema.name,
+        description: parsed.description || "",
+        fieldIds: normalizedFields,
+        fieldLabels:
+          parsed.fieldLabels?.length
+            ? parsed.fieldLabels
+            : normalizedFields.map((fieldId) => toLeadFieldSchema(fieldId).label),
+        placementType: parsed.placementType === "cta" ? "cta" : "embed",
+        targetSectionId: parsed.targetSectionId || "hero",
+        targetSectionLabel: parsed.targetSectionLabel || "Hero",
+        ctaButtonText: parsed.ctaButtonText || "",
+        updatedAt: parsed.updatedAt || new Date().toISOString(),
+      };
+
+      setAttachedLeadForm(normalized);
+    } catch {
+      setAttachedLeadForm(null);
+    }
+  }, [currentLandingPageId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -1162,8 +1233,7 @@ export default function GeneratedLandingPageEditor() {
   // ─── End domain flow helpers ──────────────────────────────────────────────────
 
   const persistLandingPage = (status: "draft" | "published") => {
-    const currentId = Array.isArray(params?.id) ? params.id[0] : params?.id;
-    const draftId = currentId && currentId !== "new" ? currentId : `lp-${Date.now()}`;
+    const draftId = currentLandingPageId && currentLandingPageId !== "new" ? currentLandingPageId : `lp-${Date.now()}`;
     const savedAt = new Date().toISOString();
     const payload: SavedLandingPageDraft = {
       id: draftId,
@@ -1214,6 +1284,8 @@ export default function GeneratedLandingPageEditor() {
   const resetLeadFormFlowState = () => {
     setLeadFormModalStep("form-selection");
     setSelectedLeadFields([]);
+    setLeadFormName("");
+    setLeadFormDescription("");
     setLeadFieldValidationError("");
     setSelectedLeadFormId("");
     setPlacementType(null);
@@ -1232,8 +1304,13 @@ export default function GeneratedLandingPageEditor() {
       })
     );
 
-    const generatedId = `lf-new-${Date.now()}`;
-    setSelectedLeadFormId(generatedId);
+    const activeLeadFormId = selectedLeadFormId || `lf-new-${Date.now()}`;
+    const resolvedSchema = resolveLeadFormSchema(activeLeadFormId, fields);
+
+    setSelectedLeadFormId(activeLeadFormId);
+    if (!leadFormName.trim()) {
+      setLeadFormName(resolvedSchema.name);
+    }
     setPlacementBackStep("form-builder");
     setLeadFormModalStep("placement");
   };
@@ -1268,30 +1345,41 @@ export default function GeneratedLandingPageEditor() {
     setPlacementValidation(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
+    const activePlacementType = placementType as LeadPlacementType;
+
     const selectedSection =
       landingSectionOptions.find((section) => section.id === targetSectionId)?.label || targetSectionId;
 
-    const insertionPayload = {
+    const resolvedSchema = resolveLeadFormSchema(selectedLeadFormId, selectedLeadFields);
+    const fallbackFields = resolvedSchema.fields.map((field) => field.id);
+    const activeFieldIds = selectedLeadFields.length ? selectedLeadFields : fallbackFields;
+    const activeFieldLabels = activeFieldIds.map((fieldId) => toLeadFieldSchema(fieldId).label);
+    const activeFormName =
+      leadFormName.trim() ||
+      (EXISTING_FORMS["Lead Form"] ?? []).find((form) => form.id === selectedLeadFormId)?.name ||
+      resolvedSchema.name;
+
+    const insertionPayload: AttachedLeadFormConfig = {
+      landingPageId: currentLandingPageId,
       selectedLeadFormId,
-      placementType,
+      name: activeFormName,
+      description: leadFormDescription.trim(),
+      fieldIds: activeFieldIds,
+      fieldLabels: activeFieldLabels,
+      placementType: activePlacementType,
       targetSectionId,
-      ctaButtonText: placementType === "cta" ? ctaButtonText.trim() : "",
+      targetSectionLabel: selectedSection,
+      ctaButtonText: activePlacementType === "cta" ? ctaButtonText.trim() : "",
+      updatedAt: new Date().toISOString(),
     };
 
-    localStorage.setItem("universell-lead-form-insertion-config", JSON.stringify(insertionPayload));
+    localStorage.setItem(LEAD_FORM_INSERTION_CONFIG_KEY, JSON.stringify(insertionPayload));
+    setAttachedLeadForm(insertionPayload);
 
-    const existingFormName = (EXISTING_FORMS["Lead Form"] ?? []).find((form) => form.id === selectedLeadFormId)?.name;
-    const newFormFieldLabels = LEAD_FORM_FIELD_OPTIONS
-      .filter((field) => selectedLeadFields.includes(field.id))
-      .map((field) => field.label)
-      .join(", ");
-
-    const formDescriptor = existingFormName
-      ? `the existing lead form "${existingFormName}"`
-      : `a newly created lead form with fields (${newFormFieldLabels || selectedLeadFields.join(", ")})`;
+    const formDescriptor = `the lead form "${activeFormName}" with fields (${activeFieldLabels.join(", ")})`;
 
     const prompt =
-      placementType === "embed"
+      activePlacementType === "embed"
         ? `Insert ${formDescriptor} directly into the ${selectedSection} section with responsive spacing and current design system styling. Payload: ${JSON.stringify(insertionPayload)}.`
         : `Insert a CTA button in the ${selectedSection} section with text "${ctaButtonText.trim()}" that opens ${formDescriptor} using the existing lead form modal/drawer pattern. Payload: ${JSON.stringify(insertionPayload)}.`;
 
@@ -1299,6 +1387,43 @@ export default function GeneratedLandingPageEditor() {
     setShowFormModal(false);
     setSelectedFormType(null);
     setSelectedExistingForm("");
+    resetLeadFormFlowState();
+  };
+
+  const openLeadFormCreationFlow = () => {
+    setShowFormModal(true);
+    setSelectedFormType("Lead Form");
+    setSelectedExistingForm("");
+    resetLeadFormFlowState();
+    setLeadFormModalStep("field-selection");
+  };
+
+  const openLeadFormEditFlow = () => {
+    if (!attachedLeadForm) {
+      openLeadFormCreationFlow();
+      return;
+    }
+
+    setShowFormModal(true);
+    setSelectedFormType("Lead Form");
+    setSelectedExistingForm(attachedLeadForm.selectedLeadFormId || "");
+    setLeadFormModalStep("form-builder");
+    setSelectedLeadFormId(attachedLeadForm.selectedLeadFormId || "");
+    setSelectedLeadFields(attachedLeadForm.fieldIds || []);
+    setLeadFormName(attachedLeadForm.name || "");
+    setLeadFormDescription(attachedLeadForm.description || "");
+    setPlacementType(attachedLeadForm.placementType || null);
+    setTargetSectionId(attachedLeadForm.targetSectionId || "");
+    setCtaButtonText(attachedLeadForm.ctaButtonText || "");
+    setPlacementBackStep("form-builder");
+    setLeadFieldValidationError("");
+    setPlacementValidation({});
+  };
+
+  const handleRemoveLeadForm = () => {
+    localStorage.removeItem(LEAD_FORM_INSERTION_CONFIG_KEY);
+    setAttachedLeadForm(null);
+    setShowFormModal(false);
     resetLeadFormFlowState();
   };
 
@@ -1379,6 +1504,23 @@ export default function GeneratedLandingPageEditor() {
           </ScrollArea>
 
           <div className="p-4 border-t border-border space-y-2">
+            {attachedLeadForm ? (
+              <button
+                type="button"
+                onClick={openLeadFormEditFlow}
+                className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 hover:bg-muted/60 transition-colors"
+                title="Edit Lead Form"
+              >
+                <ClipboardList className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="text-xs font-medium text-foreground truncate">{attachedLeadForm.name}</span>
+                <Pencil className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              </button>
+            ) : (
+              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white w-full" onClick={openLeadFormCreationFlow}>
+                + Add Lead Form
+              </Button>
+            )}
+
             <div className="flex gap-2">
               <Input
                 value={inputMessage}
@@ -1447,31 +1589,51 @@ export default function GeneratedLandingPageEditor() {
                   <DialogTitle>
                     {selectedFormType ? (
                       selectedFormType === "Lead Form" && leadFormModalStep !== "form-selection" ? (
-                        <button
-                          onClick={() => {
-                            if (leadFormModalStep === "field-selection") {
-                              setLeadFormModalStep("form-selection");
-                              setLeadFieldValidationError("");
-                              return;
-                            }
-                            if (leadFormModalStep === "form-builder") {
-                              setLeadFormModalStep("field-selection");
-                              return;
-                            }
-                            if (leadFormModalStep === "placement") {
-                              setLeadFormModalStep(placementBackStep);
-                              return;
-                            }
-                          }}
-                          className="flex items-center gap-1.5 text-sm font-semibold hover:text-orange-600 transition-colors"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                          {leadFormModalStep === "field-selection"
-                            ? "Lead Form"
-                            : leadFormModalStep === "form-builder"
-                            ? "What information would you like to collect?"
-                            : "Lead Form"}
-                        </button>
+                        <div className="space-y-4">
+                          <button
+                            onClick={() => {
+                              if (leadFormModalStep === "field-selection") {
+                                setLeadFormModalStep("form-selection");
+                                setLeadFieldValidationError("");
+                                return;
+                              }
+                              if (leadFormModalStep === "form-builder") {
+                                setLeadFormModalStep("field-selection");
+                                return;
+                              }
+                              if (leadFormModalStep === "placement") {
+                                setLeadFormModalStep(placementBackStep);
+                                return;
+                              }
+                            }}
+                            className="flex items-center gap-1.5 text-sm font-semibold hover:text-orange-600 transition-colors"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            {attachedLeadForm ? "Edit Lead Form" : "Create Lead Form"}
+                          </button>
+
+                          {attachedLeadForm && (
+                            <div className="flex items-center gap-3 pt-2 border-t border-border">
+                              {["form-builder", "placement"].includes(leadFormModalStep) && (
+                                <div className="flex items-center gap-2 text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center font-medium", leadFormModalStep === "form-builder" || ["placement"].includes(leadFormModalStep) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                                      1
+                                    </div>
+                                    <span className={leadFormModalStep === "form-builder" ? "font-medium text-foreground" : "text-muted-foreground"}>Basic Information</span>
+                                  </div>
+                                  <div className={cn("w-8 h-0.5", leadFormModalStep === "placement" ? "bg-primary" : "bg-border")} />
+                                  <div className="flex items-center gap-2">
+                                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center font-medium", leadFormModalStep === "placement" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                                      2
+                                    </div>
+                                    <span className={leadFormModalStep === "placement" ? "font-medium text-foreground" : "text-muted-foreground"}>Form Placement</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <button
                           onClick={() => {
@@ -1570,6 +1732,7 @@ export default function GeneratedLandingPageEditor() {
                       }}
                       onBack={() => setLeadFormModalStep(placementBackStep)}
                       onContinue={handlePlacementContinue}
+                      isEditMode={!!attachedLeadForm}
                     />
                   ) : selectedFormType === "Lead Form" && leadFormModalStep === "form-builder" ? (
                     <div className="space-y-4 pt-1 animate-fade-in-up">
@@ -1578,6 +1741,26 @@ export default function GeneratedLandingPageEditor() {
                         <p className="text-xs text-muted-foreground">
                           We&apos;ll initialize your lead form with the selected fields before placement.
                         </p>
+                      </div>
+
+                      <div className="space-y-3 rounded-lg border border-border bg-background p-3">
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-foreground">Form Name</p>
+                          <Input
+                            value={leadFormName}
+                            onChange={(e) => setLeadFormName(e.target.value)}
+                            placeholder="Enter lead form name"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-foreground">Description (optional)</p>
+                          <Textarea
+                            value={leadFormDescription}
+                            onChange={(e) => setLeadFormDescription(e.target.value)}
+                            placeholder="Describe what this form is for"
+                            className="min-h-[72px] resize-none"
+                          />
+                        </div>
                       </div>
 
                       <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-1">
@@ -1594,6 +1777,24 @@ export default function GeneratedLandingPageEditor() {
                         </div>
                       </div>
 
+                      {attachedLeadForm && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-border">
+                          <button
+                            type="button"
+                            onClick={handleRemoveLeadForm}
+                            className="text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
+                          >
+                            Remove Form
+                          </button>
+                          <div className="group relative">
+                            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                            <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-popover border border-border rounded-lg shadow-md p-2 w-48 text-[11px] text-foreground z-50">
+                              Unlink this lead form from the landing page. Visitors will no longer see the form or be able to submit their information.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex gap-2 justify-end">
                         <Button
                           variant="outline"
@@ -1607,7 +1808,7 @@ export default function GeneratedLandingPageEditor() {
                           onClick={() => startLeadFormBuilder(selectedLeadFields)}
                           className="bg-orange-500 hover:bg-orange-600 text-white"
                         >
-                          Continue to Placement
+                          {attachedLeadForm ? "Continue" : "Continue to Placement"}
                         </Button>
                       </div>
                     </div>
@@ -1622,6 +1823,10 @@ export default function GeneratedLandingPageEditor() {
                           setSelectedExistingForm(value);
                           if (selectedFormType === "Lead Form") {
                             setSelectedLeadFormId(value);
+                            const resolved = resolveLeadFormSchema(value, []);
+                            setSelectedLeadFields(resolved.fields.map((field) => field.id));
+                            setLeadFormName(resolved.name);
+                            setLeadFormDescription("");
                           }
                         }}
                       >
@@ -1642,6 +1847,8 @@ export default function GeneratedLandingPageEditor() {
                           size="sm"
                           onClick={() => {
                             if (selectedFormType === "Lead Form") {
+                              setLeadFormName("");
+                              setLeadFormDescription("");
                               setLeadFormModalStep("field-selection");
                               setLeadFieldValidationError("");
                               return;
@@ -1664,6 +1871,10 @@ export default function GeneratedLandingPageEditor() {
                           onClick={() => {
                             if (selectedFormType === "Lead Form") {
                               setSelectedLeadFormId(selectedExistingForm);
+                              const resolved = resolveLeadFormSchema(selectedExistingForm, []);
+                              setSelectedLeadFields(resolved.fields.map((field) => field.id));
+                              setLeadFormName(resolved.name);
+                              setLeadFormDescription("");
                               setPlacementBackStep("form-selection");
                               setLeadFormModalStep("placement");
                               return;
