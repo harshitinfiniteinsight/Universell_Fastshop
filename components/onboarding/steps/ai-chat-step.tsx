@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -3098,6 +3099,168 @@ const CATCHER_FIELD_OPTIONS = [
   "Location",
 ];
 
+interface ServiceOption {
+  id: string;
+  name: string;
+  category?: string;
+  description?: string;
+  benefits?: string;
+  features?: string;
+  pricing?: string;
+  testimonials?: string;
+  employeeName?: string;
+  duration?: string;
+  showInInventory?: boolean;
+  imagePreview?: string;
+}
+
+interface EmployeeOption {
+  id: string;
+  name: string;
+  role?: string;
+}
+
+const DEFAULT_SERVICE_OPTIONS: ServiceOption[] = [
+  {
+    id: "svc-1",
+    name: "Website Design",
+    category: "Design",
+    description: "Modern conversion-focused website design tailored to your brand.",
+    benefits: "Professional first impression, higher conversion rates, mobile-optimized experience",
+    features: "Custom UI, responsive layout, SEO-friendly structure",
+    pricing: "Starting at $1,500",
+    testimonials: '"Our leads increased by 42% after launch." - Sarah M.',
+  },
+  {
+    id: "svc-2",
+    name: "SEO Consulting",
+    category: "Marketing",
+    description: "Technical and content SEO strategy to improve rankings and organic traffic.",
+    benefits: "More qualified traffic, stronger visibility, long-term growth",
+    features: "SEO audit, keyword roadmap, on-page optimization",
+    pricing: "From $499/month",
+    testimonials: '"We moved from page 3 to page 1 for our key terms." - Raj P.',
+  },
+  {
+    id: "svc-3",
+    name: "Social Media Management",
+    category: "Marketing",
+    description: "Done-for-you social strategy, content planning, and performance optimization.",
+    benefits: "Consistent brand presence, better engagement, faster campaign execution",
+    features: "Content calendar, platform posting, monthly analytics",
+    pricing: "Packages from $699/month",
+    testimonials: '"Engagement doubled in under 60 days." - Emma T.',
+  },
+  {
+    id: "svc-4",
+    name: "Business Coaching",
+    category: "Consulting",
+    description: "1:1 coaching sessions to improve operations, positioning, and growth strategy.",
+    benefits: "Clear direction, faster decisions, measurable business outcomes",
+    features: "Weekly coaching, action plans, accountability check-ins",
+    pricing: "$299/session",
+    testimonials: '"We scaled from 2 to 6 clients per month." - Daniel K.',
+  },
+];
+
+const SERVICE_STORAGE_KEYS = [
+  "universell-services",
+  "universell-service-catalog",
+  "universell-inventory-services",
+  "universell-onboarding-data",
+];
+
+const EMPLOYEE_STORAGE_KEYS = [
+  "universell-employees",
+  "universell-employee-list",
+  "universell-staff",
+  "universell-onboarding-data",
+];
+
+const DEFAULT_EMPLOYEE_OPTIONS: EmployeeOption[] = [
+  { id: "emp-1", name: "Sarah Johnson", role: "Design Lead" },
+  { id: "emp-2", name: "Michael Chen", role: "SEO Specialist" },
+  { id: "emp-3", name: "Priya Patel", role: "Marketing Manager" },
+  { id: "emp-4", name: "David Kim", role: "Business Consultant" },
+];
+
+interface BookingFormOption {
+  id: string;
+  name: string;
+  duration?: string;
+  assignedEmployee?: string;
+  description?: string;
+}
+
+const DEFAULT_BOOKING_FORMS: BookingFormOption[] = [
+  { id: "bf-1", name: "General Appointment Booking", duration: "60 mins", assignedEmployee: "Sarah Johnson", description: "Standard appointment booking for all services" },
+  { id: "bf-2", name: "Consultation Booking", duration: "30 mins", assignedEmployee: "Michael Chen", description: "Initial consultation session" },
+  { id: "bf-3", name: "Service Reservation", duration: "90 mins", assignedEmployee: "Priya Patel", description: "Full service reservation with intake form" },
+  { id: "bf-4", name: "Discovery Call Booking", duration: "20 mins", assignedEmployee: "David Kim", description: "Quick discovery call to assess fit" },
+];
+
+const normalizeEmployeeOption = (item: unknown, index: number): EmployeeOption | null => {
+  if (!item || typeof item !== "object") return null;
+  const employee = item as Record<string, unknown>;
+  const rawName = employee.name ?? employee.fullName ?? employee.label;
+  const name = typeof rawName === "string" ? rawName.trim() : "";
+  if (!name) return null;
+
+  const rawId = employee.id;
+  const id =
+    typeof rawId === "string" && rawId.trim()
+      ? rawId.trim()
+      : `emp-${index + 1}-${name.toLowerCase().replace(/\s+/g, "-")}`;
+
+  const role =
+    typeof employee.role === "string"
+      ? employee.role.trim()
+      : typeof employee.title === "string"
+      ? employee.title.trim()
+      : "";
+
+  return { id, name, role };
+};
+
+const normalizeServiceOption = (
+  item: unknown,
+  index: number
+): ServiceOption | null => {
+  if (!item || typeof item !== "object") return null;
+  const service = item as Record<string, unknown>;
+
+  const rawName = service.name ?? service.title ?? service.label;
+  const name = typeof rawName === "string" ? rawName.trim() : "";
+  if (!name) return null;
+
+  const rawId = service.id;
+  const id =
+    typeof rawId === "string" && rawId.trim()
+      ? rawId.trim()
+      : `svc-${index + 1}-${name.toLowerCase().replace(/\s+/g, "-")}`;
+
+  const toText = (value: unknown): string => {
+    if (Array.isArray(value)) {
+      return value
+        .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+        .filter(Boolean)
+        .join(", ");
+    }
+    return typeof value === "string" ? value.trim() : "";
+  };
+
+  return {
+    id,
+    name,
+    category: toText(service.category ?? service.type),
+    description: toText(service.description),
+    benefits: toText(service.benefits),
+    features: toText(service.features),
+    pricing: toText(service.pricing ?? service.price),
+    testimonials: toText(service.testimonials),
+  };
+};
+
 function LandingPageDetailsForm({
   landingPageType,
   onConfirm,
@@ -3112,23 +3275,182 @@ function LandingPageDetailsForm({
   const [showCatcherDropdown, setShowCatcherDropdown] = useState(false);
   const [leadFormNameError, setLeadFormNameError] = useState("");
   const catcherDropdownRef = useRef<HTMLDivElement>(null);
+  const serviceDropdownRef = useRef<HTMLDivElement>(null);
+  const employeeDropdownRef = useRef<HTMLDivElement>(null);
+  const serviceImageInputRef = useRef<HTMLInputElement>(null);
+  const [availableServices, setAvailableServices] = useState<ServiceOption[]>(DEFAULT_SERVICE_OPTIONS);
+  const [availableEmployees, setAvailableEmployees] = useState<EmployeeOption[]>(DEFAULT_EMPLOYEE_OPTIONS);
+  const [selectedServiceId, setSelectedServiceId] = useState("");
+  const [serviceSearchQuery, setServiceSearchQuery] = useState("");
+  const [showServiceDropdown, setShowServiceDropdown] = useState(false);
+  const [serviceValidationError, setServiceValidationError] = useState("");
+  const [showCreateServiceModal, setShowCreateServiceModal] = useState(false);
+  const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);
+  const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
+  const [newServiceValidation, setNewServiceValidation] = useState<{
+    name?: string;
+    price?: string;
+    hours?: string;
+    minutes?: string;
+    employeeId?: string;
+  }>({});
+  const [isServiceImageDragActive, setIsServiceImageDragActive] = useState(false);
+  const [availableBookingForms, setAvailableBookingForms] = useState<BookingFormOption[]>(DEFAULT_BOOKING_FORMS);
+  const [bookingFormOption, setBookingFormOption] = useState<"none" | "none-confirmed" | "existing" | "add-new">("none");
+  const [selectedBookingFormId, setSelectedBookingFormId] = useState("");
+  const [showBookingFormDropdown, setShowBookingFormDropdown] = useState(false);
+  const [bookingFormSearchQuery, setBookingFormSearchQuery] = useState("");
+  const bookingFormDropdownRef = useRef<HTMLDivElement>(null);
+  const [newBookingForm, setNewBookingForm] = useState({ formName: "", publicName: "", publicDescription: "", paymentPreference: "without-payment" as "with-payment" | "without-payment", approvalType: "instant" as "instant" | "approval-required" });
+  const [newBookingFormValidation, setNewBookingFormValidation] = useState<{ formName?: string; publicName?: string }>({});
+  const [bookingFormSaved, setBookingFormSaved] = useState(false);
+  const [savedBookingFormName, setSavedBookingFormName] = useState("");
+  const [newService, setNewService] = useState({
+    name: "",
+    price: "",
+    hours: "",
+    minutes: "",
+    employeeId: "",
+    showInInventory: true,
+    description: "",
+    benefits: "",
+    features: "",
+    testimonials: "",
+    imagePreview: "",
+    imageName: "",
+  });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (!catcherDropdownRef.current) return;
-      if (!catcherDropdownRef.current.contains(event.target as Node)) {
+      if (catcherDropdownRef.current && !catcherDropdownRef.current.contains(event.target as Node)) {
         setShowCatcherDropdown(false);
+      }
+
+      if (serviceDropdownRef.current && !serviceDropdownRef.current.contains(event.target as Node)) {
+        setShowServiceDropdown(false);
+      }
+
+      if (employeeDropdownRef.current && !employeeDropdownRef.current.contains(event.target as Node)) {
+        setShowEmployeeDropdown(false);
+      }
+
+      if (bookingFormDropdownRef.current && !bookingFormDropdownRef.current.contains(event.target as Node)) {
+        setShowBookingFormDropdown(false);
       }
     };
 
-    if (showCatcherDropdown) {
+    if (showCatcherDropdown || showServiceDropdown || showEmployeeDropdown || showBookingFormDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showCatcherDropdown]);
+  }, [showCatcherDropdown, showServiceDropdown, showEmployeeDropdown, showBookingFormDropdown]);
+
+  useEffect(() => {
+    if (landingPageType !== "service-showcase") return;
+
+    const loadedServices: ServiceOption[] = [];
+
+    for (const key of SERVICE_STORAGE_KEYS) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const parsed = JSON.parse(raw) as unknown;
+
+        if (Array.isArray(parsed)) {
+          parsed.forEach((item, index) => {
+            const normalized = normalizeServiceOption(item, loadedServices.length + index);
+            if (normalized) loadedServices.push(normalized);
+          });
+          continue;
+        }
+
+        if (parsed && typeof parsed === "object") {
+          const record = parsed as Record<string, unknown>;
+
+          if (Array.isArray(record.services)) {
+            record.services.forEach((item, index) => {
+              const normalized = normalizeServiceOption(item, loadedServices.length + index);
+              if (normalized) loadedServices.push(normalized);
+            });
+          }
+
+          if (Array.isArray(record.selectedServices)) {
+            record.selectedServices.forEach((item, index) => {
+              const normalized = normalizeServiceOption(item, loadedServices.length + index);
+              if (normalized) loadedServices.push(normalized);
+            });
+          }
+        }
+      } catch {
+        // ignore malformed storage values
+      }
+    }
+
+    const byName = new Map<string, ServiceOption>();
+    [...DEFAULT_SERVICE_OPTIONS, ...loadedServices].forEach((service) => {
+      const key = service.name.toLowerCase();
+      if (!byName.has(key)) {
+        byName.set(key, service);
+      }
+    });
+
+    setAvailableServices(Array.from(byName.values()));
+  }, [landingPageType]);
+
+  useEffect(() => {
+    if (landingPageType !== "service-showcase") return;
+
+    const loadedEmployees: EmployeeOption[] = [];
+
+    for (const key of EMPLOYEE_STORAGE_KEYS) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const parsed = JSON.parse(raw) as unknown;
+
+        if (Array.isArray(parsed)) {
+          parsed.forEach((item, index) => {
+            const normalized = normalizeEmployeeOption(item, loadedEmployees.length + index);
+            if (normalized) loadedEmployees.push(normalized);
+          });
+          continue;
+        }
+
+        if (parsed && typeof parsed === "object") {
+          const record = parsed as Record<string, unknown>;
+
+          if (Array.isArray(record.employees)) {
+            record.employees.forEach((item, index) => {
+              const normalized = normalizeEmployeeOption(item, loadedEmployees.length + index);
+              if (normalized) loadedEmployees.push(normalized);
+            });
+          }
+
+          if (Array.isArray(record.staff)) {
+            record.staff.forEach((item, index) => {
+              const normalized = normalizeEmployeeOption(item, loadedEmployees.length + index);
+              if (normalized) loadedEmployees.push(normalized);
+            });
+          }
+        }
+      } catch {
+        // ignore malformed storage values
+      }
+    }
+
+    const byName = new Map<string, EmployeeOption>();
+    [...DEFAULT_EMPLOYEE_OPTIONS, ...loadedEmployees].forEach((employee) => {
+      const key = employee.name.toLowerCase();
+      if (!byName.has(key)) {
+        byName.set(key, employee);
+      }
+    });
+
+    setAvailableEmployees(Array.from(byName.values()));
+  }, [landingPageType]);
 
   const set = (key: string, value: string) =>
     setFields((prev) => ({ ...prev, [key]: value }));
@@ -3146,9 +3468,119 @@ function LandingPageDetailsForm({
       prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
     );
 
+  const handleServiceSelect = (service: ServiceOption) => {
+    setSelectedServiceId(service.id);
+    setServiceSearchQuery("");
+    setShowServiceDropdown(false);
+    setServiceValidationError("");
+    setFields((prev) => ({
+      ...prev,
+      serviceName: service.name,
+      serviceCategory: service.category ?? "",
+      serviceDescription: service.description ?? "",
+      serviceBenefits: service.benefits ?? "",
+      serviceFeatures: service.features ?? "",
+      servicePricing: service.pricing ?? "",
+      serviceTestimonials: service.testimonials ?? "",
+    }));
+  };
+
+  const handleEmployeeSelect = (employeeId: string) => {
+    setNewService((prev) => ({ ...prev, employeeId }));
+    setShowEmployeeDropdown(false);
+    setEmployeeSearchQuery("");
+    setNewServiceValidation((prev) => ({ ...prev, employeeId: undefined }));
+  };
+
+  const handleServiceImageFile = (file: File | null) => {
+    if (!file) return;
+    const previewUrl = URL.createObjectURL(file);
+    setNewService((prev) => ({
+      ...prev,
+      imagePreview: previewUrl,
+      imageName: file.name,
+    }));
+  };
+
+  const handleCreateService = () => {
+    const validationErrors: {
+      name?: string;
+      price?: string;
+      hours?: string;
+      minutes?: string;
+      employeeId?: string;
+    } = {};
+
+    if (!newService.name.trim()) {
+      validationErrors.name = "Service Name is required.";
+    }
+    if (!newService.price.trim()) {
+      validationErrors.price = "Service Price is required.";
+    }
+    if (!newService.hours.trim()) {
+      validationErrors.hours = "Service Hours is required.";
+    }
+    if (!newService.minutes.trim()) {
+      validationErrors.minutes = "Service Minutes is required.";
+    }
+    if (!newService.employeeId) {
+      validationErrors.employeeId = "Select Employee is required.";
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setNewServiceValidation(validationErrors);
+      return;
+    }
+
+    const selectedEmployee = availableEmployees.find((employee) => employee.id === newService.employeeId);
+    const duration = `${newService.hours.trim()}h ${newService.minutes.trim()}m`;
+
+    const createdService: ServiceOption = {
+      id: `svc-${Date.now()}`,
+      name: newService.name.trim(),
+      category: selectedEmployee?.role ?? "",
+      description: newService.description.trim(),
+      benefits: newService.benefits.trim(),
+      features: newService.features.trim(),
+      pricing: `$${newService.price.trim()}`,
+      testimonials: newService.testimonials.trim(),
+      employeeName: selectedEmployee?.name ?? "",
+      duration,
+      showInInventory: newService.showInInventory,
+      imagePreview: newService.imagePreview,
+    };
+
+    setAvailableServices((prev) => [...prev, createdService]);
+    handleServiceSelect(createdService);
+    setShowCreateServiceModal(false);
+    setNewServiceValidation({});
+    setShowEmployeeDropdown(false);
+    setEmployeeSearchQuery("");
+    setIsServiceImageDragActive(false);
+    setNewService({
+      name: "",
+      price: "",
+      hours: "",
+      minutes: "",
+      employeeId: "",
+      showInInventory: true,
+      description: "",
+      benefits: "",
+      features: "",
+      testimonials: "",
+      imagePreview: "",
+      imageName: "",
+    });
+  };
+
   const handleConfirm = () => {
     if (landingPageType === "lead-generation" && !(fields.leadFormName ?? "").trim()) {
       setLeadFormNameError("Lead Form Name is required.");
+      return;
+    }
+
+    if (landingPageType === "service-showcase" && !selectedServiceId) {
+      setServiceValidationError("Please select or create a service to continue.");
       return;
     }
 
@@ -3159,6 +3591,30 @@ function LandingPageDetailsForm({
       details["leadFormDescription"] = fields.leadFormDescription ?? "";
       details["catcherFields"] = selectedCatcherFields.join(", ");
       setLeadFormNameError("");
+    }
+
+    if (landingPageType === "service-showcase") {
+      const selectedService = availableServices.find((service) => service.id === selectedServiceId);
+
+      details["selectedServiceId"] = selectedService?.id ?? "";
+      details["serviceName"] = selectedService?.name ?? details["serviceName"] ?? "";
+      details["serviceCategory"] = selectedService?.category ?? details["serviceCategory"] ?? "";
+      details["serviceDescription"] = selectedService?.description ?? details["serviceDescription"] ?? "";
+      details["serviceBenefits"] = selectedService?.benefits ?? details["serviceBenefits"] ?? "";
+      details["serviceFeatures"] = selectedService?.features ?? details["serviceFeatures"] ?? "";
+      details["servicePricing"] = selectedService?.pricing ?? details["servicePricing"] ?? "";
+      details["serviceTestimonials"] = selectedService?.testimonials ?? details["serviceTestimonials"] ?? "";
+
+      const attachedBookingForm = (bookingFormOption === "existing" || (bookingFormOption === "add-new" && bookingFormSaved)) && selectedBookingFormId
+        ? availableBookingForms.find((bf) => bf.id === selectedBookingFormId)
+        : null;
+      details["bookingFormId"] = attachedBookingForm?.id ?? "";
+      details["bookingFormName"] = attachedBookingForm?.name ?? "";
+      details["hasBookingForm"] = attachedBookingForm ? "true" : "false";
+      if (attachedBookingForm) {
+        details["ctaStyle"] = "booking";
+        details["ctaSuggestions"] = "Book Now · Schedule Your Appointment · Reserve Your Spot · Book a Consultation";
+      }
     }
 
     // Augment with structured data
@@ -3438,28 +3894,436 @@ function LandingPageDetailsForm({
         );
 
       case "service-showcase":
+        const selectedService = availableServices.find((service) => service.id === selectedServiceId);
+        const filteredServices = availableServices.filter((service) => {
+          const query = serviceSearchQuery.trim().toLowerCase();
+          if (!query) return true;
+          return (
+            service.name.toLowerCase().includes(query) ||
+            (service.category ?? "").toLowerCase().includes(query)
+          );
+        });
+
         return (
           <div className={sectionClass}>
-            <div>
-              <label className={labelClass}>Service name</label>
-              <Input className={inputClass} placeholder="e.g. 1-on-1 Business Coaching" value={fields.serviceName ?? ""} onChange={(e) => set("serviceName", e.target.value)} />
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-foreground">Select Service</h3>
+              <p className="text-xs text-muted-foreground">
+                Choose an existing service to showcase on this landing page or create a new one.
+              </p>
             </div>
-            <div>
-              <label className={labelClass}>Key benefit / headline</label>
-              <Input className={inputClass} placeholder="e.g. Double your revenue in 90 days" value={fields.keyBenefit ?? ""} onChange={(e) => set("keyBenefit", e.target.value)} />
+
+            <div className="space-y-2">
+              <label className={labelClass}>Service</label>
+              <p className="text-[11px] text-muted-foreground">
+                Demo existing services: {availableServices.slice(0, 4).map((service) => service.name).join(" • ")}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start">
+                <div className="relative" ref={serviceDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowServiceDropdown((prev) => !prev)}
+                    className="w-full h-10 rounded-lg border border-border/60 bg-background px-3 text-sm flex items-center justify-between hover:border-primary/40 transition-colors"
+                  >
+                    <span className={cn(selectedService ? "text-foreground" : "text-muted-foreground")}>
+                      {selectedService ? selectedService.name : "Select a service"}
+                    </span>
+                    {showServiceDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  </button>
+
+                  {showServiceDropdown && (
+                    <div className="mt-1 w-full rounded-lg border border-border/60 bg-popover p-2 shadow-md">
+                      <Input
+                        className="h-8 text-xs"
+                        placeholder="Search services"
+                        value={serviceSearchQuery}
+                        onChange={(e) => setServiceSearchQuery(e.target.value)}
+                      />
+                      <div className="mt-2 max-h-48 overflow-y-auto space-y-1">
+                        {filteredServices.map((service) => (
+                          <button
+                            key={service.id}
+                            type="button"
+                            onClick={() => handleServiceSelect(service)}
+                            className={cn(
+                              "w-full text-left rounded-md border px-2.5 py-2 transition-colors",
+                              selectedServiceId === service.id
+                                ? "border-primary/40 bg-primary/10"
+                                : "border-border/40 hover:border-primary/30 hover:bg-muted/40"
+                            )}
+                          >
+                            <p className="text-xs font-medium text-foreground">{service.name}</p>
+                            {service.category && (
+                              <p className="text-[11px] text-muted-foreground mt-0.5">{service.category}</p>
+                            )}
+                          </button>
+                        ))}
+
+                        {filteredServices.length === 0 && (
+                          <p className="text-xs text-muted-foreground px-1 py-2">No services found.</p>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowServiceDropdown(false);
+                          setShowCreateServiceModal(true);
+                        }}
+                        className="mt-2 w-full rounded-md border border-dashed border-primary/40 bg-primary/5 px-2.5 py-2 text-xs font-medium text-primary hover:bg-primary/10 transition-colors text-left"
+                      >
+                        + Add New Service
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 px-4 text-xs whitespace-nowrap"
+                  onClick={() => {
+                    setShowServiceDropdown(false);
+                    setShowCreateServiceModal(true);
+                  }}
+                >
+                  + Add New Service
+                </Button>
+              </div>
+
+              {serviceValidationError && (
+                <p className="text-xs text-destructive">{serviceValidationError}</p>
+              )}
+
+              {selectedService && (
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
+                  <p className="text-xs font-medium text-foreground">{selectedService.name}</p>
+                  {selectedService.description && (
+                    <p className="text-xs text-muted-foreground">{selectedService.description}</p>
+                  )}
+                  {(selectedService.pricing || selectedService.category) && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedService.category && (
+                        <span className="inline-flex items-center rounded-full border border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground">
+                          {selectedService.category}
+                        </span>
+                      )}
+                      {selectedService.pricing && (
+                        <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-foreground">
+                          {selectedService.pricing}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <div>
-              <label className={labelClass}>Price or pricing model (optional)</label>
-              <Input className={inputClass} placeholder="e.g. $299/month, custom quote, free consultation…" value={fields.price ?? ""} onChange={(e) => set("price", e.target.value)} />
+
+            {/* Booking Form Section — Progressive Disclosure */}
+            <div className="space-y-3 pt-1">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <h3 className="text-sm font-semibold text-foreground">Booking Form</h3>
+                  {bookingFormOption === "none" && !bookingFormOption && (
+                    <p className="text-xs text-muted-foreground">How would you like visitors to book this service?</p>
+                  )}
+                </div>
+                {bookingFormOption !== "none" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBookingFormOption("none");
+                      setSelectedBookingFormId("");
+                      setShowBookingFormDropdown(false);
+                      setBookingFormSearchQuery("");
+                      setBookingFormSaved(false);
+                    }}
+                    className="text-[11px] text-primary hover:underline flex items-center gap-1"
+                  >
+                    ← Change Option
+                  </button>
+                )}
+              </div>
+
+              {/* Step 1: choose option */}
+              {bookingFormOption === "none" && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">How would you like visitors to book this service?</p>
+                  <div className="space-y-2 pt-1">
+                    {([
+                      { value: "none-confirmed", label: "No Booking Form" },
+                      { value: "existing", label: "Use Existing Booking Form" },
+                      { value: "add-new", label: "Add Booking Form" },
+                    ] as const).map(({ value, label }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => {
+                          setBookingFormOption(value === "none-confirmed" ? "none-confirmed" as never : value);
+                          setSelectedBookingFormId("");
+                          setShowBookingFormDropdown(value === "existing");
+                          setBookingFormSearchQuery("");
+                        }}
+                        className="w-full flex items-center gap-3 rounded-lg border border-border/60 bg-background px-3 py-2.5 text-left hover:border-primary/40 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="w-4 h-4 rounded-full border-2 border-border/60 flex items-center justify-center shrink-0" />
+                        <span className="text-xs text-foreground">{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2a: No Booking Form confirmed */}
+              {(bookingFormOption as string) === "none-confirmed" && (
+                <div className="space-y-2">
+                  <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5 flex items-center gap-2">
+                    <span className="text-sm text-green-600">✓</span>
+                    <span className="text-xs font-medium text-foreground">No Booking Form</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Visitors will not be able to book this service directly from the landing page.</p>
+                </div>
+              )}
+
+              {/* Step 2b: Use Existing Booking Form */}
+              {bookingFormOption === "existing" && (() => {
+                const selectedBookingForm = availableBookingForms.find((bf) => bf.id === selectedBookingFormId);
+                const filteredBookingForms = availableBookingForms.filter((bf) => {
+                  const q = bookingFormSearchQuery.trim().toLowerCase();
+                  if (!q) return true;
+                  return bf.name.toLowerCase().includes(q) || (bf.assignedEmployee ?? "").toLowerCase().includes(q);
+                });
+                return (
+                  <div className="space-y-3">
+                    <p className="text-xs text-muted-foreground">Select an existing booking form to attach to this landing page.</p>
+                    <div className="relative" ref={bookingFormDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setShowBookingFormDropdown((prev) => !prev)}
+                        className="w-full h-10 rounded-lg border border-border/60 bg-background px-3 text-sm flex items-center justify-between hover:border-primary/40 transition-colors"
+                      >
+                        <span className={cn(selectedBookingForm ? "text-foreground" : "text-muted-foreground")}>
+                          {selectedBookingForm ? selectedBookingForm.name : "Select a booking form"}
+                        </span>
+                        {showBookingFormDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                      </button>
+                      {showBookingFormDropdown && (
+                        <div className="mt-1 w-full rounded-lg border border-border/60 bg-popover p-2 shadow-md z-10 relative">
+                          <Input
+                            className="h-8 text-xs"
+                            placeholder="Search booking forms"
+                            value={bookingFormSearchQuery}
+                            onChange={(e) => setBookingFormSearchQuery(e.target.value)}
+                          />
+                          <div className="mt-2 max-h-44 overflow-y-auto space-y-1">
+                            {filteredBookingForms.map((bf) => (
+                              <button
+                                key={bf.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedBookingFormId(bf.id);
+                                  setShowBookingFormDropdown(false);
+                                  setBookingFormSearchQuery("");
+                                }}
+                                className={cn(
+                                  "w-full text-left rounded-md border px-2.5 py-2 transition-colors",
+                                  selectedBookingFormId === bf.id
+                                    ? "border-primary/40 bg-primary/10"
+                                    : "border-border/40 hover:border-primary/30 hover:bg-muted/40"
+                                )}
+                              >
+                                <p className="text-xs font-medium text-foreground">{bf.name}</p>
+                                {bf.assignedEmployee && (
+                                  <p className="text-[11px] text-muted-foreground mt-0.5">Assigned: {bf.assignedEmployee}</p>
+                                )}
+                              </button>
+                            ))}
+                            {filteredBookingForms.length === 0 && (
+                              <p className="text-xs text-muted-foreground px-1 py-2">No booking forms found.</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {selectedBookingForm && (
+                      <div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-1">
+                        <p className="text-xs font-semibold text-foreground">{selectedBookingForm.name}</p>
+                        {selectedBookingForm.duration && (
+                          <p className="text-[11px] text-muted-foreground">• Duration: {selectedBookingForm.duration}</p>
+                        )}
+                        {selectedBookingForm.description && (
+                          <p className="text-[11px] text-muted-foreground">• Confirmation: Instant</p>
+                        )}
+                      </div>
+                    )}
+                    <p className="text-[11px] text-muted-foreground">
+                      You can manage this booking form later from{" "}
+                      <button type="button" className="underline hover:text-foreground transition-colors">Manage Booking Forms</button>.
+                    </p>
+                  </div>
+                );
+              })()}
+
+              {/* Step 2c: Add Booking Form — inline */}
+              {bookingFormOption === "add-new" && (
+                <div className="space-y-4">
+                  {bookingFormSaved ? (
+                    <div className="space-y-2">
+                      <div className="rounded-lg border border-green-500/30 bg-green-50 dark:bg-green-500/10 p-3 flex items-center gap-2">
+                        <span className="text-green-600 text-sm">✓</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-green-700 dark:text-green-400">Booking Form Added</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">Booking Form: {savedBookingFormName}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setBookingFormSaved(false)}
+                          className="text-[11px] text-primary hover:underline shrink-0"
+                        >Edit</button>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        You can edit this booking form later from{" "}
+                        <button type="button" className="underline hover:text-foreground transition-colors">Manage Booking Forms</button>.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-xs text-muted-foreground">This booking form will automatically be linked to the selected service and created as a store-level booking form.</p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs font-medium">Form Name *</Label>
+                          <Input
+                            placeholder="e.g. Website Design Booking"
+                            value={newBookingForm.formName}
+                            onChange={(e) => {
+                              setNewBookingForm((prev) => ({ ...prev, formName: e.target.value }));
+                              if (newBookingFormValidation.formName) setNewBookingFormValidation((prev) => ({ ...prev, formName: undefined }));
+                            }}
+                          />
+                          {newBookingFormValidation.formName && <p className="text-xs text-destructive">{newBookingFormValidation.formName}</p>}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs font-medium">Public Name *</Label>
+                          <Input
+                            placeholder="e.g. Book a Website Design Session"
+                            value={newBookingForm.publicName}
+                            onChange={(e) => {
+                              setNewBookingForm((prev) => ({ ...prev, publicName: e.target.value }));
+                              if (newBookingFormValidation.publicName) setNewBookingFormValidation((prev) => ({ ...prev, publicName: undefined }));
+                            }}
+                          />
+                          {newBookingFormValidation.publicName && <p className="text-xs text-destructive">{newBookingFormValidation.publicName}</p>}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium">Public Description <span className="text-muted-foreground font-normal">(Optional)</span></Label>
+                        <Textarea
+                          className="resize-none text-sm"
+                          rows={2}
+                          placeholder="Briefly describe what visitors can expect when booking…"
+                          value={newBookingForm.publicDescription}
+                          onChange={(e) => setNewBookingForm((prev) => ({ ...prev, publicDescription: e.target.value }))}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium">Payment Preference</Label>
+                        {([
+                          { val: "with-payment" as const, label: "Allow Booking With Payment" },
+                          { val: "without-payment" as const, label: "Allow Booking Without Payment" },
+                        ]).map(({ val, label }) => (
+                          <label key={val} className="flex items-center gap-2 cursor-pointer group">
+                            <div
+                              className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors", newBookingForm.paymentPreference === val ? "border-primary bg-primary" : "border-border/60 group-hover:border-primary/50")}
+                              onClick={() => setNewBookingForm((prev) => ({ ...prev, paymentPreference: val }))}
+                            >
+                              {newBookingForm.paymentPreference === val && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                            <span className="text-xs text-foreground select-none" onClick={() => setNewBookingForm((prev) => ({ ...prev, paymentPreference: val }))}>{label}</span>
+                          </label>
+                        ))}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium">Confirmation Type</Label>
+                        {([
+                          { val: "instant" as const, label: "Instant Confirmation" },
+                          { val: "approval-required" as const, label: "Approval Required" },
+                        ]).map(({ val, label }) => (
+                          <label key={val} className="flex items-center gap-2 cursor-pointer group">
+                            <div
+                              className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors", newBookingForm.approvalType === val ? "border-primary bg-primary" : "border-border/60 group-hover:border-primary/50")}
+                              onClick={() => setNewBookingForm((prev) => ({ ...prev, approvalType: val }))}
+                            >
+                              {newBookingForm.approvalType === val && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                            <span className="text-xs text-foreground select-none" onClick={() => setNewBookingForm((prev) => ({ ...prev, approvalType: val }))}>{label}</span>
+                          </label>
+                        ))}
+                      </div>
+
+                      {selectedServiceId && (
+                        <div className="rounded-lg border border-border/40 bg-muted/30 px-3 py-2 flex items-center gap-2">
+                          <span className="text-[11px] text-muted-foreground">Auto-linked to:</span>
+                          <span className="text-[11px] font-medium text-foreground">{availableServices.find((s) => s.id === selectedServiceId)?.name ?? ""}</span>
+                        </div>
+                      )}
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => {
+                          const errs: { formName?: string; publicName?: string } = {};
+                          if (!newBookingForm.formName.trim()) errs.formName = "Form Name is required.";
+                          if (!newBookingForm.publicName.trim()) errs.publicName = "Public Name is required.";
+                          if (Object.keys(errs).length > 0) { setNewBookingFormValidation(errs); return; }
+                          const createdBf: BookingFormOption = {
+                            id: `bf-${Date.now()}`,
+                            name: newBookingForm.formName.trim(),
+                            description: newBookingForm.publicDescription.trim(),
+                            assignedEmployee: availableServices.find((s) => s.id === selectedServiceId)?.employeeName ?? availableEmployees[0]?.name ?? "",
+                          };
+                          setAvailableBookingForms((prev) => [...prev, createdBf]);
+                          setSelectedBookingFormId(createdBf.id);
+                          setSavedBookingFormName(createdBf.name);
+                          setBookingFormSaved(true);
+                          setNewBookingFormValidation({});
+                        }}
+                      >
+                        Save Booking Form
+                      </Button>
+
+                      <p className="text-[11px] text-muted-foreground">
+                        You can edit this booking form later from{" "}
+                        <button type="button" className="underline hover:text-foreground transition-colors">Manage Booking Forms</button>.
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
-            <div>
-              <label className={labelClass}>Who is this for?</label>
-              <Input className={inputClass} placeholder="e.g. Solo founders, fitness professionals…" value={fields.targetAudience ?? ""} onChange={(e) => set("targetAudience", e.target.value)} />
-            </div>
-            <div>
-              <label className={labelClass}>What should visitors do? (CTA)</label>
-              <Input className={inputClass} placeholder="e.g. Book a free call, Get a quote…" value={fields.cta ?? ""} onChange={(e) => set("cta", e.target.value)} />
-            </div>
+
+            {/* Selection Summary */}
+            {selectedServiceId && (
+              <div className="rounded-lg border border-border/60 bg-background p-3 space-y-1.5">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Summary</p>
+                <div className="flex items-start gap-2">
+                  <span className="text-[11px] text-muted-foreground w-24 shrink-0">Selected Service:</span>
+                  <span className="text-xs font-medium text-foreground">{availableServices.find((s) => s.id === selectedServiceId)?.name ?? ""}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[11px] text-muted-foreground w-24 shrink-0">Booking Form:</span>
+                  <span className="text-xs font-medium text-foreground">
+                    {(bookingFormOption === "existing" || (bookingFormOption === "add-new" && bookingFormSaved)) && selectedBookingFormId
+                      ? availableBookingForms.find((bf) => bf.id === selectedBookingFormId)?.name ?? "None"
+                      : "None"}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -3582,39 +4446,287 @@ function LandingPageDetailsForm({
   };
 
   return (
-    <div className="animate-fade-in-up space-y-4">
-      <div className="flex items-center gap-2">
-        <FileText className="w-4 h-4 text-primary" />
-        <span className="text-sm font-medium">Tell us about your {typeLabels[landingPageType] ?? "landing page"}</span>
-        {landingPageType === "lead-generation" && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
+    <>
+      <div className="animate-fade-in-up space-y-4">
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium">Tell us about your {typeLabels[landingPageType] ?? "landing page"}</span>
+          {landingPageType === "lead-generation" && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Lead generation information"
+                    className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-[260px] text-xs">
+                  Create a lead form to collect visitor information. You can view submitted leads and update this form anytime from the Lead Catcher module.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+        <div className="max-h-[380px] overflow-y-auto pr-1 space-y-3">
+          {renderForm()}
+        </div>
+        <Button
+          onClick={handleConfirm}
+          className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-sm font-medium"
+        >
+          Confirm & Continue →
+        </Button>
+      </div>
+
+      <Dialog
+        open={showCreateServiceModal}
+        onOpenChange={(open) => {
+          setShowCreateServiceModal(open);
+          if (!open) {
+            setShowEmployeeDropdown(false);
+            setEmployeeSearchQuery("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create Service</DialogTitle>
+            <DialogDescription>
+              Add a new service and we&apos;ll attach it to this Service Showcase landing page.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Service Name *</Label>
+                <Input
+                  value={newService.name}
+                  onChange={(e) => {
+                    setNewService((prev) => ({ ...prev, name: e.target.value }));
+                    if (newServiceValidation.name) {
+                      setNewServiceValidation((prev) => ({ ...prev, name: undefined }));
+                    }
+                  }}
+                  placeholder="Service Name"
+                />
+                {newServiceValidation.name && <p className="text-xs text-destructive">{newServiceValidation.name}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Service Price *</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={newService.price}
+                  onChange={(e) => {
+                    setNewService((prev) => ({ ...prev, price: e.target.value }));
+                    if (newServiceValidation.price) {
+                      setNewServiceValidation((prev) => ({ ...prev, price: undefined }));
+                    }
+                  }}
+                  placeholder="Price"
+                />
+                {newServiceValidation.price && <p className="text-xs text-destructive">{newServiceValidation.price}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Service Hours *</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={newService.hours}
+                  onChange={(e) => {
+                    setNewService((prev) => ({ ...prev, hours: e.target.value }));
+                    if (newServiceValidation.hours) {
+                      setNewServiceValidation((prev) => ({ ...prev, hours: undefined }));
+                    }
+                  }}
+                  placeholder="Enter Service Hours"
+                />
+                {newServiceValidation.hours && <p className="text-xs text-destructive">{newServiceValidation.hours}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Service Minutes *</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={newService.minutes}
+                  onChange={(e) => {
+                    setNewService((prev) => ({ ...prev, minutes: e.target.value }));
+                    if (newServiceValidation.minutes) {
+                      setNewServiceValidation((prev) => ({ ...prev, minutes: undefined }));
+                    }
+                  }}
+                  placeholder="Enter Service Minutes"
+                />
+                {newServiceValidation.minutes && <p className="text-xs text-destructive">{newServiceValidation.minutes}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1" ref={employeeDropdownRef}>
+                <Label className="text-xs font-medium">Select Employee *</Label>
                 <button
                   type="button"
-                  aria-label="Lead generation information"
-                  className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
+                  onClick={() => setShowEmployeeDropdown((prev) => !prev)}
+                  className="w-full h-10 rounded-lg border border-border/60 bg-background px-3 text-sm flex items-center justify-between hover:border-primary/40 transition-colors"
                 >
-                  <Info className="w-4 h-4" />
+                  <span className={cn(newService.employeeId ? "text-foreground" : "text-muted-foreground")}>
+                    {newService.employeeId
+                      ? availableEmployees.find((employee) => employee.id === newService.employeeId)?.name
+                      : "Select Employee"}
+                  </span>
+                  {showEmployeeDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                 </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-[260px] text-xs">
-                Create a lead form to collect visitor information. You can view submitted leads and update this form anytime from the Lead Catcher module.
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </div>
-      <div className="max-h-[380px] overflow-y-auto pr-1 space-y-3">
-        {renderForm()}
-      </div>
-      <Button
-        onClick={handleConfirm}
-        className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-sm font-medium"
-      >
-        Confirm & Continue →
-      </Button>
-    </div>
+
+                {showEmployeeDropdown && (
+                  <div className="mt-1 rounded-lg border border-border/60 bg-popover p-2 shadow-md">
+                    <Input
+                      className="h-8 text-xs"
+                      placeholder="Search employee"
+                      value={employeeSearchQuery}
+                      onChange={(e) => setEmployeeSearchQuery(e.target.value)}
+                    />
+                    <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
+                      {availableEmployees
+                        .filter((employee) => {
+                          const query = employeeSearchQuery.trim().toLowerCase();
+                          if (!query) return true;
+                          return (
+                            employee.name.toLowerCase().includes(query) ||
+                            (employee.role ?? "").toLowerCase().includes(query)
+                          );
+                        })
+                        .map((employee) => (
+                          <button
+                            key={employee.id}
+                            type="button"
+                            onClick={() => handleEmployeeSelect(employee.id)}
+                            className={cn(
+                              "w-full text-left rounded-md border px-2.5 py-2 transition-colors",
+                              newService.employeeId === employee.id
+                                ? "border-primary/40 bg-primary/10"
+                                : "border-border/40 hover:border-primary/30 hover:bg-muted/40"
+                            )}
+                          >
+                            <p className="text-xs font-medium text-foreground">{employee.name}</p>
+                            {employee.role && <p className="text-[11px] text-muted-foreground">{employee.role}</p>}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+                {newServiceValidation.employeeId && <p className="text-xs text-destructive">{newServiceValidation.employeeId}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Show In Inventory</Label>
+                <div className="h-10 rounded-lg border border-border/60 bg-background px-3 flex items-center gap-2">
+                  <Checkbox
+                    id="show-in-inventory"
+                    checked={newService.showInInventory}
+                    onCheckedChange={(checked) => {
+                      setNewService((prev) => ({ ...prev, showInInventory: checked === true }));
+                    }}
+                  />
+                  <Label htmlFor="show-in-inventory" className="text-sm font-normal cursor-pointer">
+                    Show In Inventory
+                  </Label>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Service Description</Label>
+              <Textarea
+                className="resize-none"
+                rows={4}
+                value={newService.description}
+                onChange={(e) => setNewService((prev) => ({ ...prev, description: e.target.value }))}
+                placeholder="Describe the service"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Image Upload</Label>
+              <input
+                ref={serviceImageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  handleServiceImageFile(file);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => serviceImageInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsServiceImageDragActive(true);
+                }}
+                onDragLeave={() => setIsServiceImageDragActive(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsServiceImageDragActive(false);
+                  const file = e.dataTransfer.files?.[0] ?? null;
+                  handleServiceImageFile(file);
+                }}
+                className={cn(
+                  "w-full rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors",
+                  isServiceImageDragActive
+                    ? "border-primary bg-primary/5"
+                    : "border-border/60 hover:border-primary/40 hover:bg-muted/30"
+                )}
+              >
+                <Upload className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground">Drag & drop image here or click to upload</p>
+              </button>
+
+              {newService.imagePreview && (
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5">
+                  <img
+                    src={newService.imagePreview}
+                    alt={newService.imageName || "Service preview"}
+                    className="h-28 w-full rounded-md object-cover"
+                  />
+                  <p className="mt-2 text-[11px] text-muted-foreground truncate">{newService.imageName}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowCreateServiceModal(false);
+                setShowEmployeeDropdown(false);
+                setEmployeeSearchQuery("");
+                setNewServiceValidation({});
+                setShowServiceDropdown(true);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleCreateService}>
+              Save Service
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -4076,6 +5188,152 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
   // Brand Vault state
   const [showBrandVaultModal, setShowBrandVaultModal] = useState(false);
   const [brandVaultData, setBrandVaultData] = useState<BrandVaultData | null>(null);
+
+  const getConversationStepOrder = (): ConversationStep[] => {
+    if (mode === "landing-page") {
+      if (conversationData.landingPageType === "lead-generation") {
+        return ["inspiration", "color", "secondary-color", "style", "landing-page-type"];
+      }
+      return ["inspiration", "color", "secondary-color", "style", "landing-page-type", "lp-details"];
+    }
+
+    return shouldAskBusinessModel
+      ? ["inspiration", "color", "secondary-color", "style", "shop-type", "pages", "products"]
+      : ["inspiration", "color", "secondary-color", "style", "pages", "products"];
+  };
+
+  const getStepForBackNavigation = (): ConversationStep =>
+    currentStep === "color-shade" ? "color" : currentStep;
+
+  const getRestoredAnswerForStep = (step: ConversationStep): string => {
+    switch (step) {
+      case "inspiration":
+        return conversationData.inspiration;
+      case "color":
+        return (
+          conversationData.color ||
+          colorSelection.primaryColor?.name ||
+          ""
+        );
+      case "secondary-color":
+        return colorSelection.secondaryColor?.name || "";
+      case "style":
+        return conversationData.style;
+      case "shop-type":
+        return conversationData.shopType ?? "";
+      case "landing-page-type": {
+        const selectedType = LANDING_PAGE_TYPES.find((type) => type.id === conversationData.landingPageType);
+        return selectedType?.title ?? conversationData.landingPageType ?? "";
+      }
+      case "products":
+        return conversationData.products;
+      default:
+        return "";
+    }
+  };
+
+  const clearResponsesAfterStep = (step: ConversationStep) => {
+    setConversationData((prev) => {
+      const cleared = { ...prev };
+
+      if (step === "inspiration") {
+        cleared.color = "";
+        cleared.style = "";
+        cleared.shopType = null;
+        cleared.landingPageType = null;
+        cleared.lpDetails = {};
+        cleared.products = "";
+        cleared.hasLeadForm = null;
+        cleared.selectedLeadFormId = null;
+        cleared.isCreatingNewLeadForm = false;
+        cleared.leadFormDisplayMode = null;
+        cleared.leadFormTargetSection = "";
+        cleared.leadFormCTAButtonText = "";
+        cleared.selectedPages = [];
+        cleared.customPages = [];
+        cleared.pageCustomizations = {};
+      } else if (step === "color" || step === "secondary-color") {
+        cleared.style = "";
+        cleared.shopType = null;
+        cleared.landingPageType = null;
+        cleared.lpDetails = {};
+        cleared.products = "";
+        cleared.hasLeadForm = null;
+        cleared.selectedLeadFormId = null;
+        cleared.isCreatingNewLeadForm = false;
+        cleared.leadFormDisplayMode = null;
+        cleared.leadFormTargetSection = "";
+        cleared.leadFormCTAButtonText = "";
+        cleared.selectedPages = [];
+        cleared.customPages = [];
+        cleared.pageCustomizations = {};
+      } else if (step === "style") {
+        cleared.shopType = null;
+        cleared.landingPageType = null;
+        cleared.lpDetails = {};
+        cleared.products = "";
+        cleared.hasLeadForm = null;
+        cleared.selectedLeadFormId = null;
+        cleared.isCreatingNewLeadForm = false;
+        cleared.leadFormDisplayMode = null;
+        cleared.leadFormTargetSection = "";
+        cleared.leadFormCTAButtonText = "";
+        cleared.selectedPages = [];
+        cleared.customPages = [];
+        cleared.pageCustomizations = {};
+      } else if (step === "shop-type") {
+        cleared.selectedPages = [];
+        cleared.customPages = [];
+        cleared.pageCustomizations = {};
+        cleared.products = "";
+      } else if (step === "landing-page-type") {
+        cleared.lpDetails = {};
+        cleared.hasLeadForm = null;
+        cleared.selectedLeadFormId = null;
+        cleared.isCreatingNewLeadForm = false;
+        cleared.leadFormDisplayMode = null;
+        cleared.leadFormTargetSection = "";
+        cleared.leadFormCTAButtonText = "";
+      } else if (step === "pages") {
+        cleared.products = "";
+      }
+
+      return cleared;
+    });
+
+    if (step === "inspiration" || step === "color" || step === "secondary-color") {
+      setColorSelection((prev) => ({
+        ...prev,
+        primaryColor: step === "inspiration" ? null : prev.primaryColor,
+        primaryShade: step === "inspiration" ? null : prev.primaryShade,
+        secondaryColor: null,
+        secondaryShade: null,
+      }));
+    }
+
+    if (["inspiration", "color", "secondary-color", "style", "landing-page-type"].includes(step)) {
+      setSelectedLandingPageType(null);
+      setSelectedLeadForm(null);
+      setIsCreatingNewLeadForm(false);
+      setLeadGenerationFlowStep("lead-capture-setup");
+    }
+  };
+
+  const handleBackQuestion = () => {
+    if (isTyping) return;
+
+    const stepOrder = getConversationStepOrder();
+    const mappedCurrentStep = getStepForBackNavigation();
+    const currentIndex = stepOrder.indexOf(mappedCurrentStep);
+
+    if (currentIndex <= 0) return;
+
+    const previousStep = stepOrder[currentIndex - 1];
+    clearResponsesAfterStep(previousStep);
+    setCurrentStep(previousStep);
+    setCurrentInput(getRestoredAnswerForStep(previousStep));
+    setIsTyping(false);
+  };
 
   // Handle starting the AI chat
   const handleStartChat = () => {
@@ -4678,7 +5936,7 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
       "product-launch": "Great choice! Now let me ask a few quick questions about the product. 🚀",
       "event-webinar": "Awesome! Tell me a bit about your event. 🎤",
       "portfolio": "Love it! Let's gather some details about your work. 💼",
-      "service-showcase": "Nice! A few quick questions about your service. ⚡",
+      "service-showcase": "Nice! First, select the service you want to showcase. ⚡",
       "coming-soon": "Smart move! Let's build the anticipation. 🌟",
       "discount-promo": "Excellent! Let's set up your promo details. 🎉",
       "about-brand": "Wonderful! Tell me a little about your brand story. 💫",
@@ -4977,6 +6235,10 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
     { label: "Elegant Black", value: "elegant black" },
     { label: "Fresh Green", value: "fresh green" },
   ];
+
+  const backStepOrder = getConversationStepOrder();
+  const mappedStepForBack = getStepForBackNavigation();
+  const canGoBack = backStepOrder.indexOf(mappedStepForBack) > 0 && !isTyping;
 
   // Show loading state while checking storage
   if (!hasCheckedStorage) {
@@ -5430,6 +6692,22 @@ export function AiChatStep({ businessName, onNext, onSkip, mode = "website", sho
 
                 {/* Chat Control Actions */}
                 <div className="flex items-center justify-center gap-4 mt-3">
+                  <button
+                    onClick={handleBackQuestion}
+                    disabled={!canGoBack}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-all duration-200",
+                      "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
+                      canGoBack
+                        ? "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        : "text-muted-foreground/50 opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    Back
+                  </button>
+                  <div className="w-px h-4 bg-border" />
+
                   {/* Hide Skip for mandatory landing-page-type step */}
                   {!(mode === "landing-page" && (currentStep === "landing-page-type" || currentStep === "lp-details")) && (
                     <>

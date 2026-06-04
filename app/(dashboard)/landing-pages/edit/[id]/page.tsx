@@ -1432,9 +1432,15 @@ export default function GeneratedLandingPageEditor() {
                 <Pencil className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               </button>
             ) : (
-              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white w-full" onClick={openLeadFormCreationFlow}>
-                + Add Lead Form
-              </Button>
+              <button
+                type="button"
+                onClick={openLeadFormCreationFlow}
+                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-orange-400/70 bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors"
+                title="Add Lead Form"
+              >
+                <ClipboardList className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                <span className="text-xs font-medium text-orange-600 dark:text-orange-400">+ Add Lead Form</span>
+              </button>
             )}
 
             <div className="flex gap-2">
