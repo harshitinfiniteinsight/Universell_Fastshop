@@ -25,6 +25,8 @@ import {
   CalendarClock,
   FileText,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   BookOpen,
   Link2,
   Globe,
@@ -48,6 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 type EditorMessage = {
   id: string;
@@ -306,96 +309,19 @@ const resolveLeadFormSchema = (
   );
 };
 
-function LeadFormPlacementPreview({
-  form,
-  placementType,
-  sectionLabel,
-  ctaButtonText,
-}: {
-  form: LeadFormSchema;
-  placementType: LeadPlacementType | null;
-  sectionLabel: string;
-  ctaButtonText: string;
-}) {
-  const activeCta = ctaButtonText.trim() || "Get Started";
-  const previewScale = form.fields.length >= 6 ? 0.8 : 0.88;
-
-  return (
-    <div className="rounded-xl border border-border/70 bg-muted/30 p-3 space-y-3 min-w-0 h-full flex flex-col">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-foreground">Live Preview</p>
-        <span className="text-[11px] rounded-full border border-border/70 bg-background px-2 py-0.5 text-muted-foreground">
-          Section: {sectionLabel}
-        </span>
-      </div>
-
-      <div className="rounded-xl border border-border bg-background p-3 shadow-sm overflow-hidden flex-1 flex items-center justify-center">
-        <div className="mx-auto w-full max-w-[560px] origin-top" style={{ transform: `scale(${previewScale})` }}>
-          <div className="space-y-1.5">
-            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{sectionLabel} Section</p>
-            <p className="text-sm font-semibold text-foreground">Headline</p>
-            <p className="text-xs text-muted-foreground">Subheadline</p>
-
-            {placementType !== "cta" ? (
-              <div className="mt-1.5 rounded-lg border border-orange-200 bg-orange-50/60 p-2 space-y-1.5">
-                <p className="text-xs font-semibold text-foreground">{form.name}</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {form.fields.map((field) => (
-                    <div key={field.id} className="rounded-md border border-border/70 bg-background px-2 py-0.5 text-[11px] text-muted-foreground break-words">
-                      {field.label}
-                    </div>
-                  ))}
-                </div>
-                <div className="inline-flex rounded-md bg-orange-500 px-3 py-1 text-[11px] font-semibold text-white">
-                  {form.submitButtonLabel}
-                </div>
-              </div>
-            ) : (
-              <div className="mt-1.5 space-y-1.5">
-                <button type="button" className="rounded-md bg-orange-500 px-3 py-1 text-[11px] font-semibold text-white">
-                  {activeCta}
-                </button>
-                <div className="text-[11px] text-muted-foreground">Modal Opens</div>
-                <div className="rounded-lg border border-border bg-background p-2 space-y-1.5">
-                  <p className="text-[11px] font-semibold text-foreground">{form.name}</p>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {form.fields.map((field) => (
-                      <div key={field.id} className="rounded-md border border-border/70 bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground break-words">
-                        {field.label}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="inline-flex rounded-md bg-orange-500 px-3 py-1 text-[11px] font-semibold text-white">
-                    {form.submitButtonLabel}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function LeadFormPlacementStep({
   placementType,
   targetSectionId,
   ctaButtonText,
-  placementPreviewForm,
   sectionOptions,
   validation,
   onPlacementTypeChange,
   onTargetSectionChange,
   onCtaButtonTextChange,
-  onBack,
-  onContinue,
-  isEditMode = false,
 }: {
   placementType: LeadPlacementType | null;
   targetSectionId: string;
   ctaButtonText: string;
-  placementPreviewForm: LeadFormSchema;
   sectionOptions: LandingSectionOption[];
   validation: {
     placementType?: string;
@@ -405,117 +331,102 @@ function LeadFormPlacementStep({
   onPlacementTypeChange: (value: LeadPlacementType) => void;
   onTargetSectionChange: (value: string) => void;
   onCtaButtonTextChange: (value: string) => void;
-  onBack: () => void;
-  onContinue: () => void;
-  isEditMode?: boolean;
 }) {
-  const activeSection =
-    sectionOptions.find((section) => section.id === targetSectionId) ||
-    sectionOptions[0] ||
-    { id: "hero", label: "Hero" };
-
   return (
-    <div className="h-full min-h-0 flex flex-col animate-fade-in-up">
-      <div className="space-y-2 px-6 pt-2 pb-3 shrink-0">
-        <h3 className="text-sm font-semibold text-foreground">Lead Form Placement</h3>
-        <p className="text-xs text-muted-foreground">Choose how visitors will interact with this form.</p>
-      </div>
-
-      <div className="px-6 pb-4 flex-1 min-h-0">
-        <div className="h-full grid gap-4 md:grid-cols-[340px_minmax(0,1fr)] lg:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="space-y-4">
-            <div className="space-y-2">
-            <p className="text-xs font-medium text-foreground">How would you like to use this form?</p>
-            <div className="grid grid-cols-1 gap-3">
-              {[
-                {
-                  id: "embed" as const,
-                  title: "Embed Form",
-                  description: "Display the form directly inside the selected section.",
-                },
-                {
-                  id: "cta" as const,
-                  title: "CTA Button",
-                  description: "Add a CTA button that opens the selected form.",
-                },
-              ].map((option) => {
-                const isSelected = placementType === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => onPlacementTypeChange(option.id)}
-                    className={cn(
-                      "w-full rounded-xl border p-3 text-left transition-colors min-h-[88px]",
-                      isSelected
-                        ? "border-orange-400 bg-orange-50/70"
-                        : "border-border bg-muted/60 hover:bg-orange-50/60 hover:border-orange-300"
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className={cn("mt-0.5 h-5 w-5 rounded-full border flex items-center justify-center shrink-0", isSelected ? "border-orange-500" : "border-muted-foreground/40")}>
-                        {isSelected && <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />}
-                      </span>
-                      <div className="space-y-1">
-                        <p className={cn("text-sm font-semibold", isSelected ? "text-orange-700" : "text-foreground")}>{option.title}</p>
-                        <p className="text-xs leading-normal text-muted-foreground">{option.description}</p>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            {validation.placementType && <p className="text-xs text-destructive">{validation.placementType}</p>}
-          </div>
-
-          {placementType === "cta" && (
-            <div className="space-y-2 pt-1">
-              <p className="text-xs font-medium text-foreground">CTA Button Text</p>
-              <Input
-                value={ctaButtonText}
-                onChange={(e) => onCtaButtonTextChange(e.target.value)}
-                placeholder="Get Started"
-              />
-              {validation.ctaButtonText && <p className="text-xs text-destructive">{validation.ctaButtonText}</p>}
-            </div>
-          )}
-
-            <div className="space-y-2 pt-1">
-              <p className="text-xs font-medium text-foreground">Landing Page Section</p>
-              <Select value={targetSectionId} onValueChange={onTargetSectionChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose a section..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {sectionOptions.map((section) => (
-                    <SelectItem key={section.id} value={section.id}>
-                      {section.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {validation.targetSectionId && <p className="text-xs text-destructive">{validation.targetSectionId}</p>}
-            </div>
-          </div>
-
-          <div className="h-full min-h-[320px]">
-            <LeadFormPlacementPreview
-              form={placementPreviewForm}
-              placementType={placementType}
-              sectionLabel={activeSection.label}
-              ctaButtonText={ctaButtonText}
-            />
-          </div>
+    <div className="h-full min-h-0 flex flex-col animate-fade-in-up space-y-4">
+      <div className="space-y-2">
+        <Label className="text-xs font-medium text-foreground">How do you want to use this lead form?</Label>
+        <div className="grid grid-cols-1 gap-2">
+          {[
+            { id: "embed" as const, label: "Embed the form directly on the page" },
+            { id: "cta" as const, label: "Link the form to a CTA button" },
+          ].map((option) => {
+            const isActive = placementType === option.id;
+            return (
+              <div
+                key={option.id}
+                className={cn(
+                  "rounded-xl border px-3 py-2.5 transition-colors",
+                  isActive
+                    ? "border-orange-400 bg-orange-50/70"
+                    : "border-border/60 bg-background hover:border-orange-300"
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => onPlacementTypeChange(option.id)}
+                  className="w-full flex items-center gap-2 text-left text-sm"
+                >
+                  <span className={cn("h-4 w-4 rounded-full border flex items-center justify-center shrink-0", isActive ? "border-orange-500" : "border-muted-foreground/40")}>
+                    {isActive && <span className="h-2 w-2 rounded-full bg-orange-500" />}
+                  </span>
+                  <span className={cn(isActive ? "text-foreground font-medium" : "text-muted-foreground")}>{option.label}</span>
+                </button>
+                {option.id === "cta" && isActive && (
+                  <div className="mt-3 border-t border-border/40 pt-3 space-y-1.5">
+                    <Label className="text-xs font-medium text-foreground">CTA Button Text</Label>
+                    <Input
+                      value={ctaButtonText}
+                      onChange={(e) => onCtaButtonTextChange(e.target.value)}
+                      placeholder="Get Started"
+                    />
+                    {validation.ctaButtonText && <p className="text-xs text-destructive">{validation.ctaButtonText}</p>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+        {validation.placementType && <p className="text-xs text-destructive">{validation.placementType}</p>}
       </div>
 
-      <div className="shrink-0 border-t border-border px-6 py-3 flex gap-2 justify-end bg-background rounded-b-xl">
-        <Button variant="outline" size="sm" onClick={onBack}>
-          Back
-        </Button>
-        <Button size="sm" onClick={onContinue} className="bg-orange-500 hover:bg-orange-600 text-white">
-          {isEditMode ? "Save Changes" : "Insert Form"}
-        </Button>
+      <div className="space-y-2">
+        <div className="space-y-0.5">
+          <Label className="text-xs font-medium text-foreground">Landing Page Section</Label>
+          <p className="text-xs text-muted-foreground">Choose where the lead form should appear on the page.</p>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
+          <div className="grid grid-cols-2 gap-2">
+            {sectionOptions.map((section) => {
+              const isActive = targetSectionId === section.id;
+              const isFullWidth = section.id === sectionOptions[0]?.id || section.id === sectionOptions[sectionOptions.length - 1]?.id;
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => onTargetSectionChange(section.id)}
+                  className={cn(
+                    "relative rounded-xl border bg-background p-2.5 text-left transition-all duration-200",
+                    "hover:border-orange-400/50 hover:bg-orange-50/40",
+                    isActive ? "border-orange-400 bg-orange-50/70 shadow-sm" : "border-border/60",
+                    isFullWidth ? "col-span-2" : ""
+                  )}
+                >
+                  {isActive && (
+                    <span className="absolute right-2 top-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-orange-500" />
+                    </span>
+                  )}
+                  <div className="mb-1.5 inline-grid grid-cols-3 gap-1">
+                    {Array.from({ length: 9 }).map((_, idx) => (
+                      <span
+                        key={`${section.id}-${idx}`}
+                        className={cn(
+                          "h-2 w-2 rounded-[2px] border",
+                          isActive ? "border-orange-400/50 bg-orange-200/60" : "border-muted-foreground/30 bg-muted/30"
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <p className={cn("text-xs font-medium", isActive ? "text-orange-700" : "text-muted-foreground")}>
+                    {section.label}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+          {validation.targetSectionId && <p className="text-xs text-destructive mt-2">{validation.targetSectionId}</p>}
+        </div>
       </div>
     </div>
   );
@@ -863,6 +774,7 @@ export default function GeneratedLandingPageEditor() {
   const [leadFormName, setLeadFormName] = useState<string>("");
   const [leadFormDescription, setLeadFormDescription] = useState<string>("");
   const [leadFieldValidationError, setLeadFieldValidationError] = useState<string>("");
+  const [showLeadFieldDropdown, setShowLeadFieldDropdown] = useState(false);
   const [selectedLeadFormId, setSelectedLeadFormId] = useState<string>("");
   const [placementType, setPlacementType] = useState<LeadPlacementType | null>(null);
   const [targetSectionId, setTargetSectionId] = useState<string>("");
@@ -891,19 +803,9 @@ export default function GeneratedLandingPageEditor() {
   const grapesStylesRef = useRef<HTMLDivElement>(null);
   const grapesTraitsRef = useRef<HTMLDivElement>(null);
   const grapesEditorRef = useRef<any>(null);
+  const leadFieldDropdownRef = useRef<HTMLDivElement>(null);
 
   const landingSectionOptions = useMemo(() => discoverLandingSections(html), [html]);
-  const placementPreviewForm = useMemo(
-    () => {
-      const resolved = resolveLeadFormSchema(selectedLeadFormId, selectedLeadFields);
-      return {
-        ...resolved,
-        name: leadFormName.trim() || resolved.name,
-      };
-    },
-    [selectedLeadFormId, selectedLeadFields, leadFormName]
-  );
-
   useEffect(() => {
     if (currentLandingPageId && currentLandingPageId !== "new") {
       const rawSavedDrafts = localStorage.getItem(SAVED_LANDING_PAGES_KEY);
@@ -1058,6 +960,19 @@ export default function GeneratedLandingPageEditor() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (leadFieldDropdownRef.current && !leadFieldDropdownRef.current.contains(event.target as Node)) {
+        setShowLeadFieldDropdown(false);
+      }
+    };
+
+    if (showLeadFieldDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showLeadFieldDropdown]);
 
   const srcDoc = useMemo(
     () => `
@@ -1293,6 +1208,7 @@ export default function GeneratedLandingPageEditor() {
     setCtaButtonText("");
     setPlacementBackStep("form-selection");
     setPlacementValidation({});
+    setShowLeadFieldDropdown(false);
   };
 
   const startLeadFormBuilder = (fields: string[]) => {
@@ -1550,6 +1466,7 @@ export default function GeneratedLandingPageEditor() {
                   setShowFormModal(true);
                   setSelectedFormType(null);
                   setSelectedExistingForm("");
+                  setAttachedLeadForm(null);
                   resetLeadFormFlowState();
                 }}
                 className="text-[11px] px-2 py-1 rounded-full bg-orange-500 text-white hover:bg-orange-600 flex items-center gap-1"
@@ -1579,13 +1496,13 @@ export default function GeneratedLandingPageEditor() {
             >
               <DialogContent
                 className={cn(
-                  "w-[min(96vw,560px)]",
-                  selectedFormType === "Lead Form" && leadFormModalStep === "placement"
-                    ? "w-[min(1100px,90vw)] max-h-[85vh] sm:max-w-[1100px] flex flex-col overflow-hidden gap-0 p-0"
-                    : "sm:max-w-sm"
+                  "sm:max-w-sm",
+                  selectedFormType === "Lead Form" && leadFormModalStep !== "form-selection"
+                    ? "max-h-[85vh] flex flex-col overflow-hidden gap-0 p-0"
+                    : ""
                 )}
               >
-                <DialogHeader className={cn(selectedFormType === "Lead Form" && leadFormModalStep === "placement" && "shrink-0 px-6 pt-5 pb-3") }>
+                <DialogHeader className={cn(selectedFormType === "Lead Form" && leadFormModalStep !== "form-selection" ? "shrink-0 px-6 pt-5 pb-3" : "")}>
                   <DialogTitle>
                     {selectedFormType ? (
                       selectedFormType === "Lead Form" && leadFormModalStep !== "form-selection" ? (
@@ -1609,7 +1526,7 @@ export default function GeneratedLandingPageEditor() {
                             className="flex items-center gap-1.5 text-sm font-semibold hover:text-orange-600 transition-colors"
                           >
                             <ChevronLeft className="w-4 h-4" />
-                            {attachedLeadForm ? "Edit Lead Form" : "Create Lead Form"}
+                            {attachedLeadForm ? "Edit Lead Form" : "Add Lead Form"}
                           </button>
 
                           {attachedLeadForm && (
@@ -1617,16 +1534,12 @@ export default function GeneratedLandingPageEditor() {
                               {["form-builder", "placement"].includes(leadFormModalStep) && (
                                 <div className="flex items-center gap-2 text-xs">
                                   <div className="flex items-center gap-2">
-                                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center font-medium", leadFormModalStep === "form-builder" || ["placement"].includes(leadFormModalStep) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-                                      1
-                                    </div>
+                                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center font-medium", leadFormModalStep === "form-builder" || ["placement"].includes(leadFormModalStep) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>1</div>
                                     <span className={leadFormModalStep === "form-builder" ? "font-medium text-foreground" : "text-muted-foreground"}>Basic Information</span>
                                   </div>
                                   <div className={cn("w-8 h-0.5", leadFormModalStep === "placement" ? "bg-primary" : "bg-border")} />
                                   <div className="flex items-center gap-2">
-                                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center font-medium", leadFormModalStep === "placement" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-                                      2
-                                    </div>
+                                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center font-medium", leadFormModalStep === "placement" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>2</div>
                                     <span className={leadFormModalStep === "placement" ? "font-medium text-foreground" : "text-muted-foreground"}>Form Placement</span>
                                   </div>
                                 </div>
@@ -1653,44 +1566,384 @@ export default function GeneratedLandingPageEditor() {
                   </DialogTitle>
                 </DialogHeader>
 
-                <div className={cn(selectedFormType === "Lead Form" && leadFormModalStep === "placement" && "flex-1 min-h-0") }>
-                {selectedFormType ? (
-                  selectedFormType === "Lead Form" && leadFormModalStep === "field-selection" ? (
-                    <div className="space-y-4 pt-1 animate-fade-in-up">
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-semibold text-foreground">What information would you like to collect?</h3>
-                        <p className="text-xs text-muted-foreground">Select one or more fields for your new lead form.</p>
-                      </div>
+                <div className={cn(selectedFormType === "Lead Form" && leadFormModalStep !== "form-selection" ? "flex-1 min-h-0 overflow-y-auto px-6 pb-4" : "")}>
+                  {selectedFormType ? (
+                    selectedFormType === "Lead Form" && leadFormModalStep === "field-selection" ? (
+                      <div className="space-y-4 pt-1 animate-fade-in-up">
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-semibold text-foreground">What information would you like to collect?</h3>
+                          <p className="text-xs text-muted-foreground">Select one or more fields for your new lead form.</p>
+                        </div>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        {LEAD_FORM_FIELD_OPTIONS.map((field) => {
-                          const isSelected = selectedLeadFields.includes(field.id);
-                          return (
-                            <button
-                              key={field.id}
-                              type="button"
-                              onClick={() => toggleLeadField(field.id)}
-                              className={cn(
-                                "flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm text-left transition-colors",
-                                isSelected
-                                  ? "border-orange-400 bg-orange-50 text-orange-700"
-                                  : "border-border bg-muted hover:bg-orange-50 hover:border-orange-300"
+                        <div className="grid grid-cols-2 gap-2">
+                          {LEAD_FORM_FIELD_OPTIONS.map((field) => {
+                            const isSelected = selectedLeadFields.includes(field.id);
+                            return (
+                              <button
+                                key={field.id}
+                                type="button"
+                                onClick={() => toggleLeadField(field.id)}
+                                className={cn(
+                                  "flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm text-left transition-colors",
+                                  isSelected
+                                    ? "border-orange-400 bg-orange-50 text-orange-700"
+                                    : "border-border bg-muted hover:bg-orange-50 hover:border-orange-300"
+                                )}
+                              >
+                                <span className={cn("h-4 w-4 rounded border flex items-center justify-center", isSelected ? "border-orange-500 bg-orange-500" : "border-muted-foreground/40 bg-background")}>
+                                  {isSelected && <Check className="w-3 h-3 text-white" />}
+                                </span>
+                                <span className="leading-tight">{field.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {leadFieldValidationError && (
+                          <p className="text-xs text-destructive">{leadFieldValidationError}</p>
+                        )}
+                      </div>
+                    ) : selectedFormType === "Lead Form" && leadFormModalStep === "placement" ? (
+                      <LeadFormPlacementStep
+                        placementType={placementType}
+                        targetSectionId={targetSectionId}
+                        ctaButtonText={ctaButtonText}
+                        sectionOptions={landingSectionOptions}
+                        validation={placementValidation}
+                        onPlacementTypeChange={(value) => {
+                          setPlacementType(value);
+                          setPlacementValidation((prev) => ({ ...prev, placementType: undefined, ctaButtonText: undefined }));
+                        }}
+                        onTargetSectionChange={(value) => {
+                          setTargetSectionId(value);
+                          setPlacementValidation((prev) => ({ ...prev, targetSectionId: undefined }));
+                        }}
+                        onCtaButtonTextChange={(value) => {
+                          setCtaButtonText(value);
+                          setPlacementValidation((prev) => ({ ...prev, ctaButtonText: undefined }));
+                        }}
+                      />
+                    ) : selectedFormType === "Lead Form" && leadFormModalStep === "form-builder" ? (
+                      <div className="space-y-4 pt-1 animate-fade-in-up">
+                        {!attachedLeadForm ? (
+                          <>
+                            <div className="space-y-1">
+                              <h3 className="text-sm font-semibold text-foreground">Lead Form Name</h3>
+                              <p className="text-xs text-muted-foreground">Give your lead form a descriptive name.</p>
+                            </div>
+
+                            <div className="space-y-3 rounded-lg border border-border bg-background p-3">
+                              <div className="space-y-1">
+                                <Input
+                                  value={leadFormName}
+                                  onChange={(e) => setLeadFormName(e.target.value)}
+                                  placeholder="e.g. Summer Trial Signup"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <h3 className="text-sm font-semibold text-foreground">Description</h3>
+                              <p className="text-xs text-muted-foreground">Optional context shown with your lead form.</p>
+                            </div>
+
+                            <div className="space-y-3 rounded-lg border border-border bg-background p-3">
+                              <div className="space-y-1">
+                                <Textarea
+                                  value={leadFormDescription}
+                                  onChange={(e) => setLeadFormDescription(e.target.value)}
+                                  placeholder="Optional context shown with your lead form."
+                                  className="min-h-[72px] resize-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <h3 className="text-sm font-semibold text-foreground">Catcher Fields</h3>
+                              <p className="text-xs text-muted-foreground">Select which fields to collect from your leads.</p>
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="relative" ref={leadFieldDropdownRef}>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowLeadFieldDropdown(!showLeadFieldDropdown)}
+                                  className="w-full rounded-lg border border-border bg-background p-2.5 text-left text-sm text-muted-foreground hover:bg-muted/50 transition-colors flex items-center justify-between"
+                                >
+                                  <span>{selectedLeadFields.length > 0 ? `${selectedLeadFields.length} field${selectedLeadFields.length === 1 ? "" : "s"} selected` : "Select catcher fields"}</span>
+                                  <ChevronDown className={cn("w-4 h-4 transition-transform", showLeadFieldDropdown && "rotate-180")} />
+                                </button>
+
+                                {showLeadFieldDropdown && (
+                                  <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg border border-border bg-background shadow-lg">
+                                    <div className="p-2 space-y-1 max-h-[200px] overflow-y-auto">
+                                      {LEAD_FORM_FIELD_OPTIONS.map((field) => {
+                                        const isSelected = selectedLeadFields.includes(field.id);
+                                        return (
+                                          <button
+                                            key={field.id}
+                                            type="button"
+                                            onClick={() => toggleLeadField(field.id)}
+                                            className={cn(
+                                              "w-full flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-left transition-colors",
+                                              isSelected
+                                                ? "bg-orange-50 text-orange-700"
+                                                : "text-foreground hover:bg-muted"
+                                            )}
+                                          >
+                                            <span className={cn("h-4 w-4 rounded border flex items-center justify-center shrink-0", isSelected ? "border-orange-500 bg-orange-500" : "border-muted-foreground/40 bg-background")}>
+                                              {isSelected && <Check className="w-3 h-3 text-white" />}
+                                            </span>
+                                            {field.label}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {selectedLeadFields.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 rounded-lg border border-border bg-muted/50 p-2.5">
+                                  {selectedLeadFields.map((fieldId) => {
+                                    const fieldLabel = LEAD_FORM_FIELD_OPTIONS.find((field) => field.id === fieldId)?.label ?? fieldId;
+                                    return (
+                                      <span key={fieldId} className="inline-flex items-center rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-[11px] font-medium">
+                                        {fieldLabel}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
                               )}
-                            >
-                              <span className={cn("h-4 w-4 rounded border flex items-center justify-center", isSelected ? "border-orange-500 bg-orange-500" : "border-muted-foreground/40 bg-background")}>
-                                {isSelected && <Check className="w-3 h-3 text-white" />}
-                              </span>
-                              <span className="leading-tight">{field.label}</span>
-                            </button>
-                          );
-                        })}
+                              {selectedLeadFields.length === 0 && (
+                                <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-center">
+                                  <p className="text-xs text-muted-foreground">Select catcher fields to preview your lead form.</p>
+                                </div>
+                              )}
+                            </div>
+
+
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="space-y-1">
+                                <h3 className="text-sm font-semibold text-foreground">Edit Lead Form</h3>
+                                <p className="text-xs text-muted-foreground">Update your lead form configuration.</p>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={handleRemoveLeadForm}
+                                  className="text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
+                                >
+                                  Remove Form
+                                </button>
+                                <div className="group relative">
+                                  <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                                  <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-popover border border-border rounded-lg shadow-md p-2 w-48 text-[11px] text-foreground z-50">
+                                    Unlink this lead form from the landing page. Visitors will no longer see the form or be able to submit their information.
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3 rounded-lg border border-border bg-background p-3">
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-foreground">Form Name</p>
+                                <Input
+                                  value={leadFormName}
+                                  onChange={(e) => setLeadFormName(e.target.value)}
+                                  placeholder="Enter lead form name"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-foreground">Description (optional)</p>
+                                <Textarea
+                                  value={leadFormDescription}
+                                  onChange={(e) => setLeadFormDescription(e.target.value)}
+                                  placeholder="Describe what this form is for"
+                                  className="min-h-[72px] resize-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Selected fields</p>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowLeadFieldDropdown((v) => !v)}
+                                  className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 font-medium"
+                                >
+                                  Edit
+                                  {showLeadFieldDropdown ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                </button>
+                              </div>
+
+                              {showLeadFieldDropdown && (
+                                <div className="rounded-lg border border-border bg-background p-2 space-y-1 max-h-[200px] overflow-y-auto">
+                                  {LEAD_FORM_FIELD_OPTIONS.map((field) => {
+                                    const isSelected = selectedLeadFields.includes(field.id);
+                                    return (
+                                      <button
+                                        key={field.id}
+                                        type="button"
+                                        onClick={() => toggleLeadField(field.id)}
+                                        className={cn(
+                                          "w-full flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-left transition-colors",
+                                          isSelected
+                                            ? "bg-orange-50 text-orange-700"
+                                            : "text-foreground hover:bg-muted"
+                                        )}
+                                      >
+                                        <span className={cn("h-4 w-4 rounded border flex items-center justify-center shrink-0", isSelected ? "border-orange-500 bg-orange-500" : "border-muted-foreground/40 bg-background")}>
+                                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                                        </span>
+                                        {field.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+
+                              <div className="flex flex-wrap gap-1.5 rounded-lg border border-border bg-muted/50 p-2.5 min-h-[36px]">
+                                {selectedLeadFields.map((fieldId) => {
+                                  const fieldLabel = LEAD_FORM_FIELD_OPTIONS.find((field) => field.id === fieldId)?.label ?? fieldId;
+                                  return (
+                                    <span key={fieldId} className="inline-flex items-center rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-[11px] font-medium">
+                                      {fieldLabel}
+                                    </span>
+                                  );
+                                })}
+                                {selectedLeadFields.length === 0 && (
+                                  <span className="text-[11px] text-muted-foreground">No fields selected</span>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
+                    ) : (
+                      <div className="space-y-4 pt-1 animate-fade-in-up">
+                        <p className="text-xs text-muted-foreground">
+                          Select an existing form to embed, or add a new one.
+                        </p>
+                        <Select
+                          value={selectedExistingForm}
+                          onValueChange={(value) => {
+                            setSelectedExistingForm(value);
+                            if (selectedFormType === "Lead Form") {
+                              setSelectedLeadFormId(value);
+                              const resolved = resolveLeadFormSchema(value, []);
+                              setSelectedLeadFields(resolved.fields.map((field) => field.id));
+                              setLeadFormName(resolved.name);
+                              setLeadFormDescription("");
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Choose a form…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(EXISTING_FORMS[selectedFormType] ?? []).map((form) => (
+                              <SelectItem key={form.id} value={form.id}>
+                                {form.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (selectedFormType === "Lead Form") {
+                                setLeadFormName("");
+                                setLeadFormDescription("");
+                                setSelectedLeadFields([]);
+                                setSelectedLeadFormId("");
+                                setLeadFormModalStep("form-builder");
+                                setLeadFieldValidationError("");
+                                setShowLeadFieldDropdown(false);
+                                return;
+                              }
 
-                      {leadFieldValidationError && (
-                        <p className="text-xs text-destructive">{leadFieldValidationError}</p>
-                      )}
+                              const formType = FORM_TYPES.find(
+                                (f) => f.label === selectedFormType
+                              );
+                              if (formType) setInputMessage(formType.value);
+                              setShowFormModal(false);
+                              setSelectedFormType(null);
+                              setSelectedExistingForm("");
+                            }}
+                          >
+                            Add New
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={!selectedExistingForm}
+                            onClick={() => {
+                              if (selectedFormType === "Lead Form") {
+                                setSelectedLeadFormId(selectedExistingForm);
+                                const resolved = resolveLeadFormSchema(selectedExistingForm, []);
+                                setSelectedLeadFields(resolved.fields.map((field) => field.id));
+                                setLeadFormName(resolved.name);
+                                setLeadFormDescription("");
+                                setPlacementBackStep("form-selection");
+                                setLeadFormModalStep("placement");
+                                return;
+                              }
 
-                      <div className="flex gap-2 justify-end pt-1">
+                              const form = (EXISTING_FORMS[selectedFormType] ?? []).find((f) => f.id === selectedExistingForm);
+                              if (form) {
+                                setInputMessage(`Embed the existing "${form.name}" form`);
+                              }
+
+                              setShowFormModal(false);
+                              setSelectedFormType(null);
+                              setSelectedExistingForm("");
+                              resetLeadFormFlowState();
+                            }}
+                            className="bg-orange-500 hover:bg-orange-600 text-white"
+                          >
+                            Use this form
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 pt-2">
+                      {FORM_TYPES.map(({ label, value, icon: Icon, instant }) => (
+                        <button
+                          key={label}
+                          onClick={() => {
+                            if (instant) {
+                              setInputMessage(value);
+                              setShowFormModal(false);
+                              setSelectedFormType(null);
+                              setSelectedExistingForm("");
+                              resetLeadFormFlowState();
+                            } else {
+                              setSelectedFormType(label);
+                              setSelectedExistingForm("");
+                              resetLeadFormFlowState();
+                            }
+                          }}
+                          className="flex items-center gap-2 text-sm px-3 py-2.5 rounded-lg border border-border bg-muted hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600 text-left transition-colors"
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {selectedFormType === "Lead Form" && leadFormModalStep !== "form-selection" && (
+                  <div className="shrink-0 border-t border-border px-6 py-3 flex items-center justify-end gap-2 bg-background">
+                    {leadFormModalStep === "field-selection" ? (
+                      <>
                         <Button
                           variant="outline"
                           size="sm"
@@ -1708,222 +1961,72 @@ export default function GeneratedLandingPageEditor() {
                         >
                           Continue
                         </Button>
-                      </div>
-                    </div>
-                  ) : selectedFormType === "Lead Form" && leadFormModalStep === "placement" ? (
-                    <LeadFormPlacementStep
-                      placementType={placementType}
-                      targetSectionId={targetSectionId}
-                      ctaButtonText={ctaButtonText}
-                      placementPreviewForm={placementPreviewForm}
-                      sectionOptions={landingSectionOptions}
-                      validation={placementValidation}
-                      onPlacementTypeChange={(value) => {
-                        setPlacementType(value);
-                        setPlacementValidation((prev) => ({ ...prev, placementType: undefined, ctaButtonText: undefined }));
-                      }}
-                      onTargetSectionChange={(value) => {
-                        setTargetSectionId(value);
-                        setPlacementValidation((prev) => ({ ...prev, targetSectionId: undefined }));
-                      }}
-                      onCtaButtonTextChange={(value) => {
-                        setCtaButtonText(value);
-                        setPlacementValidation((prev) => ({ ...prev, ctaButtonText: undefined }));
-                      }}
-                      onBack={() => setLeadFormModalStep(placementBackStep)}
-                      onContinue={handlePlacementContinue}
-                      isEditMode={!!attachedLeadForm}
-                    />
-                  ) : selectedFormType === "Lead Form" && leadFormModalStep === "form-builder" ? (
-                    <div className="space-y-4 pt-1 animate-fade-in-up">
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-semibold text-foreground">Lead Form Builder</h3>
-                        <p className="text-xs text-muted-foreground">
-                          We&apos;ll initialize your lead form with the selected fields before placement.
-                        </p>
-                      </div>
-
-                      <div className="space-y-3 rounded-lg border border-border bg-background p-3">
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium text-foreground">Form Name</p>
-                          <Input
-                            value={leadFormName}
-                            onChange={(e) => setLeadFormName(e.target.value)}
-                            placeholder="Enter lead form name"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium text-foreground">Description (optional)</p>
-                          <Textarea
-                            value={leadFormDescription}
-                            onChange={(e) => setLeadFormDescription(e.target.value)}
-                            placeholder="Describe what this form is for"
-                            className="min-h-[72px] resize-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-1">
-                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Selected fields</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {selectedLeadFields.map((fieldId) => {
-                            const fieldLabel = LEAD_FORM_FIELD_OPTIONS.find((field) => field.id === fieldId)?.label ?? fieldId;
-                            return (
-                              <span key={fieldId} className="inline-flex items-center rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-[11px] font-medium">
-                                {fieldLabel}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {attachedLeadForm && (
-                        <div className="flex items-center gap-2 pt-2 border-t border-border">
-                          <button
-                            type="button"
-                            onClick={handleRemoveLeadForm}
-                            className="text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
-                          >
-                            Remove Form
-                          </button>
-                          <div className="group relative">
-                            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                            <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-popover border border-border rounded-lg shadow-md p-2 w-48 text-[11px] text-foreground z-50">
-                              Unlink this lead form from the landing page. Visitors will no longer see the form or be able to submit their information.
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex gap-2 justify-end">
+                      </>
+                    ) : leadFormModalStep === "form-builder" ? (
+                      <>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setLeadFormModalStep("field-selection")}
+                          onClick={() => {
+                            if (attachedLeadForm) {
+                              setLeadFormModalStep("placement");
+                            } else {
+                              setShowFormModal(false);
+                              setSelectedFormType(null);
+                              setSelectedExistingForm("");
+                              resetLeadFormFlowState();
+                            }
+                          }}
+                        >
+                          {attachedLeadForm ? "Back" : "Close"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            if (!attachedLeadForm) {
+                              // New form - save and move to placement
+                              if (!leadFormName.trim()) {
+                                alert("Please enter a lead form name.");
+                                return;
+                              }
+                              if (selectedLeadFields.length === 0) {
+                                alert("Please select at least one catcher field.");
+                                return;
+                              }
+                              const activeLeadFormId = `lf-new-${Date.now()}`;
+                              setSelectedLeadFormId(activeLeadFormId);
+                              setPlacementBackStep("form-selection");
+                              setLeadFormModalStep("placement");
+                            } else {
+                              // Existing form - save changes
+                              setLeadFormModalStep("placement");
+                            }
+                          }}
+                          className="bg-orange-500 hover:bg-orange-600 text-white"
+                        >
+                          {attachedLeadForm ? "Save Changes" : "Save"}
+                        </Button>
+                      </>
+                    ) : leadFormModalStep === "placement" ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setLeadFormModalStep(placementBackStep)}
                         >
                           Back
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => startLeadFormBuilder(selectedLeadFields)}
+                          onClick={handlePlacementContinue}
                           className="bg-orange-500 hover:bg-orange-600 text-white"
                         >
-                          {attachedLeadForm ? "Continue" : "Continue to Placement"}
+                          {attachedLeadForm ? "Save Changes" : "Insert Form"}
                         </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 pt-1 animate-fade-in-up">
-                      <p className="text-xs text-muted-foreground">
-                        Select an existing form to embed, or add a new one.
-                      </p>
-                      <Select
-                        value={selectedExistingForm}
-                        onValueChange={(value) => {
-                          setSelectedExistingForm(value);
-                          if (selectedFormType === "Lead Form") {
-                            setSelectedLeadFormId(value);
-                            const resolved = resolveLeadFormSchema(value, []);
-                            setSelectedLeadFields(resolved.fields.map((field) => field.id));
-                            setLeadFormName(resolved.name);
-                            setLeadFormDescription("");
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Choose a form…" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(EXISTING_FORMS[selectedFormType] ?? []).map((form) => (
-                            <SelectItem key={form.id} value={form.id}>
-                              {form.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (selectedFormType === "Lead Form") {
-                              setLeadFormName("");
-                              setLeadFormDescription("");
-                              setLeadFormModalStep("field-selection");
-                              setLeadFieldValidationError("");
-                              return;
-                            }
-
-                            const formType = FORM_TYPES.find(
-                              (f) => f.label === selectedFormType
-                            );
-                            if (formType) setInputMessage(formType.value);
-                            setShowFormModal(false);
-                            setSelectedFormType(null);
-                            setSelectedExistingForm("");
-                          }}
-                        >
-                          Add New
-                        </Button>
-                        <Button
-                          size="sm"
-                          disabled={!selectedExistingForm}
-                          onClick={() => {
-                            if (selectedFormType === "Lead Form") {
-                              setSelectedLeadFormId(selectedExistingForm);
-                              const resolved = resolveLeadFormSchema(selectedExistingForm, []);
-                              setSelectedLeadFields(resolved.fields.map((field) => field.id));
-                              setLeadFormName(resolved.name);
-                              setLeadFormDescription("");
-                              setPlacementBackStep("form-selection");
-                              setLeadFormModalStep("placement");
-                              return;
-                            }
-
-                            const form = (EXISTING_FORMS[selectedFormType] ?? []).find((f) => f.id === selectedExistingForm);
-                            if (form) {
-                              setInputMessage(`Embed the existing "${form.name}" form`);
-                            }
-
-                            setShowFormModal(false);
-                            setSelectedFormType(null);
-                            setSelectedExistingForm("");
-                            resetLeadFormFlowState();
-                          }}
-                          className="bg-orange-500 hover:bg-orange-600 text-white"
-                        >
-                          Use this form
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                ) : (
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                    {FORM_TYPES.map(({ label, value, icon: Icon, instant }) => (
-                      <button
-                        key={label}
-                        onClick={() => {
-                          if (instant) {
-                            setInputMessage(value);
-                            setShowFormModal(false);
-                            setSelectedFormType(null);
-                            setSelectedExistingForm("");
-                            resetLeadFormFlowState();
-                          } else {
-                            setSelectedFormType(label);
-                            setSelectedExistingForm("");
-                            resetLeadFormFlowState();
-                          }
-                        }}
-                        className="flex items-center gap-2 text-sm px-3 py-2.5 rounded-lg border border-border bg-muted hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600 text-left transition-colors"
-                      >
-                        <Icon className="w-4 h-4 shrink-0" />
-                        {label}
-                      </button>
-                    ))}
+                      </>
+                    ) : null}
                   </div>
                 )}
-                </div>
               </DialogContent>
             </Dialog>
 
