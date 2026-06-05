@@ -3305,11 +3305,15 @@ function LandingPageDetailsForm({
   const [newBookingFormValidation, setNewBookingFormValidation] = useState<{ formName?: string; publicName?: string }>({});
   const [bookingFormSaved, setBookingFormSaved] = useState(false);
   const [savedBookingFormName, setSavedBookingFormName] = useState("");
+  const [bookingSkipped, setBookingSkipped] = useState(false);
   const [bookingPlacementMode, setBookingPlacementMode] = useState<"embed" | "cta" | null>(null);
   const [bookingPlacementSection, setBookingPlacementSection] = useState("");
   const [bookingPlacementCTA, setBookingPlacementCTA] = useState("");
   const [bookingPlacementShowErrors, setBookingPlacementShowErrors] = useState(false);
   const [addBookingFormStep, setAddBookingFormStep] = useState<"basic-info" | "placement">("basic-info");
+  const existingBookingSelectorRef = useRef<HTMLDivElement>(null);
+  const addBookingFormRef = useRef<HTMLDivElement>(null);
+  const addBookingFormNameInputRef = useRef<HTMLInputElement>(null);
   const [newService, setNewService] = useState({
     name: "",
     price: "",
@@ -3483,6 +3487,7 @@ function LandingPageDetailsForm({
     setShowBookingFormDropdown(false);
     setBookingFormSearchQuery("");
     setBookingFormSaved(false);
+    setBookingSkipped(false);
     setBookingPlacementMode(null);
     setBookingPlacementSection("");
     setBookingPlacementCTA("");
@@ -3505,6 +3510,20 @@ function LandingPageDetailsForm({
     setShowEmployeeDropdown(false);
     setEmployeeSearchQuery("");
     setNewServiceValidation((prev) => ({ ...prev, employeeId: undefined }));
+  };
+
+  const skipBookingFormFlow = () => {
+    setBookingFormOption("none-confirmed");
+    setSelectedBookingFormId("");
+    setShowBookingFormDropdown(false);
+    setBookingFormSearchQuery("");
+    setBookingFormSaved(false);
+    setBookingSkipped(true);
+    setBookingPlacementMode(null);
+    setBookingPlacementSection("");
+    setBookingPlacementCTA("");
+    setBookingPlacementShowErrors(false);
+    setAddBookingFormStep("basic-info");
   };
 
   const handleServiceImageFile = (file: File | null) => {
@@ -4188,6 +4207,7 @@ function LandingPageDetailsForm({
                       setShowBookingFormDropdown(false);
                       setBookingFormSearchQuery("");
                       setBookingFormSaved(false);
+                      setBookingSkipped(false);
                       setBookingPlacementMode(null);
                       setBookingPlacementSection("");
                       setBookingPlacementCTA("");
@@ -4216,13 +4236,25 @@ function LandingPageDetailsForm({
                         onClick={() => {
                           setBookingFormOption(value === "none-confirmed" ? "none-confirmed" as never : value);
                           setSelectedBookingFormId("");
-                          setShowBookingFormDropdown(value === "existing");
+                          setShowBookingFormDropdown(false);
                           setBookingFormSearchQuery("");
+                          setBookingFormSaved(false);
+                          setBookingSkipped(false);
                           setBookingPlacementMode(null);
                           setBookingPlacementSection("");
                           setBookingPlacementCTA("");
                           setBookingPlacementShowErrors(false);
-                          if (value === "add-new") setAddBookingFormStep("basic-info");
+                          if (value === "existing") {
+                            setTimeout(() => {
+                              existingBookingSelectorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                            }, 80);
+                          }
+                          if (value === "add-new") {
+                            setAddBookingFormStep("basic-info");
+                            setTimeout(() => {
+                              (addBookingFormNameInputRef.current ?? addBookingFormRef.current)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                            }, 80);
+                          }
                         }}
                         className="w-full flex items-center gap-3 rounded-lg border border-border/60 bg-background px-3 py-2.5 text-left hover:border-primary/40 hover:bg-muted/30 transition-colors"
                       >
@@ -4243,7 +4275,11 @@ function LandingPageDetailsForm({
                   </div>
                   <div className="inline-flex items-start gap-1.5 rounded-md border border-border/60 bg-background px-2 py-1.5">
                     <Info className="h-3.5 w-3.5 text-muted-foreground mt-[1px] shrink-0" />
-                    <p className="text-[11px] text-muted-foreground">Visitors will not be able to book this service directly from the landing page, but you can link a booking form at any time later.</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {bookingSkipped
+                        ? "No problem — I'll generate the landing page without a booking form. You can always add one later."
+                        : "Visitors will not be able to book this service directly from the landing page, but you can link a booking form at any time later."}
+                    </p>
                   </div>
                 </div>
               )}
@@ -4258,7 +4294,7 @@ function LandingPageDetailsForm({
                   return bf.name.toLowerCase().includes(q) || (bf.assignedEmployee ?? "").toLowerCase().includes(q);
                 });
                 return (
-                  <div className="space-y-3">
+                  <div className="space-y-3" ref={existingBookingSelectorRef}>
                     <p className="text-xs text-muted-foreground">Select an existing booking form to attach to this landing page.</p>
                     <p className="text-[11px] text-muted-foreground">
                       Demo booking forms: {bookingFormSource.slice(0, 4).map((bf) => bf.name).join(" • ")}
@@ -4333,7 +4369,7 @@ function LandingPageDetailsForm({
               })()}
 
               {bookingFormOption === "add-new" && !bookingFormSaved && (
-                <div className="space-y-4 rounded-2xl border border-border/60 bg-background p-4">
+                <div className="space-y-4 rounded-2xl border border-border/60 bg-background p-4" ref={addBookingFormRef}>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1.5 shrink-0">
@@ -4372,6 +4408,7 @@ function LandingPageDetailsForm({
                         <div className="space-y-1">
                           <Label className="text-xs font-medium">Form Name <span className="text-destructive">*</span></Label>
                           <Input
+                            ref={addBookingFormNameInputRef}
                             placeholder="e.g. Website Design Booking"
                             value={newBookingForm.formName}
                             onChange={(e) => {
@@ -4662,6 +4699,18 @@ function LandingPageDetailsForm({
                     You can edit this booking form later from{" "}
                     <button type="button" className="underline hover:text-foreground transition-colors">Manage Booking Forms</button>.
                   </p>
+                </div>
+              )}
+
+              {(bookingFormOption === "existing" || bookingFormOption === "add-new") && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={skipBookingFormFlow}
+                    className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                  >
+                    Skip — Generate Without Booking Form
+                  </button>
                 </div>
               )}
 
