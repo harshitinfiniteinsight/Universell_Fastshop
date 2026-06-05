@@ -4981,7 +4981,7 @@ function LandingPageDetailsForm({
           onClick={handleConfirm}
           className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-sm font-medium"
         >
-          Confirm & Continue →
+          Save and Continue →
         </Button>
       </div>
 
@@ -5152,7 +5152,6 @@ function LeadFormPlacementStep({
   backLabel: string;
 }) {
   const [showErrors, setShowErrors] = useState(false);
-  const [sectionSearch, setSectionSearch] = useState("");
 
   const missingDisplayMode = showErrors && !displayMode;
   const missingSection = showErrors && !targetSection;
@@ -5167,10 +5166,6 @@ function LeadFormPlacementStep({
     { id: "section_5", label: "Section 5", fullWidth: true },
     { id: "footer", label: "Footer", fullWidth: true },
   ];
-
-  const filteredPlacementBlocks = placementBlocks.filter((block) =>
-    block.label.toLowerCase().includes(sectionSearch.trim().toLowerCase())
-  );
 
   const handleContinue = () => {
     setShowErrors(true);
@@ -5192,16 +5187,15 @@ function LeadFormPlacementStep({
       </button>
 
       <div className="space-y-1">
-        <h3 className="text-sm font-semibold text-foreground">Lead Form Placement</h3>
-        <p className="text-xs text-muted-foreground">How would you like visitors to access this lead form?</p>
+        <h3 className="text-sm font-semibold text-foreground">Place your lead form</h3>
+        <p className="text-xs text-muted-foreground">Decide whether the form appears directly on the page or opens from a button.</p>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs font-medium text-foreground">How do you want to use this lead form?</Label>
         <div className="grid grid-cols-1 gap-2">
           {[
-            { id: "embed" as const, label: "Embed the form directly on the page" },
-            { id: "cta" as const, label: "Link the form to a CTA button" },
+            { id: "embed" as const, label: "Show the form on the page" },
+            { id: "cta" as const, label: "Show form when a CTA is clicked" },
           ].map((option) => {
             const isActive = displayMode === option.id;
             return (
@@ -5251,8 +5245,8 @@ function LeadFormPlacementStep({
 
       <div className="space-y-2">
         <div className="space-y-0.5">
-          <Label className="text-xs font-medium text-foreground">Header</Label>
-          <p className="text-xs text-muted-foreground">Choose where the lead form should appear on the landing page.</p>
+          <p className="text-xs font-medium text-foreground">Where should the form appear?</p>
+          <p className="text-xs text-muted-foreground">Select the section where the lead form should be displayed.</p>
         </div>
 
         <div className="rounded-2xl border border-border/60 bg-muted/20 p-3 space-y-3">

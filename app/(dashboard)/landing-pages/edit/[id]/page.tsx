@@ -332,6 +332,19 @@ function LeadFormPlacementStep({
   onTargetSectionChange: (value: string) => void;
   onCtaButtonTextChange: (value: string) => void;
 }) {
+  const headerSectionId = sectionOptions[0]?.id || "hero";
+  const footerSectionId = sectionOptions[sectionOptions.length - 1]?.id || headerSectionId;
+  const bodySectionId =
+    sectionOptions[Math.max(0, Math.floor((sectionOptions.length - 1) / 2))]?.id ||
+    headerSectionId;
+
+  const selectedRegion: "header" | "body" | "footer" =
+    targetSectionId === headerSectionId
+      ? "header"
+      : targetSectionId === footerSectionId
+      ? "footer"
+      : "body";
+
   return (
     <div className="h-full min-h-0 flex flex-col animate-fade-in-up space-y-4">
       <div className="space-y-2">
@@ -380,51 +393,43 @@ function LeadFormPlacementStep({
         {validation.placementType && <p className="text-xs text-destructive">{validation.placementType}</p>}
       </div>
 
+      <div className="h-px bg-border/60" />
+
       <div className="space-y-2">
         <div className="space-y-0.5">
-          <Label className="text-xs font-medium text-foreground">Landing Page Section</Label>
-          <p className="text-xs text-muted-foreground">Choose where the lead form should appear on the page.</p>
+          <Label className="text-xs font-medium text-foreground">Placement Region</Label>
+          <p className="text-xs text-muted-foreground">Select where the form should appear.</p>
         </div>
+
         <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-          <div className="grid grid-cols-2 gap-2">
-            {sectionOptions.map((section) => {
-              const isActive = targetSectionId === section.id;
-              const isFullWidth = section.id === sectionOptions[0]?.id || section.id === sectionOptions[sectionOptions.length - 1]?.id;
+          <div className="mx-auto max-w-[220px] overflow-hidden rounded-xl border border-border/70 bg-background">
+            {[
+              { id: "header" as const, label: "Header", sectionId: headerSectionId, heightClass: "h-16" },
+              { id: "body" as const, label: "Body", sectionId: bodySectionId, heightClass: "h-24" },
+              { id: "footer" as const, label: "Footer", sectionId: footerSectionId, heightClass: "h-16" },
+            ].map((region, index) => {
+              const isActive = selectedRegion === region.id;
               return (
                 <button
-                  key={section.id}
+                  key={region.id}
                   type="button"
-                  onClick={() => onTargetSectionChange(section.id)}
+                  onClick={() => onTargetSectionChange(region.sectionId)}
                   className={cn(
-                    "relative rounded-xl border bg-background p-2.5 text-left transition-all duration-200",
-                    "hover:border-orange-400/50 hover:bg-orange-50/40",
-                    isActive ? "border-orange-400 bg-orange-50/70 shadow-sm" : "border-border/60",
-                    isFullWidth ? "col-span-2" : ""
+                    "w-full relative flex items-center justify-center text-sm transition-colors",
+                    region.heightClass,
+                    index > 0 && "border-t border-border/70",
+                    isActive
+                      ? "bg-orange-50 text-orange-700 font-medium"
+                      : "bg-background text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   )}
                 >
-                  {isActive && (
-                    <span className="absolute right-2 top-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-orange-500" />
-                    </span>
-                  )}
-                  <div className="mb-1.5 inline-grid grid-cols-3 gap-1">
-                    {Array.from({ length: 9 }).map((_, idx) => (
-                      <span
-                        key={`${section.id}-${idx}`}
-                        className={cn(
-                          "h-2 w-2 rounded-[2px] border",
-                          isActive ? "border-orange-400/50 bg-orange-200/60" : "border-muted-foreground/30 bg-muted/30"
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <p className={cn("text-xs font-medium", isActive ? "text-orange-700" : "text-muted-foreground")}>
-                    {section.label}
-                  </p>
+                  {isActive && <CheckCircle2 className="absolute right-3 top-3 w-3.5 h-3.5 text-orange-500" />}
+                  <span>{region.label}</span>
                 </button>
               );
             })}
           </div>
+
           {validation.targetSectionId && <p className="text-xs text-destructive mt-2">{validation.targetSectionId}</p>}
         </div>
       </div>
