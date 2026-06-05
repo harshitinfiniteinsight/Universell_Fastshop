@@ -3284,7 +3284,7 @@ function LandingPageDetailsForm({
   const [serviceSearchQuery, setServiceSearchQuery] = useState("");
   const [showServiceDropdown, setShowServiceDropdown] = useState(false);
   const [serviceValidationError, setServiceValidationError] = useState("");
-  const [showCreateServiceModal, setShowCreateServiceModal] = useState(false);
+  const [showCreateServiceInline, setShowCreateServiceInline] = useState(false);
   const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);
   const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
   const [newServiceValidation, setNewServiceValidation] = useState<{
@@ -3305,6 +3305,11 @@ function LandingPageDetailsForm({
   const [newBookingFormValidation, setNewBookingFormValidation] = useState<{ formName?: string; publicName?: string }>({});
   const [bookingFormSaved, setBookingFormSaved] = useState(false);
   const [savedBookingFormName, setSavedBookingFormName] = useState("");
+  const [bookingPlacementMode, setBookingPlacementMode] = useState<"embed" | "cta" | null>(null);
+  const [bookingPlacementSection, setBookingPlacementSection] = useState("");
+  const [bookingPlacementCTA, setBookingPlacementCTA] = useState("");
+  const [bookingPlacementShowErrors, setBookingPlacementShowErrors] = useState(false);
+  const [addBookingFormStep, setAddBookingFormStep] = useState<"basic-info" | "placement">("basic-info");
   const [newService, setNewService] = useState({
     name: "",
     price: "",
@@ -3473,6 +3478,16 @@ function LandingPageDetailsForm({
     setServiceSearchQuery("");
     setShowServiceDropdown(false);
     setServiceValidationError("");
+    setBookingFormOption("none");
+    setSelectedBookingFormId("");
+    setShowBookingFormDropdown(false);
+    setBookingFormSearchQuery("");
+    setBookingFormSaved(false);
+    setBookingPlacementMode(null);
+    setBookingPlacementSection("");
+    setBookingPlacementCTA("");
+    setBookingPlacementShowErrors(false);
+    setAddBookingFormStep("basic-info");
     setFields((prev) => ({
       ...prev,
       serviceName: service.name,
@@ -3508,7 +3523,6 @@ function LandingPageDetailsForm({
       price?: string;
       hours?: string;
       minutes?: string;
-      employeeId?: string;
     } = {};
 
     if (!newService.name.trim()) {
@@ -3523,36 +3537,24 @@ function LandingPageDetailsForm({
     if (!newService.minutes.trim()) {
       validationErrors.minutes = "Service Minutes is required.";
     }
-    if (!newService.employeeId) {
-      validationErrors.employeeId = "Select Employee is required.";
-    }
 
     if (Object.keys(validationErrors).length > 0) {
       setNewServiceValidation(validationErrors);
       return;
     }
 
-    const selectedEmployee = availableEmployees.find((employee) => employee.id === newService.employeeId);
     const duration = `${newService.hours.trim()}h ${newService.minutes.trim()}m`;
 
     const createdService: ServiceOption = {
       id: `svc-${Date.now()}`,
       name: newService.name.trim(),
-      category: selectedEmployee?.role ?? "",
-      description: newService.description.trim(),
-      benefits: newService.benefits.trim(),
-      features: newService.features.trim(),
       pricing: `$${newService.price.trim()}`,
-      testimonials: newService.testimonials.trim(),
-      employeeName: selectedEmployee?.name ?? "",
       duration,
-      showInInventory: newService.showInInventory,
-      imagePreview: newService.imagePreview,
     };
 
     setAvailableServices((prev) => [...prev, createdService]);
     handleServiceSelect(createdService);
-    setShowCreateServiceModal(false);
+    setShowCreateServiceInline(false);
     setNewServiceValidation({});
     setShowEmployeeDropdown(false);
     setEmployeeSearchQuery("");
@@ -3608,10 +3610,26 @@ function LandingPageDetailsForm({
       const attachedBookingForm = (bookingFormOption === "existing" || (bookingFormOption === "add-new" && bookingFormSaved)) && selectedBookingFormId
         ? availableBookingForms.find((bf) => bf.id === selectedBookingFormId)
         : null;
+
+      if (attachedBookingForm) {
+        const missingPlacement =
+          !bookingPlacementMode ||
+          !bookingPlacementSection ||
+          (bookingPlacementMode === "cta" && !bookingPlacementCTA.trim());
+
+        if (missingPlacement) {
+          setBookingPlacementShowErrors(true);
+          return;
+        }
+      }
+
       details["bookingFormId"] = attachedBookingForm?.id ?? "";
       details["bookingFormName"] = attachedBookingForm?.name ?? "";
       details["hasBookingForm"] = attachedBookingForm ? "true" : "false";
       if (attachedBookingForm) {
+        details["bookingFormPlacementMode"] = bookingPlacementMode ?? "";
+        details["bookingFormPlacementSection"] = bookingPlacementSection;
+        details["bookingFormPlacementCTA"] = bookingPlacementMode === "cta" ? bookingPlacementCTA.trim() : "";
         details["ctaStyle"] = "booking";
         details["ctaSuggestions"] = "Book Now · Schedule Your Appointment · Reserve Your Spot · Book a Consultation";
       }
@@ -3895,6 +3913,19 @@ function LandingPageDetailsForm({
 
       case "service-showcase":
         const selectedService = availableServices.find((service) => service.id === selectedServiceId);
+        const hasAttachedBookingForm = bookingFormOption === "existing" && !!selectedBookingFormId;
+        const placementMissingMode = bookingPlacementShowErrors && !bookingPlacementMode;
+        const placementMissingSection = bookingPlacementShowErrors && !bookingPlacementSection;
+        const placementMissingCTA = bookingPlacementShowErrors && bookingPlacementMode === "cta" && !bookingPlacementCTA.trim();
+        const bookingPlacementBlocks = [
+          { id: "header", label: "Header", fullWidth: true },
+          { id: "section_1", label: "Section 1", fullWidth: false },
+          { id: "section_2", label: "Section 2", fullWidth: false },
+          { id: "section_3", label: "Section 3", fullWidth: false },
+          { id: "section_4", label: "Section 4", fullWidth: false },
+          { id: "section_5", label: "Section 5", fullWidth: true },
+          { id: "footer", label: "Footer", fullWidth: true },
+        ];
         const filteredServices = availableServices.filter((service) => {
           const query = serviceSearchQuery.trim().toLowerCase();
           if (!query) return true;
@@ -3906,127 +3937,247 @@ function LandingPageDetailsForm({
 
         return (
           <div className={sectionClass}>
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-foreground">Select Service</h3>
-              <p className="text-xs text-muted-foreground">
-                Choose an existing service to showcase on this landing page or create a new one.
-              </p>
-            </div>
+            {showCreateServiceInline ? (
+              <div className="rounded-lg border border-border/60 bg-muted/10 p-3 space-y-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateServiceInline(false);
+                    setShowEmployeeDropdown(false);
+                    setEmployeeSearchQuery("");
+                    setNewServiceValidation({});
+                    setShowServiceDropdown(false);
+                  }}
+                  className="text-xs text-primary hover:underline"
+                >
+                  ← Back to Select Service
+                </button>
 
-            <div className="space-y-2">
-              <label className={labelClass}>Service</label>
-              <p className="text-[11px] text-muted-foreground">
-                Demo existing services: {availableServices.slice(0, 4).map((service) => service.name).join(" • ")}
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start">
-                <div className="relative" ref={serviceDropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => setShowServiceDropdown((prev) => !prev)}
-                    className="w-full h-10 rounded-lg border border-border/60 bg-background px-3 text-sm flex items-center justify-between hover:border-primary/40 transition-colors"
-                  >
-                    <span className={cn(selectedService ? "text-foreground" : "text-muted-foreground")}>
-                      {selectedService ? selectedService.name : "Select a service"}
-                    </span>
-                    {showServiceDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                  </button>
+                <div className="space-y-0.5">
+                  <h4 className="text-sm font-semibold text-foreground">Create Service</h4>
+                  <p className="text-xs text-muted-foreground">Add a new service and we&apos;ll attach it to this Service Showcase landing page.</p>
+                </div>
 
-                  {showServiceDropdown && (
-                    <div className="mt-1 w-full rounded-lg border border-border/60 bg-popover p-2 shadow-md">
-                      <Input
-                        className="h-8 text-xs"
-                        placeholder="Search services"
-                        value={serviceSearchQuery}
-                        onChange={(e) => setServiceSearchQuery(e.target.value)}
-                      />
-                      <div className="mt-2 max-h-48 overflow-y-auto space-y-1">
-                        {filteredServices.map((service) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">Service Name *</Label>
+                    <Input
+                      value={newService.name}
+                      onChange={(e) => {
+                        setNewService((prev) => ({ ...prev, name: e.target.value }));
+                        if (newServiceValidation.name) {
+                          setNewServiceValidation((prev) => ({ ...prev, name: undefined }));
+                        }
+                      }}
+                      placeholder="Service Name"
+                    />
+                    {newServiceValidation.name && <p className="text-xs text-destructive">{newServiceValidation.name}</p>}
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">Service Price *</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newService.price}
+                      onChange={(e) => {
+                        setNewService((prev) => ({ ...prev, price: e.target.value }));
+                        if (newServiceValidation.price) {
+                          setNewServiceValidation((prev) => ({ ...prev, price: undefined }));
+                        }
+                      }}
+                      placeholder="Price"
+                    />
+                    {newServiceValidation.price && <p className="text-xs text-destructive">{newServiceValidation.price}</p>}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">Service Hours *</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={newService.hours}
+                      onChange={(e) => {
+                        setNewService((prev) => ({ ...prev, hours: e.target.value }));
+                        if (newServiceValidation.hours) {
+                          setNewServiceValidation((prev) => ({ ...prev, hours: undefined }));
+                        }
+                      }}
+                      placeholder="Enter Service Hours"
+                    />
+                    {newServiceValidation.hours && <p className="text-xs text-destructive">{newServiceValidation.hours}</p>}
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">Service Minutes *</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={newService.minutes}
+                      onChange={(e) => {
+                        setNewService((prev) => ({ ...prev, minutes: e.target.value }));
+                        if (newServiceValidation.minutes) {
+                          setNewServiceValidation((prev) => ({ ...prev, minutes: undefined }));
+                        }
+                      }}
+                      placeholder="Enter Service Minutes"
+                    />
+                    {newServiceValidation.minutes && <p className="text-xs text-destructive">{newServiceValidation.minutes}</p>}
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button type="button" onClick={handleCreateService}>
+                    Save Service
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {!selectedServiceId && (
+                  <>
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold text-foreground">Select Service</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Choose an existing service to showcase on this landing page or create a new one.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className={labelClass}>Service</label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Demo existing services: {availableServices.slice(0, 4).map((service) => service.name).join(" • ")}
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start">
+                        <div className="relative" ref={serviceDropdownRef}>
                           <button
-                            key={service.id}
                             type="button"
-                            onClick={() => handleServiceSelect(service)}
-                            className={cn(
-                              "w-full text-left rounded-md border px-2.5 py-2 transition-colors",
-                              selectedServiceId === service.id
-                                ? "border-primary/40 bg-primary/10"
-                                : "border-border/40 hover:border-primary/30 hover:bg-muted/40"
-                            )}
+                            onClick={() => setShowServiceDropdown((prev) => !prev)}
+                            className="w-full h-10 rounded-lg border border-border/60 bg-background px-3 text-sm flex items-center justify-between hover:border-primary/40 transition-colors"
                           >
-                            <p className="text-xs font-medium text-foreground">{service.name}</p>
-                            {service.category && (
-                              <p className="text-[11px] text-muted-foreground mt-0.5">{service.category}</p>
-                            )}
+                            <span className={cn(selectedService ? "text-foreground" : "text-muted-foreground")}>
+                              {selectedService ? selectedService.name : "Select a service"}
+                            </span>
+                            {showServiceDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                           </button>
-                        ))}
 
-                        {filteredServices.length === 0 && (
-                          <p className="text-xs text-muted-foreground px-1 py-2">No services found.</p>
-                        )}
+                          {showServiceDropdown && (
+                            <div className="mt-1 w-full rounded-lg border border-border/60 bg-popover p-2 shadow-md">
+                              <Input
+                                className="h-8 text-xs"
+                                placeholder="Search services"
+                                value={serviceSearchQuery}
+                                onChange={(e) => setServiceSearchQuery(e.target.value)}
+                              />
+                              <div className="mt-2 max-h-48 overflow-y-auto space-y-1">
+                                {filteredServices.map((service) => (
+                                  <button
+                                    key={service.id}
+                                    type="button"
+                                    onClick={() => handleServiceSelect(service)}
+                                    className={cn(
+                                      "w-full text-left rounded-md border px-2.5 py-2 transition-colors",
+                                      selectedServiceId === service.id
+                                        ? "border-primary/40 bg-primary/10"
+                                        : "border-border/40 hover:border-primary/30 hover:bg-muted/40"
+                                    )}
+                                  >
+                                    <p className="text-xs font-medium text-foreground">{service.name}</p>
+                                    {service.category && (
+                                      <p className="text-[11px] text-muted-foreground mt-0.5">{service.category}</p>
+                                    )}
+                                  </button>
+                                ))}
+
+                                {filteredServices.length === 0 && (
+                                  <p className="text-xs text-muted-foreground px-1 py-2">No services found.</p>
+                                )}
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowServiceDropdown(false);
+                                  setShowCreateServiceInline(true);
+                                }}
+                                className="mt-2 w-full rounded-md border border-dashed border-primary/40 bg-primary/5 px-2.5 py-2 text-xs font-medium text-primary hover:bg-primary/10 transition-colors text-left"
+                              >
+                                + Add New Service
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-10 px-4 text-xs whitespace-nowrap"
+                          onClick={() => {
+                            setShowServiceDropdown(false);
+                            setShowCreateServiceInline(true);
+                          }}
+                        >
+                          + Add New Service
+                        </Button>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowServiceDropdown(false);
-                          setShowCreateServiceModal(true);
-                        }}
-                        className="mt-2 w-full rounded-md border border-dashed border-primary/40 bg-primary/5 px-2.5 py-2 text-xs font-medium text-primary hover:bg-primary/10 transition-colors text-left"
-                      >
-                        + Add New Service
-                      </button>
+                      {serviceValidationError && (
+                        <p className="text-xs text-destructive">{serviceValidationError}</p>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </>
+                )}
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 px-4 text-xs whitespace-nowrap"
-                  onClick={() => {
-                    setShowServiceDropdown(false);
-                    setShowCreateServiceModal(true);
-                  }}
-                >
-                  + Add New Service
-                </Button>
+                {selectedService && (
+                  <div className="space-y-2.5">
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                      <p className="text-xs text-foreground">
+                        Perfect — I&apos;ll use <span className="font-semibold">{selectedService.name}</span> for this landing page. ✨
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
+                      <p className="text-xs font-medium text-foreground">{selectedService.name}</p>
+                      {selectedService.description && (
+                        <p className="text-xs text-muted-foreground">{selectedService.description}</p>
+                      )}
+                      {(selectedService.pricing || selectedService.category) && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedService.category && (
+                            <span className="inline-flex items-center rounded-full border border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground">
+                              {selectedService.category}
+                            </span>
+                          )}
+                          {selectedService.pricing && (
+                            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-foreground">
+                              {selectedService.pricing}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {selectedServiceId && !showCreateServiceInline && (
+            /* Booking Form Section — Progressive Disclosure */
+            <div className="space-y-3 pt-1">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                <p className="text-xs text-foreground">
+                  Would you like to add a booking form so visitors can book this service directly from your landing page?
+                </p>
               </div>
 
-              {serviceValidationError && (
-                <p className="text-xs text-destructive">{serviceValidationError}</p>
-              )}
-
-              {selectedService && (
-                <div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
-                  <p className="text-xs font-medium text-foreground">{selectedService.name}</p>
-                  {selectedService.description && (
-                    <p className="text-xs text-muted-foreground">{selectedService.description}</p>
-                  )}
-                  {(selectedService.pricing || selectedService.category) && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedService.category && (
-                        <span className="inline-flex items-center rounded-full border border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground">
-                          {selectedService.category}
-                        </span>
-                      )}
-                      {selectedService.pricing && (
-                        <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-foreground">
-                          {selectedService.pricing}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Booking Form Section — Progressive Disclosure */}
-            <div className="space-y-3 pt-1">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <h3 className="text-sm font-semibold text-foreground">Booking Form</h3>
-                  {bookingFormOption === "none" && !bookingFormOption && (
-                    <p className="text-xs text-muted-foreground">How would you like visitors to book this service?</p>
-                  )}
+                  <p className="text-xs text-muted-foreground">Choose how you want to handle service bookings.</p>
                 </div>
                 {bookingFormOption !== "none" && (
                   <button
@@ -4037,6 +4188,11 @@ function LandingPageDetailsForm({
                       setShowBookingFormDropdown(false);
                       setBookingFormSearchQuery("");
                       setBookingFormSaved(false);
+                      setBookingPlacementMode(null);
+                      setBookingPlacementSection("");
+                      setBookingPlacementCTA("");
+                      setBookingPlacementShowErrors(false);
+                      setAddBookingFormStep("basic-info");
                     }}
                     className="text-[11px] text-primary hover:underline flex items-center gap-1"
                   >
@@ -4048,7 +4204,6 @@ function LandingPageDetailsForm({
               {/* Step 1: choose option */}
               {bookingFormOption === "none" && (
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">How would you like visitors to book this service?</p>
                   <div className="space-y-2 pt-1">
                     {([
                       { value: "none-confirmed", label: "No Booking Form" },
@@ -4063,6 +4218,11 @@ function LandingPageDetailsForm({
                           setSelectedBookingFormId("");
                           setShowBookingFormDropdown(value === "existing");
                           setBookingFormSearchQuery("");
+                          setBookingPlacementMode(null);
+                          setBookingPlacementSection("");
+                          setBookingPlacementCTA("");
+                          setBookingPlacementShowErrors(false);
+                          if (value === "add-new") setAddBookingFormStep("basic-info");
                         }}
                         className="w-full flex items-center gap-3 rounded-lg border border-border/60 bg-background px-3 py-2.5 text-left hover:border-primary/40 hover:bg-muted/30 transition-colors"
                       >
@@ -4081,14 +4241,18 @@ function LandingPageDetailsForm({
                     <span className="text-sm text-green-600">✓</span>
                     <span className="text-xs font-medium text-foreground">No Booking Form</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Visitors will not be able to book this service directly from the landing page.</p>
+                  <div className="inline-flex items-start gap-1.5 rounded-md border border-border/60 bg-background px-2 py-1.5">
+                    <Info className="h-3.5 w-3.5 text-muted-foreground mt-[1px] shrink-0" />
+                    <p className="text-[11px] text-muted-foreground">Visitors will not be able to book this service directly from the landing page, but you can link a booking form at any time later.</p>
+                  </div>
                 </div>
               )}
 
               {/* Step 2b: Use Existing Booking Form */}
               {bookingFormOption === "existing" && (() => {
                 const selectedBookingForm = availableBookingForms.find((bf) => bf.id === selectedBookingFormId);
-                const filteredBookingForms = availableBookingForms.filter((bf) => {
+                const bookingFormSource = availableBookingForms.length > 0 ? availableBookingForms : DEFAULT_BOOKING_FORMS;
+                const filteredBookingForms = bookingFormSource.filter((bf) => {
                   const q = bookingFormSearchQuery.trim().toLowerCase();
                   if (!q) return true;
                   return bf.name.toLowerCase().includes(q) || (bf.assignedEmployee ?? "").toLowerCase().includes(q);
@@ -4096,6 +4260,9 @@ function LandingPageDetailsForm({
                 return (
                   <div className="space-y-3">
                     <p className="text-xs text-muted-foreground">Select an existing booking form to attach to this landing page.</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Demo booking forms: {bookingFormSource.slice(0, 4).map((bf) => bf.name).join(" • ")}
+                    </p>
                     <div className="relative" ref={bookingFormDropdownRef}>
                       <button
                         type="button"
@@ -4124,6 +4291,7 @@ function LandingPageDetailsForm({
                                   setSelectedBookingFormId(bf.id);
                                   setShowBookingFormDropdown(false);
                                   setBookingFormSearchQuery("");
+                                  setBookingPlacementShowErrors(false);
                                 }}
                                 className={cn(
                                   "w-full text-left rounded-md border px-2.5 py-2 transition-colors",
@@ -4164,35 +4332,45 @@ function LandingPageDetailsForm({
                 );
               })()}
 
-              {/* Step 2c: Add Booking Form — inline */}
-              {bookingFormOption === "add-new" && (
-                <div className="space-y-4">
-                  {bookingFormSaved ? (
-                    <div className="space-y-2">
-                      <div className="rounded-lg border border-green-500/30 bg-green-50 dark:bg-green-500/10 p-3 flex items-center gap-2">
-                        <span className="text-green-600 text-sm">✓</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-green-700 dark:text-green-400">Booking Form Added</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">Booking Form: {savedBookingFormName}</p>
+              {bookingFormOption === "add-new" && !bookingFormSaved && (
+                <div className="space-y-4 rounded-2xl border border-border/60 bg-background p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div className={cn(
+                          "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors",
+                          "bg-primary text-primary-foreground"
+                        )}>
+                          {addBookingFormStep === "placement" ? <Check className="w-3.5 h-3.5" /> : "1"}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setBookingFormSaved(false)}
-                          className="text-[11px] text-primary hover:underline shrink-0"
-                        >Edit</button>
+                        <span className={cn("text-xs transition-colors", addBookingFormStep === "basic-info" ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                          Basic Information
+                        </span>
                       </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        You can edit this booking form later from{" "}
-                        <button type="button" className="underline hover:text-foreground transition-colors">Manage Booking Forms</button>.
-                      </p>
+                      <div className="flex-1 h-px bg-border/60" />
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div className={cn(
+                          "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors",
+                          addBookingFormStep === "placement"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground border border-border/60"
+                        )}>
+                          2
+                        </div>
+                        <span className={cn("text-xs transition-colors", addBookingFormStep === "placement" ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                          Form Placement
+                        </span>
+                      </div>
                     </div>
-                  ) : (
-                    <>
+                  </div>
+
+                  {addBookingFormStep === "basic-info" ? (
+                    <div className="space-y-4">
                       <p className="text-xs text-muted-foreground">This booking form will automatically be linked to the selected service and created as a store-level booking form.</p>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-3">
                         <div className="space-y-1">
-                          <Label className="text-xs font-medium">Form Name *</Label>
+                          <Label className="text-xs font-medium">Form Name <span className="text-destructive">*</span></Label>
                           <Input
                             placeholder="e.g. Website Design Booking"
                             value={newBookingForm.formName}
@@ -4204,7 +4382,7 @@ function LandingPageDetailsForm({
                           {newBookingFormValidation.formName && <p className="text-xs text-destructive">{newBookingFormValidation.formName}</p>}
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs font-medium">Public Name *</Label>
+                          <Label className="text-xs font-medium">Public Name <span className="text-destructive">*</span></Label>
                           <Input
                             placeholder="e.g. Book a Website Design Session"
                             value={newBookingForm.publicName}
@@ -4218,7 +4396,10 @@ function LandingPageDetailsForm({
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium">Public Description <span className="text-muted-foreground font-normal">(Optional)</span></Label>
+                        <Label className="text-xs font-medium">
+                          Public Description{" "}
+                          <span className="text-muted-foreground font-normal">(Optional)</span>
+                        </Label>
                         <Textarea
                           className="resize-none text-sm"
                           rows={2}
@@ -4236,12 +4417,20 @@ function LandingPageDetailsForm({
                         ]).map(({ val, label }) => (
                           <label key={val} className="flex items-center gap-2 cursor-pointer group">
                             <div
-                              className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors", newBookingForm.paymentPreference === val ? "border-primary bg-primary" : "border-border/60 group-hover:border-primary/50")}
+                              className={cn(
+                                "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                                newBookingForm.paymentPreference === val ? "border-primary bg-primary" : "border-border/60 group-hover:border-primary/50"
+                              )}
                               onClick={() => setNewBookingForm((prev) => ({ ...prev, paymentPreference: val }))}
                             >
                               {newBookingForm.paymentPreference === val && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                             </div>
-                            <span className="text-xs text-foreground select-none" onClick={() => setNewBookingForm((prev) => ({ ...prev, paymentPreference: val }))}>{label}</span>
+                            <span
+                              className="text-xs text-foreground select-none"
+                              onClick={() => setNewBookingForm((prev) => ({ ...prev, paymentPreference: val }))}
+                            >
+                              {label}
+                            </span>
                           </label>
                         ))}
                       </div>
@@ -4254,76 +4443,351 @@ function LandingPageDetailsForm({
                         ]).map(({ val, label }) => (
                           <label key={val} className="flex items-center gap-2 cursor-pointer group">
                             <div
-                              className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors", newBookingForm.approvalType === val ? "border-primary bg-primary" : "border-border/60 group-hover:border-primary/50")}
+                              className={cn(
+                                "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                                newBookingForm.approvalType === val ? "border-primary bg-primary" : "border-border/60 group-hover:border-primary/50"
+                              )}
                               onClick={() => setNewBookingForm((prev) => ({ ...prev, approvalType: val }))}
                             >
                               {newBookingForm.approvalType === val && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                             </div>
-                            <span className="text-xs text-foreground select-none" onClick={() => setNewBookingForm((prev) => ({ ...prev, approvalType: val }))}>{label}</span>
+                            <span
+                              className="text-xs text-foreground select-none"
+                              onClick={() => setNewBookingForm((prev) => ({ ...prev, approvalType: val }))}
+                            >
+                              {label}
+                            </span>
                           </label>
                         ))}
                       </div>
 
                       {selectedServiceId && (
-                        <div className="rounded-lg border border-border/40 bg-muted/30 px-3 py-2 flex items-center gap-2">
-                          <span className="text-[11px] text-muted-foreground">Auto-linked to:</span>
-                          <span className="text-[11px] font-medium text-foreground">{availableServices.find((s) => s.id === selectedServiceId)?.name ?? ""}</span>
+                        <div className="rounded-lg border border-border/40 bg-muted/30 px-3 py-2.5">
+                          <p className="text-[11px] text-muted-foreground mb-0.5">Linked Service (Auto-linked)</p>
+                          <p className="text-xs font-medium text-foreground">
+                            {availableServices.find((s) => s.id === selectedServiceId)?.name ?? ""}
+                          </p>
                         </div>
                       )}
 
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => {
-                          const errs: { formName?: string; publicName?: string } = {};
-                          if (!newBookingForm.formName.trim()) errs.formName = "Form Name is required.";
-                          if (!newBookingForm.publicName.trim()) errs.publicName = "Public Name is required.";
-                          if (Object.keys(errs).length > 0) { setNewBookingFormValidation(errs); return; }
-                          const createdBf: BookingFormOption = {
-                            id: `bf-${Date.now()}`,
-                            name: newBookingForm.formName.trim(),
-                            description: newBookingForm.publicDescription.trim(),
-                            assignedEmployee: availableServices.find((s) => s.id === selectedServiceId)?.employeeName ?? availableEmployees[0]?.name ?? "",
-                          };
-                          setAvailableBookingForms((prev) => [...prev, createdBf]);
-                          setSelectedBookingFormId(createdBf.id);
-                          setSavedBookingFormName(createdBf.name);
-                          setBookingFormSaved(true);
-                          setNewBookingFormValidation({});
-                        }}
-                      >
-                        Save Booking Form
-                      </Button>
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            const errs: { formName?: string; publicName?: string } = {};
+                            if (!newBookingForm.formName.trim()) errs.formName = "Form Name is required.";
+                            if (!newBookingForm.publicName.trim()) errs.publicName = "Public Name is required.";
+                            if (Object.keys(errs).length > 0) { setNewBookingFormValidation(errs); return; }
+                            setNewBookingFormValidation({});
+                            setBookingPlacementShowErrors(false);
+                            setAddBookingFormStep("placement");
+                          }}
+                        >
+                          Continue to Placement →
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-foreground">How do you want to use this booking form?</Label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {[
+                            { id: "embed" as const, label: "Embed the form directly on the page" },
+                            { id: "cta" as const, label: "Link the form to a CTA button" },
+                          ].map((option) => {
+                            const isActive = bookingPlacementMode === option.id;
+                            return (
+                              <div
+                                key={option.id}
+                                className={cn(
+                                  "rounded-xl border px-3 py-2.5 transition-colors",
+                                  isActive ? "border-primary bg-primary/5" : "border-border/60 bg-background hover:border-primary/40"
+                                )}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setBookingPlacementMode(option.id);
+                                    setBookingPlacementShowErrors(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 text-left text-sm"
+                                >
+                                  <span
+                                    className={cn(
+                                      "h-4 w-4 rounded-full border flex items-center justify-center",
+                                      isActive ? "border-primary" : "border-muted-foreground/40"
+                                    )}
+                                  >
+                                    {isActive && <span className="h-2 w-2 rounded-full bg-primary" />}
+                                  </span>
+                                  <span className={cn(isActive ? "text-foreground" : "text-muted-foreground")}>{option.label}</span>
+                                </button>
 
-                      <p className="text-[11px] text-muted-foreground">
-                        You can edit this booking form later from{" "}
-                        <button type="button" className="underline hover:text-foreground transition-colors">Manage Booking Forms</button>.
-                      </p>
-                    </>
+                                {option.id === "cta" && isActive && (
+                                  <div className="mt-3 border-t border-border/40 pt-3 space-y-1.5">
+                                    <Label className="text-xs font-medium text-foreground">CTA Button Title</Label>
+                                    <Input
+                                      className="h-10 rounded-xl"
+                                      value={bookingPlacementCTA}
+                                      onChange={(e) => setBookingPlacementCTA(e.target.value)}
+                                      placeholder="Enter CTA button text"
+                                    />
+                                    {placementMissingCTA && <p className="text-xs text-destructive">CTA Button Title is required.</p>}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {placementMissingMode && <p className="text-xs text-destructive">Please select how to use this booking form.</p>}
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="space-y-0.5">
+                          <Label className="text-xs font-medium text-foreground">Section</Label>
+                          <p className="text-xs text-muted-foreground">Choose where the booking form should appear on the landing page.</p>
+                        </div>
+
+                        <div className="rounded-2xl border border-border/60 bg-muted/20 p-3 space-y-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            {bookingPlacementBlocks.map((block) => {
+                              const isActive = bookingPlacementSection === block.id;
+                              return (
+                                <button
+                                  key={`new-${block.id}`}
+                                  type="button"
+                                  onClick={() => {
+                                    setBookingPlacementSection(block.id);
+                                    setBookingPlacementShowErrors(false);
+                                  }}
+                                  className={cn(
+                                    "relative rounded-xl border bg-background p-3 text-left transition-all duration-200",
+                                    "hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm",
+                                    isActive
+                                      ? "border-primary bg-primary/10 shadow-sm"
+                                      : "border-border/60",
+                                    block.fullWidth ? "col-span-2" : ""
+                                  )}
+                                >
+                                  {isActive && (
+                                    <span className="absolute right-2 top-2">
+                                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                                    </span>
+                                  )}
+                                  <div className="mb-2 inline-grid grid-cols-3 gap-1">
+                                    {Array.from({ length: 9 }).map((_, idx) => (
+                                      <span
+                                        key={`new-${block.id}-${idx}`}
+                                        className={cn(
+                                          "h-2.5 w-2.5 rounded-[2px] border",
+                                          isActive ? "border-primary/50 bg-primary/20" : "border-muted-foreground/30 bg-muted/30"
+                                        )}
+                                      />
+                                    ))}
+                                  </div>
+                                  <p className={cn("text-sm font-medium", isActive ? "text-foreground" : "text-muted-foreground")}>
+                                    {block.label}
+                                  </p>
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {placementMissingSection && <p className="text-xs text-destructive">Please select a placement location.</p>}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setAddBookingFormStep("basic-info")}
+                        >
+                          ← Back
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            if (!bookingPlacementMode || !bookingPlacementSection || (bookingPlacementMode === "cta" && !bookingPlacementCTA.trim())) {
+                              setBookingPlacementShowErrors(true);
+                              return;
+                            }
+                            const createdBf: BookingFormOption = {
+                              id: `bf-${Date.now()}`,
+                              name: newBookingForm.formName.trim(),
+                              description: newBookingForm.publicDescription.trim(),
+                              assignedEmployee:
+                                availableServices.find((s) => s.id === selectedServiceId)?.employeeName ??
+                                availableEmployees[0]?.name ?? "",
+                            };
+                            setAvailableBookingForms((prev) => [...prev, createdBf]);
+                            setSelectedBookingFormId(createdBf.id);
+                            setSavedBookingFormName(createdBf.name);
+                            setBookingFormSaved(true);
+                            setNewBookingFormValidation({});
+                            setBookingPlacementShowErrors(false);
+                          }}
+                        >
+                          Save Booking Form
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
-            </div>
 
-            {/* Selection Summary */}
-            {selectedServiceId && (
-              <div className="rounded-lg border border-border/60 bg-background p-3 space-y-1.5">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Summary</p>
-                <div className="flex items-start gap-2">
-                  <span className="text-[11px] text-muted-foreground w-24 shrink-0">Selected Service:</span>
-                  <span className="text-xs font-medium text-foreground">{availableServices.find((s) => s.id === selectedServiceId)?.name ?? ""}</span>
+              {/* Step 2c: Add Booking Form — saved confirmation */}
+              {bookingFormOption === "add-new" && bookingFormSaved && (
+                <div className="space-y-2">
+                  <div className="rounded-lg border border-green-500/30 bg-green-50 dark:bg-green-500/10 p-3 flex items-center gap-2">
+                    <span className="text-green-600 text-sm">✓</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-green-700 dark:text-green-400">Booking Form Added</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{savedBookingFormName}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBookingFormSaved(false);
+                        setAddBookingFormStep("basic-info");
+                      }}
+                      className="text-[11px] text-primary hover:underline shrink-0"
+                    >Edit</button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    You can edit this booking form later from{" "}
+                    <button type="button" className="underline hover:text-foreground transition-colors">Manage Booking Forms</button>.
+                  </p>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[11px] text-muted-foreground w-24 shrink-0">Booking Form:</span>
-                  <span className="text-xs font-medium text-foreground">
-                    {(bookingFormOption === "existing" || (bookingFormOption === "add-new" && bookingFormSaved)) && selectedBookingFormId
-                      ? availableBookingForms.find((bf) => bf.id === selectedBookingFormId)?.name ?? "None"
-                      : "None"}
-                  </span>
+              )}
+
+              {hasAttachedBookingForm && (
+                <div className="space-y-3 rounded-2xl border border-border/60 bg-background p-4">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-semibold text-foreground">Booking Form Placement</h3>
+                    <p className="text-xs text-muted-foreground">How would you like visitors to access this booking form?</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-foreground">How do you want to use this booking form?</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      {[
+                        { id: "embed" as const, label: "Embed the form directly on the page" },
+                        { id: "cta" as const, label: "Link the form to a CTA button" },
+                      ].map((option) => {
+                        const isActive = bookingPlacementMode === option.id;
+                        return (
+                          <div
+                            key={option.id}
+                            className={cn(
+                              "rounded-xl border px-3 py-2.5 transition-colors",
+                              isActive
+                                ? "border-primary bg-primary/5"
+                                : "border-border/60 bg-background hover:border-primary/40"
+                            )}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setBookingPlacementMode(option.id);
+                                setBookingPlacementShowErrors(false);
+                              }}
+                              className="w-full flex items-center gap-2 text-left text-sm"
+                            >
+                              <span
+                                className={cn(
+                                  "h-4 w-4 rounded-full border flex items-center justify-center",
+                                  isActive ? "border-primary" : "border-muted-foreground/40"
+                                )}
+                              >
+                                {isActive && <span className="h-2 w-2 rounded-full bg-primary" />}
+                              </span>
+                              <span className={cn(isActive ? "text-foreground" : "text-muted-foreground")}>{option.label}</span>
+                            </button>
+
+                            {option.id === "cta" && isActive && (
+                              <div className="mt-3 border-t border-border/40 pt-3 space-y-1.5">
+                                <Label className="text-xs font-medium text-foreground">CTA Button Title</Label>
+                                <Input
+                                  className="h-10 rounded-xl"
+                                  value={bookingPlacementCTA}
+                                  onChange={(e) => setBookingPlacementCTA(e.target.value)}
+                                  placeholder="Enter CTA button text"
+                                />
+                                {placementMissingCTA && <p className="text-xs text-destructive">CTA Button Title is required.</p>}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {placementMissingMode && <p className="text-xs text-destructive">Please select how to use this booking form.</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="space-y-0.5">
+                      <Label className="text-xs font-medium text-foreground">Header</Label>
+                      <p className="text-xs text-muted-foreground">Choose where the booking form should appear on the landing page.</p>
+                    </div>
+
+                    <div className="rounded-2xl border border-border/60 bg-muted/20 p-3 space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        {bookingPlacementBlocks.map((block) => {
+                          const isActive = bookingPlacementSection === block.id;
+                          return (
+                            <button
+                              key={block.id}
+                              type="button"
+                              onClick={() => {
+                                setBookingPlacementSection(block.id);
+                                setBookingPlacementShowErrors(false);
+                              }}
+                              className={cn(
+                                "relative rounded-xl border bg-background p-3 text-left transition-all duration-200",
+                                "hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm",
+                                isActive
+                                  ? "border-primary bg-primary/10 shadow-sm"
+                                  : "border-border/60",
+                                block.fullWidth ? "col-span-2" : ""
+                              )}
+                            >
+                              {isActive && (
+                                <span className="absolute right-2 top-2">
+                                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                                </span>
+                              )}
+                              <div className="mb-2 inline-grid grid-cols-3 gap-1">
+                                {Array.from({ length: 9 }).map((_, idx) => (
+                                  <span
+                                    key={`${block.id}-${idx}`}
+                                    className={cn(
+                                      "h-2.5 w-2.5 rounded-[2px] border",
+                                      isActive ? "border-primary/50 bg-primary/20" : "border-muted-foreground/30 bg-muted/30"
+                                    )}
+                                  />
+                                ))}
+                              </div>
+                              <p className={cn("text-sm font-medium", isActive ? "text-foreground" : "text-muted-foreground")}>
+                                {block.label}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {placementMissingSection && <p className="text-xs text-destructive">Please select a placement location.</p>}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+            </div>
             )}
+
+
           </div>
         );
 
@@ -4481,251 +4945,6 @@ function LandingPageDetailsForm({
         </Button>
       </div>
 
-      <Dialog
-        open={showCreateServiceModal}
-        onOpenChange={(open) => {
-          setShowCreateServiceModal(open);
-          if (!open) {
-            setShowEmployeeDropdown(false);
-            setEmployeeSearchQuery("");
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create Service</DialogTitle>
-            <DialogDescription>
-              Add a new service and we&apos;ll attach it to this Service Showcase landing page.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Service Name *</Label>
-                <Input
-                  value={newService.name}
-                  onChange={(e) => {
-                    setNewService((prev) => ({ ...prev, name: e.target.value }));
-                    if (newServiceValidation.name) {
-                      setNewServiceValidation((prev) => ({ ...prev, name: undefined }));
-                    }
-                  }}
-                  placeholder="Service Name"
-                />
-                {newServiceValidation.name && <p className="text-xs text-destructive">{newServiceValidation.name}</p>}
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Service Price *</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={newService.price}
-                  onChange={(e) => {
-                    setNewService((prev) => ({ ...prev, price: e.target.value }));
-                    if (newServiceValidation.price) {
-                      setNewServiceValidation((prev) => ({ ...prev, price: undefined }));
-                    }
-                  }}
-                  placeholder="Price"
-                />
-                {newServiceValidation.price && <p className="text-xs text-destructive">{newServiceValidation.price}</p>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Service Hours *</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={newService.hours}
-                  onChange={(e) => {
-                    setNewService((prev) => ({ ...prev, hours: e.target.value }));
-                    if (newServiceValidation.hours) {
-                      setNewServiceValidation((prev) => ({ ...prev, hours: undefined }));
-                    }
-                  }}
-                  placeholder="Enter Service Hours"
-                />
-                {newServiceValidation.hours && <p className="text-xs text-destructive">{newServiceValidation.hours}</p>}
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Service Minutes *</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="59"
-                  value={newService.minutes}
-                  onChange={(e) => {
-                    setNewService((prev) => ({ ...prev, minutes: e.target.value }));
-                    if (newServiceValidation.minutes) {
-                      setNewServiceValidation((prev) => ({ ...prev, minutes: undefined }));
-                    }
-                  }}
-                  placeholder="Enter Service Minutes"
-                />
-                {newServiceValidation.minutes && <p className="text-xs text-destructive">{newServiceValidation.minutes}</p>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1" ref={employeeDropdownRef}>
-                <Label className="text-xs font-medium">Select Employee *</Label>
-                <button
-                  type="button"
-                  onClick={() => setShowEmployeeDropdown((prev) => !prev)}
-                  className="w-full h-10 rounded-lg border border-border/60 bg-background px-3 text-sm flex items-center justify-between hover:border-primary/40 transition-colors"
-                >
-                  <span className={cn(newService.employeeId ? "text-foreground" : "text-muted-foreground")}>
-                    {newService.employeeId
-                      ? availableEmployees.find((employee) => employee.id === newService.employeeId)?.name
-                      : "Select Employee"}
-                  </span>
-                  {showEmployeeDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                </button>
-
-                {showEmployeeDropdown && (
-                  <div className="mt-1 rounded-lg border border-border/60 bg-popover p-2 shadow-md">
-                    <Input
-                      className="h-8 text-xs"
-                      placeholder="Search employee"
-                      value={employeeSearchQuery}
-                      onChange={(e) => setEmployeeSearchQuery(e.target.value)}
-                    />
-                    <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
-                      {availableEmployees
-                        .filter((employee) => {
-                          const query = employeeSearchQuery.trim().toLowerCase();
-                          if (!query) return true;
-                          return (
-                            employee.name.toLowerCase().includes(query) ||
-                            (employee.role ?? "").toLowerCase().includes(query)
-                          );
-                        })
-                        .map((employee) => (
-                          <button
-                            key={employee.id}
-                            type="button"
-                            onClick={() => handleEmployeeSelect(employee.id)}
-                            className={cn(
-                              "w-full text-left rounded-md border px-2.5 py-2 transition-colors",
-                              newService.employeeId === employee.id
-                                ? "border-primary/40 bg-primary/10"
-                                : "border-border/40 hover:border-primary/30 hover:bg-muted/40"
-                            )}
-                          >
-                            <p className="text-xs font-medium text-foreground">{employee.name}</p>
-                            {employee.role && <p className="text-[11px] text-muted-foreground">{employee.role}</p>}
-                          </button>
-                        ))}
-                    </div>
-                  </div>
-                )}
-                {newServiceValidation.employeeId && <p className="text-xs text-destructive">{newServiceValidation.employeeId}</p>}
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Show In Inventory</Label>
-                <div className="h-10 rounded-lg border border-border/60 bg-background px-3 flex items-center gap-2">
-                  <Checkbox
-                    id="show-in-inventory"
-                    checked={newService.showInInventory}
-                    onCheckedChange={(checked) => {
-                      setNewService((prev) => ({ ...prev, showInInventory: checked === true }));
-                    }}
-                  />
-                  <Label htmlFor="show-in-inventory" className="text-sm font-normal cursor-pointer">
-                    Show In Inventory
-                  </Label>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Service Description</Label>
-              <Textarea
-                className="resize-none"
-                rows={4}
-                value={newService.description}
-                onChange={(e) => setNewService((prev) => ({ ...prev, description: e.target.value }))}
-                placeholder="Describe the service"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Image Upload</Label>
-              <input
-                ref={serviceImageInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] ?? null;
-                  handleServiceImageFile(file);
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => serviceImageInputRef.current?.click()}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsServiceImageDragActive(true);
-                }}
-                onDragLeave={() => setIsServiceImageDragActive(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsServiceImageDragActive(false);
-                  const file = e.dataTransfer.files?.[0] ?? null;
-                  handleServiceImageFile(file);
-                }}
-                className={cn(
-                  "w-full rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors",
-                  isServiceImageDragActive
-                    ? "border-primary bg-primary/5"
-                    : "border-border/60 hover:border-primary/40 hover:bg-muted/30"
-                )}
-              >
-                <Upload className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
-                <p className="text-xs text-muted-foreground">Drag & drop image here or click to upload</p>
-              </button>
-
-              {newService.imagePreview && (
-                <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <img
-                    src={newService.imagePreview}
-                    alt={newService.imageName || "Service preview"}
-                    className="h-28 w-full rounded-md object-cover"
-                  />
-                  <p className="mt-2 text-[11px] text-muted-foreground truncate">{newService.imageName}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowCreateServiceModal(false);
-                setShowEmployeeDropdown(false);
-                setEmployeeSearchQuery("");
-                setNewServiceValidation({});
-                setShowServiceDropdown(true);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleCreateService}>
-              Save Service
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

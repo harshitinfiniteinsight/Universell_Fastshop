@@ -786,6 +786,23 @@ export default function GeneratedLandingPageEditor() {
     ctaButtonText?: string;
   }>({});
   const [attachedLeadForm, setAttachedLeadForm] = useState<AttachedLeadFormConfig | null>(null);
+  const [showBookingFormModal, setShowBookingFormModal] = useState(false);
+  const [bookingFormModalStep, setBookingFormModalStep] = useState<"basic-info" | "placement">("basic-info");
+  const [bookingFormName, setBookingFormName] = useState("");
+  const [bookingPublicName, setBookingPublicName] = useState("");
+  const [bookingPublicDescription, setBookingPublicDescription] = useState("");
+  const [bookingPaymentPreference, setBookingPaymentPreference] = useState<"with-payment" | "without-payment">("without-payment");
+  const [bookingApprovalType, setBookingApprovalType] = useState<"instant" | "approval-required">("instant");
+  const [bookingPlacementType, setBookingPlacementType] = useState<LeadPlacementType | null>(null);
+  const [bookingTargetSectionId, setBookingTargetSectionId] = useState("");
+  const [bookingCtaButtonText, setBookingCtaButtonText] = useState("");
+  const [bookingValidation, setBookingValidation] = useState<{
+    formName?: string;
+    publicName?: string;
+    placementType?: string;
+    targetSectionId?: string;
+    ctaButtonText?: string;
+  }>({});
 
   // Connect Domain modal state
   const [showDomainModal, setShowDomainModal] = useState(false);
@@ -1211,6 +1228,19 @@ export default function GeneratedLandingPageEditor() {
     setShowLeadFieldDropdown(false);
   };
 
+  const resetBookingFormModalState = () => {
+    setBookingFormModalStep("basic-info");
+    setBookingFormName("");
+    setBookingPublicName("");
+    setBookingPublicDescription("");
+    setBookingPaymentPreference("without-payment");
+    setBookingApprovalType("instant");
+    setBookingPlacementType(null);
+    setBookingTargetSectionId("");
+    setBookingCtaButtonText("");
+    setBookingValidation({});
+  };
+
   const startLeadFormBuilder = (fields: string[]) => {
     localStorage.setItem(
       LEAD_FORM_BUILDER_INIT_KEY,
@@ -1420,28 +1450,18 @@ export default function GeneratedLandingPageEditor() {
           </ScrollArea>
 
           <div className="p-4 border-t border-border space-y-2">
-            {attachedLeadForm ? (
-              <button
-                type="button"
-                onClick={openLeadFormEditFlow}
-                className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 hover:bg-muted/60 transition-colors"
-                title="Edit Lead Form"
-              >
-                <ClipboardList className="w-3.5 h-3.5 text-primary shrink-0" />
-                <span className="text-xs font-medium text-foreground truncate">{attachedLeadForm.name}</span>
-                <Pencil className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={openLeadFormCreationFlow}
-                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-orange-400/70 bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors"
-                title="Add Lead Form"
-              >
-                <ClipboardList className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                <span className="text-xs font-medium text-orange-600 dark:text-orange-400">+ Add Lead Form</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={attachedLeadForm ? openLeadFormEditFlow : openLeadFormCreationFlow}
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 hover:bg-muted/60 transition-colors"
+              title={attachedLeadForm ? "Edit Lead Form" : "Add Lead Form"}
+            >
+              <ClipboardList className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span className="text-xs font-medium text-foreground truncate max-w-[180px]">
+                {attachedLeadForm?.name || leadFormName.trim() || "Lead Form"}
+              </span>
+              <Pencil className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            </button>
 
             <div className="flex gap-2">
               <Input
@@ -1875,6 +1895,13 @@ export default function GeneratedLandingPageEditor() {
                                 return;
                               }
 
+                              if (selectedFormType === "Booking Form") {
+                                setShowFormModal(false);
+                                resetBookingFormModalState();
+                                setShowBookingFormModal(true);
+                                return;
+                              }
+
                               const formType = FORM_TYPES.find(
                                 (f) => f.label === selectedFormType
                               );
@@ -2033,6 +2060,229 @@ export default function GeneratedLandingPageEditor() {
                     ) : null}
                   </div>
                 )}
+              </DialogContent>
+            </Dialog>
+
+            <Dialog
+              open={showBookingFormModal}
+              onOpenChange={(open) => {
+                setShowBookingFormModal(open);
+                if (!open) {
+                  resetBookingFormModalState();
+                }
+              }}
+            >
+              <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col overflow-hidden gap-0 p-0">
+                <DialogHeader className="shrink-0 px-6 pt-5 pb-3 border-b border-border/60">
+                  <DialogTitle>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        {bookingFormModalStep === "placement" && (
+                          <button
+                            type="button"
+                            onClick={() => setBookingFormModalStep("basic-info")}
+                            className="flex items-center gap-1.5 text-sm font-semibold hover:text-orange-600 transition-colors"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            Add Booking Form
+                          </button>
+                        )}
+                        {bookingFormModalStep === "basic-info" && (
+                          <span className="text-sm font-semibold">Add Booking Form</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-6 h-6 rounded-full flex items-center justify-center font-medium", bookingFormModalStep === "basic-info" || bookingFormModalStep === "placement" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>1</div>
+                          <span className={bookingFormModalStep === "basic-info" ? "font-medium text-foreground" : "text-muted-foreground"}>Basic Information</span>
+                        </div>
+                        <div className={cn("w-8 h-0.5", bookingFormModalStep === "placement" ? "bg-primary" : "bg-border")} />
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-6 h-6 rounded-full flex items-center justify-center font-medium", bookingFormModalStep === "placement" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>2</div>
+                          <span className={bookingFormModalStep === "placement" ? "font-medium text-foreground" : "text-muted-foreground"}>Form Placement</span>
+                        </div>
+                      </div>
+                    </div>
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4 pt-4">
+                  {bookingFormModalStep === "basic-info" ? (
+                    <div className="space-y-4 animate-fade-in-up">
+                      <p className="text-xs text-muted-foreground">Create a booking form and place it on your landing page.</p>
+
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium">Form Name <span className="text-destructive">*</span></Label>
+                        <Input
+                          value={bookingFormName}
+                          onChange={(e) => {
+                            setBookingFormName(e.target.value);
+                            setBookingValidation((prev) => ({ ...prev, formName: undefined }));
+                          }}
+                          placeholder="e.g. Website Design Booking"
+                        />
+                        {bookingValidation.formName && <p className="text-xs text-destructive">{bookingValidation.formName}</p>}
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium">Public Name <span className="text-destructive">*</span></Label>
+                        <Input
+                          value={bookingPublicName}
+                          onChange={(e) => {
+                            setBookingPublicName(e.target.value);
+                            setBookingValidation((prev) => ({ ...prev, publicName: undefined }));
+                          }}
+                          placeholder="e.g. Book a Website Design Session"
+                        />
+                        {bookingValidation.publicName && <p className="text-xs text-destructive">{bookingValidation.publicName}</p>}
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium">Public Description <span className="text-muted-foreground font-normal">(Optional)</span></Label>
+                        <Textarea
+                          value={bookingPublicDescription}
+                          onChange={(e) => setBookingPublicDescription(e.target.value)}
+                          className="min-h-[72px] resize-none"
+                          placeholder="Briefly describe what visitors can expect when booking…"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium">Payment Preference</Label>
+                        {[
+                          { id: "with-payment" as const, label: "Allow Booking With Payment" },
+                          { id: "without-payment" as const, label: "Allow Booking Without Payment" },
+                        ].map((opt) => (
+                          <label key={opt.id} className="flex items-center gap-2 text-xs cursor-pointer">
+                            <input
+                              type="radio"
+                              className="accent-orange-500"
+                              checked={bookingPaymentPreference === opt.id}
+                              onChange={() => setBookingPaymentPreference(opt.id)}
+                            />
+                            {opt.label}
+                          </label>
+                        ))}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium">Confirmation Type</Label>
+                        {[
+                          { id: "instant" as const, label: "Instant Confirmation" },
+                          { id: "approval-required" as const, label: "Approval Required" },
+                        ].map((opt) => (
+                          <label key={opt.id} className="flex items-center gap-2 text-xs cursor-pointer">
+                            <input
+                              type="radio"
+                              className="accent-orange-500"
+                              checked={bookingApprovalType === opt.id}
+                              onChange={() => setBookingApprovalType(opt.id)}
+                            />
+                            {opt.label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <LeadFormPlacementStep
+                      placementType={bookingPlacementType}
+                      targetSectionId={bookingTargetSectionId}
+                      ctaButtonText={bookingCtaButtonText}
+                      sectionOptions={landingSectionOptions}
+                      validation={{
+                        placementType: bookingValidation.placementType,
+                        targetSectionId: bookingValidation.targetSectionId,
+                        ctaButtonText: bookingValidation.ctaButtonText,
+                      }}
+                      onPlacementTypeChange={(value) => {
+                        setBookingPlacementType(value);
+                        setBookingValidation((prev) => ({ ...prev, placementType: undefined, ctaButtonText: undefined }));
+                      }}
+                      onTargetSectionChange={(value) => {
+                        setBookingTargetSectionId(value);
+                        setBookingValidation((prev) => ({ ...prev, targetSectionId: undefined }));
+                      }}
+                      onCtaButtonTextChange={(value) => {
+                        setBookingCtaButtonText(value);
+                        setBookingValidation((prev) => ({ ...prev, ctaButtonText: undefined }));
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className="shrink-0 border-t border-border px-6 py-3 flex items-center justify-end gap-2 bg-background">
+                  {bookingFormModalStep === "basic-info" ? (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setShowBookingFormModal(false)}>
+                        Close
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          const nextErrors: { formName?: string; publicName?: string } = {};
+                          if (!bookingFormName.trim()) nextErrors.formName = "Form Name is required.";
+                          if (!bookingPublicName.trim()) nextErrors.publicName = "Public Name is required.";
+                          if (Object.keys(nextErrors).length) {
+                            setBookingValidation((prev) => ({ ...prev, ...nextErrors }));
+                            return;
+                          }
+                          setBookingValidation((prev) => ({ ...prev, formName: undefined, publicName: undefined }));
+                          setBookingFormModalStep("placement");
+                        }}
+                        className="bg-orange-500 hover:bg-orange-600 text-white"
+                      >
+                        Continue
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setBookingFormModalStep("basic-info")}>
+                        Back
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          const nextErrors: {
+                            placementType?: string;
+                            targetSectionId?: string;
+                            ctaButtonText?: string;
+                          } = {};
+
+                          if (!bookingPlacementType) {
+                            nextErrors.placementType = "Please choose how to use this form.";
+                          }
+                          if (!bookingTargetSectionId) {
+                            nextErrors.targetSectionId = "Please select a landing page section.";
+                          }
+                          if (bookingPlacementType === "cta" && !bookingCtaButtonText.trim()) {
+                            nextErrors.ctaButtonText = "Please enter CTA button text.";
+                          }
+
+                          if (Object.keys(nextErrors).length) {
+                            setBookingValidation((prev) => ({ ...prev, ...nextErrors }));
+                            return;
+                          }
+
+                          const selectedSection =
+                            landingSectionOptions.find((section) => section.id === bookingTargetSectionId)?.label || bookingTargetSectionId;
+
+                          const prompt =
+                            bookingPlacementType === "embed"
+                              ? `Insert a booking form named "${bookingFormName.trim()}" with public name "${bookingPublicName.trim()}" in the ${selectedSection} section. Description: ${bookingPublicDescription.trim() || "N/A"}. Payment preference: ${bookingPaymentPreference}. Confirmation: ${bookingApprovalType}.`
+                              : `Insert a CTA button in the ${selectedSection} section with text "${bookingCtaButtonText.trim()}" that opens booking form "${bookingFormName.trim()}" (public name: "${bookingPublicName.trim()}"). Description: ${bookingPublicDescription.trim() || "N/A"}. Payment preference: ${bookingPaymentPreference}. Confirmation: ${bookingApprovalType}.`;
+
+                          setInputMessage(prompt);
+                          setShowBookingFormModal(false);
+                          resetBookingFormModalState();
+                        }}
+                        className="bg-orange-500 hover:bg-orange-600 text-white"
+                      >
+                        Insert Form
+                      </Button>
+                    </>
+                  )}
+                </div>
               </DialogContent>
             </Dialog>
 
