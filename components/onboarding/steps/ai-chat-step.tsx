@@ -3596,7 +3596,7 @@ function LandingPageDetailsForm({
 
   const handleConfirm = () => {
     if (landingPageType === "lead-generation" && !(fields.leadFormName ?? "").trim()) {
-      setLeadFormNameError("Lead Form Name is required.");
+      setLeadFormNameError("Form Title is required.");
       return;
     }
 
@@ -3609,7 +3609,6 @@ function LandingPageDetailsForm({
 
     if (landingPageType === "lead-generation") {
       details["leadFormName"] = (fields.leadFormName ?? "").trim();
-      details["leadFormDescription"] = fields.leadFormDescription ?? "";
       details["catcherFields"] = selectedCatcherFields.join(", ");
       setLeadFormNameError("");
     }
@@ -3736,7 +3735,7 @@ function LandingPageDetailsForm({
         return (
           <div className={sectionClass}>
             <div>
-              <label className={labelClass}>Lead Form Name</label>
+              <label className={labelClass}>Form Title</label>
               <Input
                 className={inputClass}
                 placeholder="e.g. Summer Trial Signup"
@@ -3749,19 +3748,8 @@ function LandingPageDetailsForm({
               {leadFormNameError && <p className="text-xs text-destructive mt-1">{leadFormNameError}</p>}
             </div>
 
-            <div>
-              <label className={labelClass}>Lead Form Description</label>
-              <Textarea
-                className={cn(inputClass, "resize-none")}
-                rows={3}
-                placeholder="Optional context shown with your lead form."
-                value={fields.leadFormDescription ?? ""}
-                onChange={(e) => set("leadFormDescription", e.target.value)}
-              />
-            </div>
-
             <div className="space-y-2">
-              <label className={labelClass}>Catcher Fields</label>
+              <label className={labelClass}>Form Fields</label>
               <div className="relative" ref={catcherDropdownRef}>
                 <button
                   type="button"
@@ -3770,8 +3758,8 @@ function LandingPageDetailsForm({
                 >
                   <span className="text-muted-foreground">
                     {selectedCatcherFields.length
-                      ? `${selectedCatcherFields.length} catcher field${selectedCatcherFields.length > 1 ? "s" : ""} selected`
-                      : "Select catcher fields"}
+                      ? `${selectedCatcherFields.length} form field${selectedCatcherFields.length > 1 ? "s" : ""} selected`
+                      : "Select form fields"}
                   </span>
                   {showCatcherDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                 </button>
@@ -3808,6 +3796,10 @@ function LandingPageDetailsForm({
                 )}
               </div>
 
+              <p className="text-[11px] text-muted-foreground">
+                Select the information you would like the visitors to provide
+              </p>
+
               {selectedCatcherFields.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {selectedCatcherFields.map((fieldLabel) => (
@@ -3825,7 +3817,7 @@ function LandingPageDetailsForm({
             <div className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-3">
               <div className="flex items-center gap-2">
                 <FileText className="w-3.5 h-3.5 text-primary" />
-                <p className="text-xs font-medium text-foreground">Lead Form Preview</p>
+                <p className="text-xs font-medium text-foreground">How your form will appear</p>
               </div>
 
               <div className="rounded-lg border border-border/60 bg-background p-3 space-y-2.5">
@@ -3833,16 +3825,11 @@ function LandingPageDetailsForm({
                   <p className="text-sm font-semibold text-foreground">
                     {(fields.leadFormName ?? "").trim() || "New Lead Form"}
                   </p>
-                  {(fields.leadFormDescription ?? "").trim() && (
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      {fields.leadFormDescription?.trim()}
-                    </p>
-                  )}
                 </div>
 
                 {selectedCatcherFields.length === 0 ? (
                   <div className="rounded-md border border-dashed border-border/70 bg-muted/30 px-3 py-4 text-center text-xs text-muted-foreground">
-                    Select catcher fields to preview your lead form.
+                    Select form fields to preview your lead form.
                   </div>
                 ) : (
                   <div className="space-y-1.5">
@@ -4963,7 +4950,11 @@ function LandingPageDetailsForm({
       <div className="animate-fade-in-up space-y-4">
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">Tell us about your {typeLabels[landingPageType] ?? "landing page"}</span>
+          <span className="text-sm font-medium">
+            {landingPageType === "lead-generation"
+              ? "Create your lead form"
+              : `Tell us about your ${typeLabels[landingPageType] ?? "landing page"}`}
+          </span>
           {landingPageType === "lead-generation" && (
             <TooltipProvider>
               <Tooltip>
