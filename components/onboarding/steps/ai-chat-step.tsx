@@ -3273,7 +3273,6 @@ function LandingPageDetailsForm({
   const [checkedFields, setCheckedFields] = useState<Record<string, boolean>>({});
   const [selectedCatcherFields, setSelectedCatcherFields] = useState<string[]>([]);
   const [showCatcherDropdown, setShowCatcherDropdown] = useState(false);
-  const [leadFormNameError, setLeadFormNameError] = useState("");
   const catcherDropdownRef = useRef<HTMLDivElement>(null);
   const serviceDropdownRef = useRef<HTMLDivElement>(null);
   const employeeDropdownRef = useRef<HTMLDivElement>(null);
@@ -3595,11 +3594,6 @@ function LandingPageDetailsForm({
   };
 
   const handleConfirm = () => {
-    if (landingPageType === "lead-generation" && !(fields.leadFormName ?? "").trim()) {
-      setLeadFormNameError("Form Title is required.");
-      return;
-    }
-
     if (landingPageType === "service-showcase" && !selectedServiceId) {
       setServiceValidationError("Please select or create a service to continue.");
       return;
@@ -3608,9 +3602,7 @@ function LandingPageDetailsForm({
     const details: Record<string, string> = { ...fields };
 
     if (landingPageType === "lead-generation") {
-      details["leadFormName"] = (fields.leadFormName ?? "").trim();
       details["catcherFields"] = selectedCatcherFields.join(", ");
-      setLeadFormNameError("");
     }
 
     if (landingPageType === "service-showcase") {
@@ -3734,20 +3726,6 @@ function LandingPageDetailsForm({
       case "lead-generation":
         return (
           <div className={sectionClass}>
-            <div>
-              <label className={labelClass}>Form Title</label>
-              <Input
-                className={inputClass}
-                placeholder="e.g. Summer Trial Signup"
-                value={fields.leadFormName ?? ""}
-                onChange={(e) => {
-                  set("leadFormName", e.target.value);
-                  if (leadFormNameError) setLeadFormNameError("");
-                }}
-              />
-              {leadFormNameError && <p className="text-xs text-destructive mt-1">{leadFormNameError}</p>}
-            </div>
-
             <div className="space-y-2">
               <label className={labelClass}>Form Fields</label>
               <div className="relative" ref={catcherDropdownRef}>
@@ -3822,9 +3800,7 @@ function LandingPageDetailsForm({
 
               <div className="rounded-lg border border-border/60 bg-background p-3 space-y-2.5">
                 <div className="space-y-0.5">
-                  <p className="text-sm font-semibold text-foreground">
-                    {(fields.leadFormName ?? "").trim() || "New Lead Form"}
-                  </p>
+                  <p className="text-sm font-semibold text-foreground">New Lead Form</p>
                 </div>
 
                 {selectedCatcherFields.length === 0 ? (
@@ -5157,14 +5133,10 @@ function LeadFormPlacementStep({
   const missingSection = showErrors && !targetSection;
   const missingCTA = showErrors && displayMode === "cta" && !ctaButtonText.trim();
 
-  const placementBlocks = [
-    { id: "header", label: "Header", fullWidth: true },
-    { id: "section_1", label: "Section 1", fullWidth: false },
-    { id: "section_2", label: "Section 2", fullWidth: false },
-    { id: "section_3", label: "Section 3", fullWidth: false },
-    { id: "section_4", label: "Section 4", fullWidth: false },
-    { id: "section_5", label: "Section 5", fullWidth: true },
-    { id: "footer", label: "Footer", fullWidth: true },
+  const placementRegions: { id: string; label: string; heightClass: string }[] = [
+    { id: "header", label: "Header", heightClass: "h-20" },
+    { id: "body", label: "Body", heightClass: "h-40" },
+    { id: "footer", label: "Footer", heightClass: "h-20" },
   ];
 
   const handleContinue = () => {
@@ -5243,49 +5215,37 @@ function LeadFormPlacementStep({
         {missingDisplayMode && <p className="text-xs text-destructive">Please select how to use this lead form.</p>}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <div className="space-y-0.5">
           <p className="text-xs font-medium text-foreground">Where should the form appear?</p>
-          <p className="text-xs text-muted-foreground">Select the section where the lead form should be displayed.</p>
+          <p className="text-xs text-muted-foreground">Choose one region: header, body, or footer.</p>
         </div>
 
-        <div className="rounded-2xl border border-border/60 bg-muted/20 p-3 space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            {placementBlocks.map((block) => {
-              const isActive = targetSection === block.id;
+        <div className="rounded-2xl border border-border/60 bg-muted/20 p-2.5 space-y-2">
+          <div className="rounded-xl overflow-hidden border border-border/60 bg-background">
+            {placementRegions.map((region, index) => {
+              const isActive = targetSection === region.id;
+              const isLast = index === placementRegions.length - 1;
               return (
                 <button
-                  key={block.id}
+                  key={region.id}
                   type="button"
-                  onClick={() => onTargetSectionChange(block.id)}
+                  onClick={() => onTargetSectionChange(region.id)}
                   className={cn(
-                    "relative rounded-xl border bg-background p-3 text-left transition-all duration-200",
-                    "hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm",
+                    "relative w-full transition-colors duration-200 flex items-center justify-center px-3",
+                    region.heightClass,
+                    !isLast && "border-b border-border/60",
                     isActive
-                      ? "border-primary bg-primary/10 shadow-sm"
-                      : "border-border/60",
-                    block.fullWidth ? "col-span-2" : ""
+                      ? "bg-primary/10 text-foreground"
+                      : "bg-background text-muted-foreground hover:bg-primary/5 hover:text-foreground"
                   )}
                 >
+                  <span className="text-sm font-medium">{region.label}</span>
                   {isActive && (
-                    <span className="absolute right-2 top-2">
+                    <span className="absolute right-2 top-2.5">
                       <CheckCircle2 className="w-4 h-4 text-primary" />
                     </span>
                   )}
-                  <div className="mb-2 inline-grid grid-cols-3 gap-1">
-                    {Array.from({ length: 9 }).map((_, idx) => (
-                      <span
-                        key={`${block.id}-${idx}`}
-                        className={cn(
-                          "h-2.5 w-2.5 rounded-[2px] border",
-                          isActive ? "border-primary/50 bg-primary/20" : "border-muted-foreground/30 bg-muted/30"
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <p className={cn("text-sm font-medium", isActive ? "text-foreground" : "text-muted-foreground")}>
-                    {block.label}
-                  </p>
                 </button>
               );
             })}

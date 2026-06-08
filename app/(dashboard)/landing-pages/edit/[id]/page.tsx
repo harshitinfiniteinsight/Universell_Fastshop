@@ -1659,37 +1659,6 @@ export default function GeneratedLandingPageEditor() {
                         {!attachedLeadForm ? (
                           <>
                             <div className="space-y-1">
-                              <h3 className="text-sm font-semibold text-foreground">Lead Form Name</h3>
-                              <p className="text-xs text-muted-foreground">Give your lead form a descriptive name.</p>
-                            </div>
-
-                            <div className="space-y-3 rounded-lg border border-border bg-background p-3">
-                              <div className="space-y-1">
-                                <Input
-                                  value={leadFormName}
-                                  onChange={(e) => setLeadFormName(e.target.value)}
-                                  placeholder="e.g. Summer Trial Signup"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="space-y-1">
-                              <h3 className="text-sm font-semibold text-foreground">Description</h3>
-                              <p className="text-xs text-muted-foreground">Optional context shown with your lead form.</p>
-                            </div>
-
-                            <div className="space-y-3 rounded-lg border border-border bg-background p-3">
-                              <div className="space-y-1">
-                                <Textarea
-                                  value={leadFormDescription}
-                                  onChange={(e) => setLeadFormDescription(e.target.value)}
-                                  placeholder="Optional context shown with your lead form."
-                                  className="min-h-[72px] resize-none"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="space-y-1">
                               <h3 className="text-sm font-semibold text-foreground">Catcher Fields</h3>
                               <p className="text-xs text-muted-foreground">Select which fields to collect from your leads.</p>
                             </div>
@@ -1753,64 +1722,79 @@ export default function GeneratedLandingPageEditor() {
                               )}
                             </div>
 
-
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="space-y-1">
-                                <h3 className="text-sm font-semibold text-foreground">Edit Lead Form</h3>
-                                <p className="text-xs text-muted-foreground">Update your lead form configuration.</p>
+                            <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-3.5 h-3.5 text-primary" />
+                                <p className="text-xs font-medium text-foreground">Lead Form Preview</p>
                               </div>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={handleRemoveLeadForm}
-                                  className="text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
-                                >
-                                  Remove Form
-                                </button>
-                                <div className="group relative">
-                                  <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                                  <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-popover border border-border rounded-lg shadow-md p-2 w-48 text-[11px] text-foreground z-50">
-                                    Unlink this lead form from the landing page. Visitors will no longer see the form or be able to submit their information.
+
+                              <div className="rounded-lg border border-border/60 bg-background p-3 space-y-2.5">
+                                <p className="text-sm font-semibold text-foreground">New Lead Form</p>
+
+                                {selectedLeadFields.length === 0 ? (
+                                  <div className="rounded-md border border-dashed border-border/70 bg-muted/30 px-3 py-4 text-center text-xs text-muted-foreground">
+                                    Select catcher fields to preview your lead form.
                                   </div>
+                                ) : (
+                                  <div className="space-y-1.5">
+                                    {selectedLeadFields.map((fieldId) => (
+                                      <div key={fieldId} className="space-y-1">
+                                        <label className="text-[11px] font-medium text-foreground">{toLeadFieldSchema(fieldId).label}</label>
+                                        <Input className="h-8 text-xs" value="" readOnly placeholder={toLeadFieldSchema(fieldId).label} />
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                <div className="flex gap-2 pt-1">
+                                  <Button type="button" disabled size="sm" className="h-8 px-3 text-xs bg-primary/80 text-white hover:bg-primary/80">
+                                    Submit Request
+                                  </Button>
+                                  <Button type="button" disabled size="sm" variant="outline" className="h-8 px-3 text-xs">
+                                    Clear Form
+                                  </Button>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="space-y-3 rounded-lg border border-border bg-background p-3">
-                              <div className="space-y-1">
-                                <p className="text-xs font-medium text-foreground">Form Name</p>
-                                <Input
-                                  value={leadFormName}
-                                  onChange={(e) => setLeadFormName(e.target.value)}
-                                  placeholder="Enter lead form name"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-xs font-medium text-foreground">Description (optional)</p>
-                                <Textarea
-                                  value={leadFormDescription}
-                                  onChange={(e) => setLeadFormDescription(e.target.value)}
-                                  placeholder="Describe what this form is for"
-                                  className="min-h-[72px] resize-none"
-                                />
-                              </div>
-                            </div>
 
-                            <div className="space-y-1.5">
+                          </>
+                        ) : (
+                          <>
+                            <div className="space-y-3" ref={leadFieldDropdownRef}>
+                              {/* Form Fields header row with Remove Form inline */}
                               <div className="flex items-center justify-between">
-                                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Selected fields</p>
-                                <button
-                                  type="button"
-                                  onClick={() => setShowLeadFieldDropdown((v) => !v)}
-                                  className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 font-medium"
-                                >
-                                  Edit
-                                  {showLeadFieldDropdown ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                </button>
+                                <p className="text-xs font-medium text-foreground">Form Fields</p>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={handleRemoveLeadForm}
+                                    className="text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
+                                  >
+                                    Remove Form
+                                  </button>
+                                  <div className="relative flex items-center">
+                                    <Info className="peer w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                                    <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-border bg-popover p-2.5 text-[11px] leading-relaxed text-foreground shadow-lg opacity-0 peer-hover:opacity-100 transition-opacity duration-150 z-[100]">
+                                      This will unlink the lead form from the landing page. The form will remain available in the Lead Form module and can be reconnected later.
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
+
+                              {/* Dropdown trigger */}
+                              <button
+                                type="button"
+                                onClick={() => setShowLeadFieldDropdown((v) => !v)}
+                                className="w-full flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                              >
+                                <span className="text-muted-foreground">
+                                  {selectedLeadFields.length === 0
+                                    ? "Select form fields"
+                                    : `${selectedLeadFields.length} form field${selectedLeadFields.length > 1 ? "s" : ""} selected`}
+                                </span>
+                                {showLeadFieldDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                              </button>
 
                               {showLeadFieldDropdown && (
                                 <div className="rounded-lg border border-border bg-background p-2 space-y-1 max-h-[200px] overflow-y-auto">
@@ -1838,18 +1822,56 @@ export default function GeneratedLandingPageEditor() {
                                 </div>
                               )}
 
-                              <div className="flex flex-wrap gap-1.5 rounded-lg border border-border bg-muted/50 p-2.5 min-h-[36px]">
-                                {selectedLeadFields.map((fieldId) => {
-                                  const fieldLabel = LEAD_FORM_FIELD_OPTIONS.find((field) => field.id === fieldId)?.label ?? fieldId;
-                                  return (
-                                    <span key={fieldId} className="inline-flex items-center rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-[11px] font-medium">
-                                      {fieldLabel}
-                                    </span>
-                                  );
-                                })}
-                                {selectedLeadFields.length === 0 && (
-                                  <span className="text-[11px] text-muted-foreground">No fields selected</span>
+                              {/* Helper text */}
+                              <p className="text-[11px] text-muted-foreground">Select the information you would like the visitors to provide</p>
+
+                              {/* Selected field badges */}
+                              {selectedLeadFields.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {selectedLeadFields.map((fieldId) => {
+                                    const fieldLabel = LEAD_FORM_FIELD_OPTIONS.find((field) => field.id === fieldId)?.label ?? fieldId;
+                                    return (
+                                      <span key={fieldId} className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 text-orange-700 px-3 py-1 text-xs font-medium">
+                                        {fieldLabel}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-3.5 h-3.5 text-primary" />
+                                <p className="text-xs font-medium text-foreground">Lead Form Preview</p>
+                              </div>
+
+                              <div className="rounded-lg border border-border/60 bg-background p-3 space-y-2.5">
+                                <p className="text-sm font-semibold text-foreground">{attachedLeadForm?.name || "Lead Form"}</p>
+
+                                {selectedLeadFields.length === 0 ? (
+                                  <div className="rounded-md border border-dashed border-border/70 bg-muted/30 px-3 py-4 text-center text-xs text-muted-foreground">
+                                    Select catcher fields to preview your lead form.
+                                  </div>
+                                ) : (
+                                  <div className="space-y-1.5">
+                                    {selectedLeadFields.map((fieldId) => (
+                                      <div key={fieldId} className="space-y-1">
+                                        <label className="text-[11px] font-medium text-foreground">{toLeadFieldSchema(fieldId).label}</label>
+                                        <Input className="h-8 text-xs" value="" readOnly placeholder={toLeadFieldSchema(fieldId).label} />
+                                      </div>
+                                    ))}
+                                  </div>
                                 )}
+
+                                <div className="flex gap-2 pt-1">
+                                  <Button type="button" disabled size="sm" className="h-8 px-3 text-xs bg-primary/80 text-white hover:bg-primary/80">
+                                    Submit Request
+                                  </Button>
+                                  <Button type="button" disabled size="sm" variant="outline" className="h-8 px-3 text-xs">
+                                    Clear Form
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </>
@@ -2023,10 +2045,6 @@ export default function GeneratedLandingPageEditor() {
                           onClick={() => {
                             if (!attachedLeadForm) {
                               // New form - save and move to placement
-                              if (!leadFormName.trim()) {
-                                alert("Please enter a lead form name.");
-                                return;
-                              }
                               if (selectedLeadFields.length === 0) {
                                 alert("Please select at least one catcher field.");
                                 return;
@@ -2042,7 +2060,7 @@ export default function GeneratedLandingPageEditor() {
                           }}
                           className="bg-orange-500 hover:bg-orange-600 text-white"
                         >
-                          {attachedLeadForm ? "Save Changes" : "Save"}
+                          Next
                         </Button>
                       </>
                     ) : leadFormModalStep === "placement" ? (
