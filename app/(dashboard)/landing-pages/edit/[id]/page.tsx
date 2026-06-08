@@ -2025,22 +2025,6 @@ export default function GeneratedLandingPageEditor() {
                     ) : leadFormModalStep === "form-builder" ? (
                       <>
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (attachedLeadForm) {
-                              setLeadFormModalStep("placement");
-                            } else {
-                              setShowFormModal(false);
-                              setSelectedFormType(null);
-                              setSelectedExistingForm("");
-                              resetLeadFormFlowState();
-                            }
-                          }}
-                        >
-                          {attachedLeadForm ? "Back" : "Close"}
-                        </Button>
-                        <Button
                           size="sm"
                           onClick={() => {
                             if (!attachedLeadForm) {
