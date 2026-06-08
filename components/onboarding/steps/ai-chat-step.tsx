@@ -5218,7 +5218,7 @@ function LeadFormPlacementStep({
       <div className="space-y-1.5">
         <div className="space-y-0.5">
           <p className="text-xs font-medium text-foreground">Where should the form appear?</p>
-          <p className="text-xs text-muted-foreground">Choose one region: header, body, or footer.</p>
+          <p className="text-xs text-muted-foreground">Choose the initial placement of your form. After the page is generated, you can ask the AI to move it to another section at any time.</p>
         </div>
 
         <div className="rounded-2xl border border-border/60 bg-muted/20 p-2.5 space-y-2">
