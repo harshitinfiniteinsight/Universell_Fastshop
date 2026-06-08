@@ -1782,6 +1782,9 @@ export default function GeneratedLandingPageEditor() {
                                 </div>
                               </div>
 
+                              {/* Helper text */}
+                              <p className="text-[11px] text-muted-foreground">Select the information you would like the visitors to provide</p>
+
                               {/* Dropdown trigger */}
                               <button
                                 type="button"
@@ -1821,9 +1824,6 @@ export default function GeneratedLandingPageEditor() {
                                   })}
                                 </div>
                               )}
-
-                              {/* Helper text */}
-                              <p className="text-[11px] text-muted-foreground">Select the information you would like the visitors to provide</p>
 
                               {/* Selected field badges */}
                               {selectedLeadFields.length > 0 && (
