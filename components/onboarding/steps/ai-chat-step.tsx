@@ -3272,6 +3272,7 @@ function LandingPageDetailsForm({
   const [selectedInventory, setSelectedInventory] = useState<string[]>([]);
   const [checkedFields, setCheckedFields] = useState<Record<string, boolean>>({});
   const [selectedCatcherFields, setSelectedCatcherFields] = useState<string[]>([]);
+  const [leadFormTitle, setLeadFormTitle] = useState("");
   const [showCatcherDropdown, setShowCatcherDropdown] = useState(false);
   const catcherDropdownRef = useRef<HTMLDivElement>(null);
   const serviceDropdownRef = useRef<HTMLDivElement>(null);
@@ -3310,6 +3311,7 @@ function LandingPageDetailsForm({
   const [bookingPlacementCTA, setBookingPlacementCTA] = useState("");
   const [bookingPlacementShowErrors, setBookingPlacementShowErrors] = useState(false);
   const [addBookingFormStep, setAddBookingFormStep] = useState<"basic-info" | "placement">("basic-info");
+  const [bookingSetupStep, setBookingSetupStep] = useState<"ask" | "how" | "existing" | "add-new" | "done">("ask");
   const existingBookingSelectorRef = useRef<HTMLDivElement>(null);
   const addBookingFormRef = useRef<HTMLDivElement>(null);
   const addBookingFormNameInputRef = useRef<HTMLInputElement>(null);
@@ -3481,6 +3483,7 @@ function LandingPageDetailsForm({
     setServiceSearchQuery("");
     setShowServiceDropdown(false);
     setServiceValidationError("");
+    setBookingSetupStep("ask");
     setBookingFormOption("none");
     setSelectedBookingFormId("");
     setShowBookingFormDropdown(false);
@@ -3523,6 +3526,7 @@ function LandingPageDetailsForm({
     setBookingPlacementCTA("");
     setBookingPlacementShowErrors(false);
     setAddBookingFormStep("basic-info");
+    setBookingSetupStep("done");
   };
 
   const handleServiceImageFile = (file: File | null) => {
@@ -3603,6 +3607,7 @@ function LandingPageDetailsForm({
 
     if (landingPageType === "lead-generation") {
       details["catcherFields"] = selectedCatcherFields.join(", ");
+      details["leadFormTitle"] = leadFormTitle.trim();
     }
 
     if (landingPageType === "service-showcase") {
@@ -3726,6 +3731,15 @@ function LandingPageDetailsForm({
       case "lead-generation":
         return (
           <div className={sectionClass}>
+            <div className="space-y-1.5">
+              <label className={labelClass}>Lead form title</label>
+              <Input
+                className="h-10 text-sm"
+                placeholder="e.g. Get in Touch, Request a Quote…"
+                value={leadFormTitle}
+                onChange={(e) => setLeadFormTitle(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <label className={labelClass}>Form Fields</label>
               <div className="relative" ref={catcherDropdownRef}>
@@ -3800,7 +3814,7 @@ function LandingPageDetailsForm({
 
               <div className="rounded-lg border border-border/60 bg-background p-3 space-y-2.5">
                 <div className="space-y-0.5">
-                  <p className="text-sm font-semibold text-foreground">New Lead Form</p>
+                  <p className="text-sm font-semibold text-foreground">{leadFormTitle.trim() || "New Lead Form"}</p>
                 </div>
 
                 {selectedCatcherFields.length === 0 ? (
@@ -4030,10 +4044,6 @@ function LandingPageDetailsForm({
                     </div>
 
                     <div className="space-y-2">
-                      <label className={labelClass}>Service</label>
-                      <p className="text-[11px] text-muted-foreground">
-                        Demo existing services: {availableServices.slice(0, 4).map((service) => service.name).join(" • ")}
-                      </p>
                       <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start">
                         <div className="relative" ref={serviceDropdownRef}>
                           <button
@@ -4148,107 +4158,146 @@ function LandingPageDetailsForm({
             )}
 
             {selectedServiceId && !showCreateServiceInline && (
-            /* Booking Form Section — Progressive Disclosure */
-            <div className="space-y-3 pt-1">
-              <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
-                <p className="text-xs text-foreground">
-                  Would you like to add a booking form so visitors can book this service directly from your landing page?
-                </p>
-              </div>
+            /* Booking Form Section — Conversational Flow */
+            <div className="space-y-3 pt-1 animate-fade-in-up">
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <h3 className="text-sm font-semibold text-foreground">Booking Form</h3>
-                  <p className="text-xs text-muted-foreground">Choose how you want to handle service bookings.</p>
-                </div>
-                {bookingFormOption !== "none" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBookingFormOption("none");
-                      setSelectedBookingFormId("");
-                      setShowBookingFormDropdown(false);
-                      setBookingFormSearchQuery("");
-                      setBookingFormSaved(false);
-                      setBookingSkipped(false);
-                      setBookingPlacementMode(null);
-                      setBookingPlacementSection("");
-                      setBookingPlacementCTA("");
-                      setBookingPlacementShowErrors(false);
-                      setAddBookingFormStep("basic-info");
-                    }}
-                    className="text-[11px] text-primary hover:underline flex items-center gap-1"
-                  >
-                    ← Change Option
-                  </button>
-                )}
-              </div>
-
-              {/* Step 1: choose option */}
-              {bookingFormOption === "none" && (
-                <div className="space-y-1">
-                  <div className="space-y-2 pt-1">
-                    {([
-                      { value: "none-confirmed", label: "No Booking Form" },
-                      { value: "existing", label: "Use Existing Booking Form" },
-                      { value: "add-new", label: "Add Booking Form" },
-                    ] as const).map(({ value, label }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => {
-                          setBookingFormOption(value === "none-confirmed" ? "none-confirmed" as never : value);
-                          setSelectedBookingFormId("");
-                          setShowBookingFormDropdown(false);
-                          setBookingFormSearchQuery("");
-                          setBookingFormSaved(false);
-                          setBookingSkipped(false);
-                          setBookingPlacementMode(null);
-                          setBookingPlacementSection("");
-                          setBookingPlacementCTA("");
-                          setBookingPlacementShowErrors(false);
-                          if (value === "existing") {
-                            setTimeout(() => {
-                              existingBookingSelectorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                            }, 80);
-                          }
-                          if (value === "add-new") {
-                            setAddBookingFormStep("basic-info");
-                            setTimeout(() => {
-                              (addBookingFormNameInputRef.current ?? addBookingFormRef.current)?.scrollIntoView({ behavior: "smooth", block: "center" });
-                            }, 80);
-                          }
-                        }}
-                        className="w-full flex items-center gap-3 rounded-lg border border-border/60 bg-background px-3 py-2.5 text-left hover:border-primary/40 hover:bg-muted/30 transition-colors"
-                      >
-                        <div className="w-4 h-4 rounded-full border-2 border-border/60 flex items-center justify-center shrink-0" />
-                        <span className="text-xs text-foreground">{label}</span>
-                      </button>
-                    ))}
+              {/* Step 1: Yes / No prompt */}
+              {bookingSetupStep === "ask" && (
+                <div className="animate-fade-in-up space-y-4 rounded-2xl border border-border/60 bg-background p-4">
+                  <div className="space-y-1.5">
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                      📅 Booking Setup
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground">Would you like to add a booking form?</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Let visitors book this service directly from your landing page. You can always add or change it later.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBookingSetupStep("how");
+                        setBookingFormOption("none");
+                      }}
+                      className="w-full rounded-xl border border-border/70 bg-background px-3.5 py-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <span className="mt-0.5 h-4 w-4 rounded-full border border-primary/40" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Yes, add a booking form</p>
+                          <p className="text-xs text-muted-foreground">Choose an existing form or create a new one.</p>
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBookingSetupStep("done");
+                        setBookingFormOption("none-confirmed" as never);
+                        setBookingSkipped(true);
+                      }}
+                      className="w-full rounded-xl border border-border/70 bg-background px-3.5 py-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <span className="mt-0.5 h-4 w-4 rounded-full border border-primary/40" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">No, continue without booking</p>
+                          <p className="text-xs text-muted-foreground">You can always add a booking form later from the editor.</p>
+                        </div>
+                      </div>
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* Step 2a: No Booking Form confirmed */}
-              {(bookingFormOption as string) === "none-confirmed" && (
-                <div className="space-y-2">
-                  <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5 flex items-center gap-2">
-                    <span className="text-sm text-green-600">✓</span>
-                    <span className="text-xs font-medium text-foreground">No Booking Form</span>
+              {/* Step 2: How — existing or new */}
+              {bookingSetupStep === "how" && (
+                <div className="animate-fade-in-up space-y-4 rounded-2xl border border-border/60 bg-background p-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => {
+                        setBookingSetupStep("ask");
+                        setBookingFormOption("none");
+                        setSelectedBookingFormId("");
+                        setBookingFormSaved(false);
+                        setBookingSkipped(false);
+                        setBookingPlacementMode(null);
+                        setBookingPlacementSection("");
+                        setBookingPlacementCTA("");
+                        setBookingPlacementShowErrors(false);
+                        setAddBookingFormStep("basic-info");
+                      }}
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      Back
+                    </button>
                   </div>
-                  <div className="inline-flex items-start gap-1.5 rounded-md border border-border/60 bg-background px-2 py-1.5">
-                    <Info className="h-3.5 w-3.5 text-muted-foreground mt-[1px] shrink-0" />
-                    <p className="text-[11px] text-muted-foreground">
-                      {bookingSkipped
-                        ? "No problem — I'll generate the landing page without a booking form. You can always add one later."
-                        : "Visitors will not be able to book this service directly from the landing page, but you can link a booking form at any time later."}
-                    </p>
+                  <div className="space-y-1.5">
+                    <h3 className="text-sm font-semibold text-foreground">How would you like to handle bookings?</h3>
+                    <p className="text-xs text-muted-foreground">Choose an existing booking form or create a new one for this service.</p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBookingFormOption("existing");
+                        setBookingSetupStep("existing");
+                      }}
+                      className="w-full rounded-xl border border-border/70 bg-background px-3.5 py-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <span className="mt-0.5 h-4 w-4 rounded-full border border-primary/40" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Use Existing Booking Form</p>
+                          <p className="text-xs text-muted-foreground">Select a form you've already set up.</p>
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBookingFormOption("add-new");
+                        setBookingSetupStep("add-new");
+                        setAddBookingFormStep("basic-info");
+                      }}
+                      className="w-full rounded-xl border border-border/70 bg-background px-3.5 py-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <span className="mt-0.5 h-4 w-4 rounded-full border border-primary/40" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Create New Booking Form</p>
+                          <p className="text-xs text-muted-foreground">Set up a new booking form for this service.</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* "No booking" confirmed summary */}
+              {bookingSetupStep === "done" && (bookingFormOption as string) === "none-confirmed" && (
+                <div className="animate-fade-in-up space-y-2">
+                  <div className="rounded-xl border border-border/60 bg-muted/20 px-3.5 py-3 flex items-center gap-2">
+                    <span className="text-green-600">✓</span>
+                    <span className="text-xs font-medium text-foreground">No Booking Form — continuing without</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBookingSetupStep("ask");
+                        setBookingFormOption("none");
+                        setBookingSkipped(false);
+                      }}
+                      className="ml-auto text-[11px] text-primary hover:underline"
+                    >Change</button>
                   </div>
                 </div>
               )}
 
               {/* Step 2b: Use Existing Booking Form */}
-              {bookingFormOption === "existing" && (() => {
+              {bookingSetupStep === "existing" && bookingFormOption === "existing" && (() => {
                 const selectedBookingForm = availableBookingForms.find((bf) => bf.id === selectedBookingFormId);
                 const bookingFormSource = availableBookingForms.length > 0 ? availableBookingForms : DEFAULT_BOOKING_FORMS;
                 const filteredBookingForms = bookingFormSource.filter((bf) => {
@@ -4257,11 +4306,24 @@ function LandingPageDetailsForm({
                   return bf.name.toLowerCase().includes(q) || (bf.assignedEmployee ?? "").toLowerCase().includes(q);
                 });
                 return (
-                  <div className="space-y-3" ref={existingBookingSelectorRef}>
-                    <p className="text-xs text-muted-foreground">Select an existing booking form to attach to this landing page.</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Demo booking forms: {bookingFormSource.slice(0, 4).map((bf) => bf.name).join(" • ")}
-                    </p>
+                  <div className="space-y-3 animate-fade-in-up" ref={existingBookingSelectorRef}>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setBookingSetupStep("how");
+                          setBookingFormOption("none");
+                          setSelectedBookingFormId("");
+                          setBookingPlacementShowErrors(false);
+                        }}
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        Back
+                      </button>
+                    </div>
+                    <p className="text-xs font-medium text-foreground">Select an existing booking form</p>
+                    <p className="text-xs text-muted-foreground">Choose a form you've already set up to link with this landing page.</p>
                     <div className="relative" ref={bookingFormDropdownRef}>
                       <button
                         type="button"
@@ -4331,8 +4393,22 @@ function LandingPageDetailsForm({
                 );
               })()}
 
-              {bookingFormOption === "add-new" && !bookingFormSaved && (
-                <div className="space-y-4 rounded-2xl border border-border/60 bg-background p-4" ref={addBookingFormRef}>
+              {bookingSetupStep === "add-new" && bookingFormOption === "add-new" && !bookingFormSaved && (
+                <div className="space-y-4 rounded-2xl border border-border/60 bg-background p-4 animate-fade-in-up" ref={addBookingFormRef}>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => {
+                      setBookingSetupStep("how");
+                      setBookingFormOption("none");
+                      setAddBookingFormStep("basic-info");
+                      setNewBookingFormValidation({});
+                      setBookingPlacementShowErrors(false);
+                    }}
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    Back
+                  </button>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1.5 shrink-0">
@@ -4628,6 +4704,7 @@ function LandingPageDetailsForm({
                             setSelectedBookingFormId(createdBf.id);
                             setSavedBookingFormName(createdBf.name);
                             setBookingFormSaved(true);
+                            setBookingSetupStep("done");
                             setNewBookingFormValidation({});
                             setBookingPlacementShowErrors(false);
                           }}
@@ -4641,7 +4718,7 @@ function LandingPageDetailsForm({
               )}
 
               {/* Step 2c: Add Booking Form — saved confirmation */}
-              {bookingFormOption === "add-new" && bookingFormSaved && (
+              {bookingSetupStep === "add-new" && bookingFormOption === "add-new" && bookingFormSaved && (
                 <div className="space-y-2">
                   <div className="rounded-lg border border-green-500/30 bg-green-50 dark:bg-green-500/10 p-3 flex items-center gap-2">
                     <span className="text-green-600 text-sm">✓</span>
@@ -4665,11 +4742,14 @@ function LandingPageDetailsForm({
                 </div>
               )}
 
-              {(bookingFormOption === "existing" || bookingFormOption === "add-new") && (
+              {(bookingSetupStep === "existing" || bookingSetupStep === "add-new") && (bookingFormOption === "existing" || bookingFormOption === "add-new") && (
                 <div className="pt-1">
                   <button
                     type="button"
-                    onClick={skipBookingFormFlow}
+                    onClick={() => {
+                      skipBookingFormFlow();
+                      setBookingSetupStep("done");
+                    }}
                     className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
                   >
                     Skip — Generate Without Booking Form
