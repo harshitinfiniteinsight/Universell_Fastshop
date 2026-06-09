@@ -1762,24 +1762,36 @@ export default function GeneratedLandingPageEditor() {
                         ) : (
                           <>
                             <div className="space-y-3" ref={leadFieldDropdownRef}>
-                              {/* Form Fields header row with Remove Form inline */}
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-medium text-foreground">Form Fields</p>
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={handleRemoveLeadForm}
-                                    className="text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
-                                  >
-                                    Remove Form
-                                  </button>
-                                  <div className="relative flex items-center">
-                                    <Info className="peer w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                                    <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-border bg-popover p-2.5 text-[11px] leading-relaxed text-foreground shadow-lg opacity-0 peer-hover:opacity-100 transition-opacity duration-150 z-[100]">
-                                      This will unlink the lead form from the landing page. The form will remain available in the Lead Form module and can be reconnected later.
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className="text-xs font-medium text-foreground">Lead form title</p>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={handleRemoveLeadForm}
+                                      className="text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
+                                    >
+                                      Remove Form
+                                    </button>
+                                    <div className="relative flex items-center">
+                                      <Info className="peer w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                                      <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-border bg-popover p-2.5 text-[11px] leading-relaxed text-foreground shadow-lg opacity-0 peer-hover:opacity-100 transition-opacity duration-150 z-[100]">
+                                        This will unlink the lead form from the landing page. The form will remain available in the Lead Form module and can be reconnected later.
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
+                                <Input
+                                  value={leadFormName}
+                                  onChange={(event) => setLeadFormName(event.target.value)}
+                                  placeholder="e.g. Contact Form"
+                                  className="h-9 text-sm"
+                                />
+                              </div>
+
+                              {/* Form Fields header row with Remove Form inline */}
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-medium text-foreground">Form Fields</p>
                               </div>
 
                               {/* Helper text */}
@@ -1847,7 +1859,7 @@ export default function GeneratedLandingPageEditor() {
                               </div>
 
                               <div className="rounded-lg border border-border/60 bg-background p-3 space-y-2.5">
-                                <p className="text-sm font-semibold text-foreground">{attachedLeadForm?.name || "Lead Form"}</p>
+                                <p className="text-sm font-semibold text-foreground">{leadFormName.trim() || attachedLeadForm?.name || "Lead Form"}</p>
 
                                 {selectedLeadFields.length === 0 ? (
                                   <div className="rounded-md border border-dashed border-border/70 bg-muted/30 px-3 py-4 text-center text-xs text-muted-foreground">
