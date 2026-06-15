@@ -50,6 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 type EditorMessage = {
@@ -81,6 +82,27 @@ type SavedLandingPageDraft = {
 
 const LANDING_PAGE_DRAFT_KEY = "universell-landing-page-draft";
 const SAVED_LANDING_PAGES_KEY = "universell-saved-landing-pages";
+
+const AD_PIXEL_OPTIONS = [
+  {
+    id: "meta-pixel",
+    label: "Facebook / Meta Pixel",
+    description:
+      "Tracks form views and successful submissions for conversion and retargeting campaigns on Meta platforms.",
+  },
+  {
+    id: "google-tag-manager",
+    label: "Google Tag Manager",
+    description:
+      "Use GTM to manage and deploy multiple tracking tags such as Google Ads, Analytics, or custom events without modifying code.",
+  },
+  {
+    id: "custom-tracking-pixel",
+    label: "Custom Tracking Pixel",
+    description:
+      "Add any additional third-party tracking script or image pixel (e.g., LinkedIn, TikTok, analytics tools).",
+  },
+] as const;
 
 type FormType = {
   label: string;
@@ -808,6 +830,11 @@ export default function GeneratedLandingPageEditor() {
     targetSectionId?: string;
     ctaButtonText?: string;
   }>({});
+  const [showAdPixelModal, setShowAdPixelModal] = useState(false);
+  const [selectedAdPixels, setSelectedAdPixels] = useState<string[]>([]);
+  const [metaPixelCode, setMetaPixelCode] = useState("");
+  const [googleTagManagerCode, setGoogleTagManagerCode] = useState("");
+  const [customTrackingPixelCode, setCustomTrackingPixelCode] = useState("");
 
   // Connect Domain modal state
   const [showDomainModal, setShowDomainModal] = useState(false);
@@ -828,6 +855,37 @@ export default function GeneratedLandingPageEditor() {
   const leadFieldDropdownRef = useRef<HTMLDivElement>(null);
 
   const landingSectionOptions = useMemo(() => discoverLandingSections(html), [html]);
+
+  const toggleAdPixelSelection = (optionId: string) => {
+    setSelectedAdPixels((current) =>
+      current.includes(optionId) ? current.filter((item) => item !== optionId) : [...current, optionId]
+    );
+  };
+
+  const handleAdPixelSave = () => {
+    if (selectedAdPixels.length > 0) {
+      const selectedLabels = AD_PIXEL_OPTIONS.filter((option) => selectedAdPixels.includes(option.id)).map((option) => option.label);
+      const metaPixelInstruction =
+        selectedAdPixels.includes("meta-pixel") && metaPixelCode.trim().length > 0
+          ? ` Use this Meta Pixel code: ${metaPixelCode.trim()}`
+          : "";
+      const googleTagManagerInstruction =
+        selectedAdPixels.includes("google-tag-manager") && googleTagManagerCode.trim().length > 0
+          ? ` Use this Google Tag Manager code: ${googleTagManagerCode.trim()}`
+          : "";
+      const customTrackingPixelInstruction =
+        selectedAdPixels.includes("custom-tracking-pixel") && customTrackingPixelCode.trim().length > 0
+          ? ` Use this Custom Tracking Pixel code: ${customTrackingPixelCode.trim()}`
+          : "";
+
+      setInputMessage(
+        `Add ad pixel tracking for ${selectedLabels.join(", ")} to this landing page.${metaPixelInstruction}${googleTagManagerInstruction}${customTrackingPixelInstruction}`
+      );
+    }
+
+    setShowAdPixelModal(false);
+  };
+
   useEffect(() => {
     if (currentLandingPageId && currentLandingPageId !== "new") {
       const rawSavedDrafts = localStorage.getItem(SAVED_LANDING_PAGES_KEY);
@@ -1504,6 +1562,13 @@ export default function GeneratedLandingPageEditor() {
               >
                 <ClipboardList className="w-3 h-3" />
                 Add Form
+              </button>
+              <button
+                onClick={() => setShowAdPixelModal(true)}
+                className="text-[11px] px-2 py-1 rounded-full bg-orange-500 text-white hover:bg-orange-600 flex items-center gap-1"
+              >
+                <Sparkles className="w-3 h-3" />
+                Ad Pixel Tracking
               </button>
               <button
                 onClick={() => setShowDomainModal(true)}
@@ -2301,6 +2366,113 @@ export default function GeneratedLandingPageEditor() {
                       </Button>
                     </>
                   )}
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={showAdPixelModal} onOpenChange={setShowAdPixelModal}>
+              <DialogContent className="sm:max-w-[620px] p-0 overflow-hidden">
+                <DialogHeader className="border-b border-border px-6 py-4">
+                  <DialogTitle className="text-[18px] font-semibold text-foreground">
+                    Ad Pixel Tracking
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="px-6 pt-3 pb-5 space-y-5">
+                  <p className="text-[14px] leading-7 text-slate-600">
+                    Add third-party tracking scripts to your form to measure conversions, track visitors, and
+                    optimize ad campaigns across supported platforms. Pixels can be triggered on form load and
+                    successful submission.{" "}
+                    <a
+                      href="/fastshop-docs.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-orange-500 hover:text-orange-600"
+                    >
+                      Learn More...
+                    </a>
+                  </p>
+
+                  <div className="space-y-5">
+                    {AD_PIXEL_OPTIONS.map((option) => {
+                      const isChecked = selectedAdPixels.includes(option.id);
+                      const showMetaPixelField = option.id === "meta-pixel" && isChecked;
+                      const showGoogleTagManagerField = option.id === "google-tag-manager" && isChecked;
+                      const showCustomTrackingPixelField = option.id === "custom-tracking-pixel" && isChecked;
+
+                      return (
+                        <div
+                          key={option.id}
+                          className="space-y-3 rounded-lg"
+                        >
+                          <label className="flex cursor-pointer items-start gap-3 transition-colors hover:bg-muted/20">
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={() => toggleAdPixelSelection(option.id)}
+                              className="mt-1 border-slate-300 data-[state=checked]:border-orange-500 data-[state=checked]:bg-orange-500"
+                            />
+                            <div className="space-y-1.5">
+                              <div className="text-[16px] font-semibold leading-none text-slate-800">
+                                {option.label}
+                              </div>
+                              <p className="text-[14px] leading-7 text-slate-500">
+                                {option.description}
+                              </p>
+                            </div>
+                          </label>
+
+                          {showMetaPixelField && (
+                            <div className="pl-8">
+                              <Textarea
+                                value={metaPixelCode}
+                                onChange={(e) => setMetaPixelCode(e.target.value)}
+                                placeholder="Paste your Facebook/Meta Pixel code here..."
+                                className="min-h-[90px] resize-none border-slate-300 text-sm text-slate-700 placeholder:text-slate-400"
+                              />
+                            </div>
+                          )}
+
+                          {showGoogleTagManagerField && (
+                            <div className="pl-8">
+                              <Textarea
+                                value={googleTagManagerCode}
+                                onChange={(e) => setGoogleTagManagerCode(e.target.value)}
+                                placeholder="Paste your Google Tag Manager code here..."
+                                className="min-h-[90px] resize-none border-slate-300 text-sm text-slate-700 placeholder:text-slate-400"
+                              />
+                            </div>
+                          )}
+
+                          {showCustomTrackingPixelField && (
+                            <div className="pl-8">
+                              <Textarea
+                                value={customTrackingPixelCode}
+                                onChange={(e) => setCustomTrackingPixelCode(e.target.value)}
+                                placeholder="Paste your Custom Tracking Pixel code here..."
+                                className="min-h-[90px] resize-none border-slate-300 text-sm text-slate-700 placeholder:text-slate-400"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 border-t border-border bg-slate-50 px-5 py-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAdPixelModal(false)}
+                    className="h-10 min-w-[100px] border-orange-200 text-orange-500 hover:bg-orange-50 hover:text-orange-600"
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    onClick={handleAdPixelSave}
+                    className="h-10 min-w-[96px] bg-orange-500 text-white hover:bg-orange-600"
+                  >
+                    Save
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
